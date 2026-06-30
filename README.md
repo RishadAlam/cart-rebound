@@ -9,6 +9,10 @@
 
 **Cart Rebound** is a free, open-source **WooCommerce abandoned cart recovery** plugin for WordPress. It reliably records every in-progress cart — logged-in **and** guest — flips it to _abandoned_ after a configurable idle window, lets shoppers restore their cart through an unguessable **tokenized recovery link**, and attributes **recovered revenue** to the real order. A clean `do_action` event surface and REST API let automation tools (FlowMattic, Bit Integrations, n8n, Zapier bridges, …) react to abandonment and recovery without coupling to plugin internals.
 
+## Documentation
+
+📖 **[Full usage & developer guide → `docs/USAGE.md`](docs/USAGE.md)** — step-by-step installation, every setting, how tracking & recovery work end to end, the admin dashboard, and the events + REST API reference.
+
 ## Features
 
 - **Reliable cart capture** — logged-in and guest carts, including the email a guest types at checkout _before_ submitting. Works on both **classic checkout** (AJAX beacon + server-side hooks) and **block / Store API checkout**.
