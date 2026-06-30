@@ -125,8 +125,7 @@ All plugin behavior is configured under **Cart Rebound → Settings** in the Wor
 
 | Key                      | UI label                            | Type                      | Default                                                                                   | Controls                                                                                                                                                                            |
 | ------------------------ | ----------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`                | **Enable tracking**                 | boolean (checkbox)        | `true`                                                                                    | Master on/off for cart tracking. Sanitized with `! empty()`, so any falsy value becomes `false`.                                                                                    |
-| `guest_tracking`         | **Track guest carts**               | boolean (checkbox)        | `true`                                                                                    | Whether carts from non-logged-in (guest) visitors are tracked in addition to logged-in users.                                                                                       |
+| `guest_tracking`         | **Track guest carts**               | boolean (toggle)          | `true`                                                                                    | Whether carts from non-logged-in (guest) visitors are tracked in addition to logged-in users. Tracking itself is always on while the plugin is active — there is no master toggle.  |
 | `abandonment_threshold`  | **Abandonment threshold (minutes)** | integer                   | `30`                                                                                      | Minutes of inactivity after which a cart is considered abandoned. Clamped to a minimum of `1` (`max(1, (int) …)`).                                                                  |
 | `scan_interval`          | _(not shown in the Settings UI)_    | integer                   | `5`                                                                                       | Interval, in minutes, used by the background scan that detects abandoned carts. Present in defaults and sanitisation only; clamped to a minimum of `1`. Not editable from the form. |
 | `cleanup_days`           | **Cleanup after (days)**            | integer                   | `30`                                                                                      | Age, in days, after which old cart records are cleaned up. Clamped to a minimum of `1`.                                                                                             |
@@ -175,7 +174,7 @@ Capture is wired in `src/Providers/CaptureServiceProvider.php::boot()`. Four Woo
 
 Each call re-snapshots the cart and upserts the row. The snapshot (`CartTracker::snapshot()`) stores: `cart_contents` (JSON of product_id, variation_id, variation, quantity, name, price, line_total per line), `cart_total` (from `WC()->cart->get_total('edit')`), `currency`, `items_count`, `coupons` (applied coupon codes), and `checkout_url`.
 
-Tracking only runs when `CartTracker::tracking_allowed()` passes: WooCommerce must be loaded and the `enabled` setting on. Logged-in users are always tracked; guests are tracked only when the `guest_tracking` setting is on.
+Tracking runs whenever `CartTracker::tracking_allowed()` passes: WooCommerce must be loaded. There is no master on/off toggle — tracking is active while the plugin is active. Logged-in users are always tracked; guests are tracked only when the `guest_tracking` setting is on.
 
 ### The stable session key and the `cart_rebound_ref` cookie
 
@@ -859,7 +858,7 @@ Cart Rebound runs all of its background work through a small scheduler abstracti
 
 ### The recurring jobs
 
-`SchedulerServiceProvider::sync_schedule()` reconciles the schedule against the current settings. It runs on `init`, on the `cart_rebound_activated` action, and is idempotent (safe to run repeatedly). If the global `enabled` setting is off, it clears all jobs instead of scheduling them. When enabled, it registers two recurring jobs:
+`SchedulerServiceProvider::sync_schedule()` reconciles the schedule against the current settings. It runs on `init`, on the `cart_rebound_activated` action, and is idempotent (safe to run repeatedly). It registers two recurring jobs:
 
 | Job              | Hook                            | Interval                                                   |
 | ---------------- | ------------------------------- | ---------------------------------------------------------- |
@@ -919,7 +918,7 @@ The answers below are derived from the plugin's actual capture, detection, and m
 Tracking only runs when `CartTracker::tracking_allowed()` returns true (`src/Tracking/CartTracker.php`). Check, in order:
 
 - **WooCommerce must be active.** The guard calls `function_exists( 'WC' )`; if WooCommerce isn't loaded, `track()` returns immediately and no row is written.
-- **The master switch must be on.** `settings->get( 'enabled' )` must be true (default `true`). If you disabled the plugin from its settings, tracking stops and the scan/cleanup jobs are unscheduled (`SchedulerServiceProvider::sync_schedule()`).
+- **WooCommerce must be active.** Tracking runs automatically while both the plugin and WooCommerce are active — there is no master on/off switch. (Guest carts additionally require the _Track guest carts_ setting to be on.)
 - **Guests need guest tracking enabled.** Logged-in users (`get_current_user_id() > 0`) are always tracked. For visitors who are not logged in, `guest_tracking` (default `true`) must be on — otherwise `tracking_allowed()` returns false for them.
 - **A stable session key is required.** If `SessionManager::resolve_session_key()` returns an empty string (no WooCommerce session/cookie yet), `track()` and `capture_identity()` both bail.
 - **The cart row is refreshed on cart events.** Tracking is wired to `woocommerce_add_to_cart`, `woocommerce_cart_updated`, `woocommerce_cart_item_removed`, and `woocommerce_cart_emptied` (`src/Providers/CaptureServiceProvider.php`). If a theme/page builder manipulates the cart without firing these standard hooks, snapshots may not refresh.
