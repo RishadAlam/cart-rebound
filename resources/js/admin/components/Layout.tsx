@@ -15,30 +15,32 @@ const tabs: Tab[] = [
 	{ to: '/settings', label: 'Settings', end: false },
 ];
 
-const linkClass = ({ isActive }: { isActive: boolean }): string =>
-	isActive
-		? 'border-b-2 border-blue-600 pb-2 font-semibold text-blue-600'
-		: 'pb-2 text-gray-600 hover:text-gray-900';
+const tabClass = ({ isActive }: { isActive: boolean }): string =>
+	isActive ? 'cr-tab is-active' : 'cr-tab';
 
 export const Layout = () => (
-	<div className="cart-rebound-app p-6">
-		<h1 className="text-xl font-semibold">Cart Rebound</h1>
+	<div className="cr-app">
+		<header className="cr-header">
+			<h1 className="cr-header__title">Cart Rebound</h1>
+			<p className="cr-header__subtitle">
+				Recover abandoned WooCommerce carts with tokenized links and
+				automated emails — and track the revenue you win back.
+			</p>
+		</header>
 
-		<nav className="mt-4 flex gap-6 border-b border-gray-200">
+		<nav className="cr-tabs">
 			{tabs.map((tab) => (
 				<NavLink
 					key={tab.to}
 					to={tab.to}
 					end={tab.end}
-					className={linkClass}
+					className={tabClass}
 				>
 					{tab.label}
 				</NavLink>
 			))}
 		</nav>
 
-		<div className="mt-6">
-			<Outlet />
-		</div>
+		<Outlet />
 	</div>
 );

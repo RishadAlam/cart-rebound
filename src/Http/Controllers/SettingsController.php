@@ -65,7 +65,6 @@ final class SettingsController extends Controller {
 	 */
 	public function update( WP_REST_Request $request ): WP_REST_Response {
 		$keys = array(
-			'enabled',
 			'guest_tracking',
 			'abandonment_threshold',
 			'scan_interval',

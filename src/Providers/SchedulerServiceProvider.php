@@ -67,14 +67,7 @@ final class SchedulerServiceProvider extends ServiceProvider {
 	 * @return void
 	 */
 	public function sync_schedule(): void {
-		$settings = $this->app->make( Settings::class );
-
-		if ( ! $settings->get( 'enabled' ) ) {
-			$this->clear_schedule();
-
-			return;
-		}
-
+		$settings  = $this->app->make( Settings::class );
 		$scheduler = $this->app->make( Scheduler::class );
 		$interval  = max( 60, (int) $settings->get( 'scan_interval' ) * MINUTE_IN_SECONDS );
 

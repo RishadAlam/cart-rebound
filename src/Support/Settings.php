@@ -38,7 +38,6 @@ final class Settings {
 	 */
 	public function defaults(): array {
 		return array(
-			'enabled'                => true,
 			'guest_tracking'         => true,
 			'abandonment_threshold'  => 30,
 			'scan_interval'          => 5,
@@ -111,7 +110,6 @@ final class Settings {
 	 */
 	private function sanitise( array $values ): array {
 		return array(
-			'enabled'                => ! empty( $values['enabled'] ),
 			'guest_tracking'         => ! empty( $values['guest_tracking'] ),
 			'abandonment_threshold'  => max( 1, (int) ( $values['abandonment_threshold'] ?? 30 ) ),
 			'scan_interval'          => max( 1, (int) ( $values['scan_interval'] ?? 5 ) ),

@@ -52,7 +52,6 @@ export interface Stats {
 }
 
 export interface Settings {
-	enabled: boolean;
 	guest_tracking: boolean;
 	abandonment_threshold: number;
 	scan_interval: number;

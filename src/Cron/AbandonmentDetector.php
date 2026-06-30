@@ -95,10 +95,6 @@ final class AbandonmentDetector {
 	 * @return void
 	 */
 	public function run(): void {
-		if ( ! $this->settings->get( 'enabled' ) ) {
-			return;
-		}
-
 		$threshold = max( 1, (int) $this->settings->get( 'abandonment_threshold' ) );
 		$cutoff    = gmdate( 'Y-m-d H:i:s', time() - ( $threshold * MINUTE_IN_SECONDS ) );
 		$processed = 0;

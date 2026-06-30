@@ -25,9 +25,11 @@ if (container) {
 		);
 	} else {
 		root.render(
-			<div className="cart-rebound-error p-6 text-red-600" role="alert">
-				Cart Rebound could not initialise: configuration data is
-				missing. Please reload the page.
+			<div className="cr-app">
+				<div className="cr-notice is-error" role="alert">
+					Cart Rebound could not initialise: configuration data is
+					missing. Please reload the page.
+				</div>
 			</div>
 		);
 	}

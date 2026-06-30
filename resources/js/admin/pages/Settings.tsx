@@ -1,7 +1,15 @@
 /**
  * Settings page — edit and persist plugin settings.
+ *
+ * Tracking is always on while the plugin is active; there is no master toggle.
  */
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import {
+	useEffect,
+	useState,
+	type ChangeEvent,
+	type FormEvent,
+	type ReactNode,
+} from 'react';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
@@ -17,7 +25,27 @@ type TextKey =
 	| 'email_from_name'
 	| 'email_from_email';
 
-type ToggleKey = 'enabled' | 'guest_tracking' | 'recovery_email_enabled';
+type ToggleKey = 'guest_tracking' | 'recovery_email_enabled';
+
+const Field = ({
+	id,
+	label,
+	hint,
+	children,
+}: {
+	id: string;
+	label: string;
+	hint?: string;
+	children: ReactNode;
+}) => (
+	<div className="cr-field">
+		<label htmlFor={id} className="cr-field__label">
+			{label}
+		</label>
+		{children}
+		{hint !== undefined && <p className="cr-field__hint">{hint}</p>}
+	</div>
+);
 
 export const Settings = () => {
 	const { data, isLoading } = useSettings();
@@ -31,7 +59,22 @@ export const Settings = () => {
 	}, [data]);
 
 	if (isLoading || !form) {
-		return <p className="text-gray-500">Loading…</p>;
+		return (
+			<div className="cr-card cr-section">
+				<div
+					className="cr-skeleton"
+					style={{ height: 16, width: '40%' }}
+				/>
+				<div
+					className="cr-skeleton"
+					style={{ height: 40, width: '100%', marginTop: 16 }}
+				/>
+				<div
+					className="cr-skeleton"
+					style={{ height: 40, width: '100%', marginTop: 12 }}
+				/>
+			</div>
+		);
 	}
 
 	const setField = <K extends keyof SettingsData>(
@@ -66,172 +109,188 @@ export const Settings = () => {
 		update.mutate(form);
 	};
 
-	const inputClass =
-		'mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm';
+	const toggle = (key: ToggleKey, id: string) => (
+		<span className="cr-switch">
+			<input
+				id={id}
+				type="checkbox"
+				checked={form[key]}
+				onChange={onToggle(key)}
+			/>
+			<span className="cr-switch__track">
+				<span className="cr-switch__thumb" />
+			</span>
+		</span>
+	);
 
 	return (
-		<form onSubmit={onSubmit} className="max-w-xl space-y-5">
-			<div className="flex items-center gap-2">
-				<input
-					id="cr-enabled"
-					type="checkbox"
-					checked={form.enabled}
-					onChange={onToggle('enabled')}
-				/>
-				<label htmlFor="cr-enabled" className="text-sm font-medium">
-					Enable tracking
-				</label>
-			</div>
-
-			<div className="flex items-center gap-2">
-				<input
-					id="cr-guest"
-					type="checkbox"
-					checked={form.guest_tracking}
-					onChange={onToggle('guest_tracking')}
-				/>
-				<label htmlFor="cr-guest" className="text-sm font-medium">
-					Track guest carts
-				</label>
-			</div>
-
-			<div>
-				<label
-					className="block text-sm font-medium"
-					htmlFor="cr-threshold"
-				>
-					Abandonment threshold (minutes)
-				</label>
-				<input
-					id="cr-threshold"
-					type="number"
-					min={1}
-					value={form.abandonment_threshold}
-					onChange={onNumber('abandonment_threshold')}
-					className={inputClass}
-				/>
-			</div>
-
-			<div>
-				<label
-					className="block text-sm font-medium"
-					htmlFor="cr-cleanup"
-				>
-					Cleanup after (days)
-				</label>
-				<input
-					id="cr-cleanup"
-					type="number"
-					min={1}
-					value={form.cleanup_days}
-					onChange={onNumber('cleanup_days')}
-					className={inputClass}
-				/>
-			</div>
-
-			<div className="flex items-center gap-2">
-				<input
-					id="cr-email-enabled"
-					type="checkbox"
-					checked={form.recovery_email_enabled}
-					onChange={onToggle('recovery_email_enabled')}
-				/>
-				<label
-					htmlFor="cr-email-enabled"
-					className="text-sm font-medium"
-				>
-					Send recovery email
-				</label>
-			</div>
-
-			<div>
-				<label className="block text-sm font-medium" htmlFor="cr-delay">
-					Email delay (minutes)
-				</label>
-				<input
-					id="cr-delay"
-					type="number"
-					min={1}
-					value={form.email_delay_minutes}
-					onChange={onNumber('email_delay_minutes')}
-					className={inputClass}
-				/>
-			</div>
-
-			<div>
-				<label
-					className="block text-sm font-medium"
-					htmlFor="cr-subject"
-				>
-					Email subject
-				</label>
-				<input
-					id="cr-subject"
-					type="text"
-					value={form.email_subject}
-					onChange={onText('email_subject')}
-					className={inputClass}
-				/>
-			</div>
-
-			<div>
-				<label className="block text-sm font-medium" htmlFor="cr-body">
-					Email body
-				</label>
-				<textarea
-					id="cr-body"
-					rows={4}
-					value={form.email_body}
-					onChange={onText('email_body')}
-					className={inputClass}
-				/>
-				<p className="mt-1 text-xs text-gray-500">
-					Tokens: {'{first_name}'}, {'{products}'}, {'{recovery_url}'}
+		<form onSubmit={onSubmit} className="cr-card" style={{ maxWidth: 720 }}>
+			<div className="cr-section">
+				<h2 className="cr-section__title">Tracking</h2>
+				<p className="cr-section__desc">
+					Cart tracking runs automatically while the plugin is active.
+					Choose whether logged-out (guest) carts are tracked too.
 				</p>
+				<div className="cr-field--row">
+					<div>
+						<label htmlFor="cr-guest" className="cr-field__label">
+							Track guest carts
+						</label>
+						<p className="cr-field__hint">
+							Capture carts and the email guests type at checkout.
+						</p>
+					</div>
+					{toggle('guest_tracking', 'cr-guest')}
+				</div>
 			</div>
 
-			<div>
-				<label
-					className="block text-sm font-medium"
-					htmlFor="cr-from-name"
+			<div className="cr-section">
+				<h2 className="cr-section__title">Abandonment &amp; cleanup</h2>
+				<p className="cr-section__desc">
+					When an idle cart is marked abandoned, how often carts are
+					scanned, and how long stale data is kept.
+				</p>
+				<div className="cr-field__grid">
+					<Field
+						id="cr-threshold"
+						label="Abandonment threshold (minutes)"
+						hint="Idle time before a cart is abandoned."
+					>
+						<input
+							id="cr-threshold"
+							className="cr-input"
+							type="number"
+							min={1}
+							value={form.abandonment_threshold}
+							onChange={onNumber('abandonment_threshold')}
+						/>
+					</Field>
+					<Field
+						id="cr-scan"
+						label="Scan interval (minutes)"
+						hint="How often abandoned carts are detected."
+					>
+						<input
+							id="cr-scan"
+							className="cr-input"
+							type="number"
+							min={1}
+							value={form.scan_interval}
+							onChange={onNumber('scan_interval')}
+						/>
+					</Field>
+					<Field
+						id="cr-cleanup"
+						label="Cleanup after (days)"
+						hint="Unrecovered carts are purged after this."
+					>
+						<input
+							id="cr-cleanup"
+							className="cr-input"
+							type="number"
+							min={1}
+							value={form.cleanup_days}
+							onChange={onNumber('cleanup_days')}
+						/>
+					</Field>
+				</div>
+			</div>
+
+			<div className="cr-section">
+				<h2 className="cr-section__title">Recovery email</h2>
+				<p className="cr-section__desc">
+					Optionally email shoppers a one-click recovery link a set
+					time after they abandon a cart.
+				</p>
+				<div className="cr-field--row">
+					<div>
+						<label
+							htmlFor="cr-email-enabled"
+							className="cr-field__label"
+						>
+							Send recovery email
+						</label>
+						<p className="cr-field__hint">
+							Schedules a single follow-up email per abandoned
+							cart.
+						</p>
+					</div>
+					{toggle('recovery_email_enabled', 'cr-email-enabled')}
+				</div>
+
+				<div className="cr-field__grid">
+					<Field
+						id="cr-delay"
+						label="Send delay (minutes)"
+						hint="Wait time after abandonment before sending."
+					>
+						<input
+							id="cr-delay"
+							className="cr-input"
+							type="number"
+							min={1}
+							value={form.email_delay_minutes}
+							onChange={onNumber('email_delay_minutes')}
+						/>
+					</Field>
+				</div>
+
+				<Field id="cr-subject" label="Email subject">
+					<input
+						id="cr-subject"
+						className="cr-input"
+						type="text"
+						value={form.email_subject}
+						onChange={onText('email_subject')}
+					/>
+				</Field>
+
+				<Field
+					id="cr-body"
+					label="Email body"
+					hint="Tokens: {first_name}, {products}, {recovery_url}"
 				>
-					From name
-				</label>
-				<input
-					id="cr-from-name"
-					type="text"
-					value={form.email_from_name}
-					onChange={onText('email_from_name')}
-					className={inputClass}
-				/>
+					<textarea
+						id="cr-body"
+						className="cr-input"
+						rows={4}
+						value={form.email_body}
+						onChange={onText('email_body')}
+					/>
+				</Field>
+
+				<div className="cr-field__grid">
+					<Field id="cr-from-name" label="From name">
+						<input
+							id="cr-from-name"
+							className="cr-input"
+							type="text"
+							value={form.email_from_name}
+							onChange={onText('email_from_name')}
+						/>
+					</Field>
+					<Field id="cr-from-email" label="From email">
+						<input
+							id="cr-from-email"
+							className="cr-input"
+							type="email"
+							value={form.email_from_email}
+							onChange={onText('email_from_email')}
+						/>
+					</Field>
+				</div>
 			</div>
 
-			<div>
-				<label
-					className="block text-sm font-medium"
-					htmlFor="cr-from-email"
-				>
-					From email
-				</label>
-				<input
-					id="cr-from-email"
-					type="email"
-					value={form.email_from_email}
-					onChange={onText('email_from_email')}
-					className={inputClass}
-				/>
-			</div>
-
-			<div className="flex items-center gap-3">
+			<div className="cr-savebar">
 				<button
 					type="submit"
+					className="cr-btn is-primary"
 					disabled={update.isPending}
-					className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
 				>
 					{update.isPending ? 'Saving…' : 'Save settings'}
 				</button>
 				{update.isSuccess && (
-					<span className="text-sm text-green-600">Saved.</span>
+					<span className="cr-saved">Settings saved.</span>
 				)}
 			</div>
 		</form>
