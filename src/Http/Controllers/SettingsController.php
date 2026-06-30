@@ -12,8 +12,8 @@ namespace CartRebound\Http\Controllers;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Core\Application;
-use CartRebound\Http\Requests\UpdateSettingsRequest;
 use CartRebound\Support\Settings;
+use WP_REST_Request;
 use WP_REST_Response;
 
 /**
@@ -60,11 +60,36 @@ final class SettingsController extends Controller {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param UpdateSettingsRequest $request The validated request.
+	 * @param WP_REST_Request $request The request.
 	 * @return WP_REST_Response
 	 */
-	public function update( UpdateSettingsRequest $request ): WP_REST_Response {
-		$all = $this->settings->update( $request->validated() );
+	public function update( WP_REST_Request $request ): WP_REST_Response {
+		$keys = array(
+			'enabled',
+			'guest_tracking',
+			'abandonment_threshold',
+			'scan_interval',
+			'cleanup_days',
+			'recovery_email_enabled',
+			'email_delay_minutes',
+			'email_subject',
+			'email_body',
+			'email_from_name',
+			'email_from_email',
+		);
+
+		$input = array();
+
+		foreach ( $keys as $key ) {
+			$value = $request->get_param( $key );
+
+			// null = field omitted; '' is an explicit clear (Settings sanitises types).
+			if ( null !== $value ) {
+				$input[ $key ] = $value;
+			}
+		}
+
+		$all = $this->settings->update( $input );
 
 		/**
 		 * Fires after settings are saved so the scheduler can reconcile.

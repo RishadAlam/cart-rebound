@@ -30,6 +30,8 @@ final class EventDispatcherTest extends TestCase {
 				return $url . '?recover';
 			}
 		);
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\when( 'update_option' )->justReturn( true );
 	}
 
 	private function row(): array {

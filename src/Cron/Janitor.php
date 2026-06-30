@@ -61,10 +61,20 @@ final class Janitor {
 		$days   = max( 1, (int) $this->settings->get( 'cleanup_days' ) );
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
-		return CartSession::query()
+		$abandoned = CartSession::query()
 			->where_in( 'status', array( CartSession::STATUS_ABANDONED, CartSession::STATUS_LOST ) )
 			->where( 'order_id', '=', 0 )
 			->where( 'abandoned_at', '<', $cutoff )
 			->delete_where();
+
+		// Carts that never captured an email are never flipped to abandoned, so
+		// purge dead 'active' sessions on last_activity to keep the table bounded.
+		$stale_active = CartSession::query()
+			->where( 'status', '=', CartSession::STATUS_ACTIVE )
+			->where( 'order_id', '=', 0 )
+			->where( 'last_activity', '<', $cutoff )
+			->delete_where();
+
+		return $abandoned + $stale_active;
 	}
 }

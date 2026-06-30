@@ -59,7 +59,8 @@ final class CartRepository {
 	 */
 	public function get_carts( array $args ): array {
 		$page     = max( 1, (int) ( $args['page'] ?? 1 ) );
-		$per_page = min( 100, max( 1, (int) ( $args['per_page'] ?? 20 ) ) );
+		$per_page = (int) ( $args['per_page'] ?? 0 );
+		$per_page = $per_page > 0 ? min( 100, $per_page ) : 20;
 		$offset   = ( $page - 1 ) * $per_page;
 
 		$rows = $this->apply_filters( CartSession::query(), $args )
@@ -114,11 +115,15 @@ final class CartRepository {
 			$counts[ $status ] = CartSession::query()->where( 'status', '=', $status )->count();
 		}
 
-		$revenue     = CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->sum( 'recovered_amount' );
-		$recovered   = $counts[ CartSession::STATUS_RECOVERED ];
-		$abandoned   = $counts[ CartSession::STATUS_ABANDONED ];
-		$denominator = $recovered + $abandoned;
-		$rate        = $denominator > 0 ? round( ( $recovered / $denominator ) * 100, 1 ) : 0.0;
+		$revenue = CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->sum( 'recovered_amount' );
+
+		// Use purge-immune lifetime counters: the Janitor deletes unrecovered
+		// abandoned carts, so live status counts would inflate the rate over time.
+		$lifetime_abandoned = (int) get_option( EventDispatcher::OPTION_ABANDONED, 0 );
+		$lifetime_recovered = (int) get_option( EventDispatcher::OPTION_RECOVERED, 0 );
+		$rate               = $lifetime_abandoned > 0
+			? round( ( $lifetime_recovered / $lifetime_abandoned ) * 100, 1 )
+			: 0.0;
 
 		return array(
 			'counts'            => $counts,

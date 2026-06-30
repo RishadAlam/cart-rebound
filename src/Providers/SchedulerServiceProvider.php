@@ -55,7 +55,7 @@ final class SchedulerServiceProvider extends ServiceProvider {
 
 		add_action( 'init', array( $this, 'sync_schedule' ) );
 		add_action( 'cart_rebound_activated', array( $this, 'sync_schedule' ) );
-		add_action( 'cart_rebound_settings_updated', array( $this, 'sync_schedule' ) );
+		add_action( 'cart_rebound_settings_updated', array( $this, 'reschedule' ) );
 		add_action( 'cart_rebound_deactivated', array( $this, 'clear_schedule' ) );
 	}
 
@@ -80,6 +80,19 @@ final class SchedulerServiceProvider extends ServiceProvider {
 
 		$scheduler->ensure_recurring( AbandonmentDetector::HOOK, $interval, self::FALLBACK_RECURRENCE );
 		$scheduler->ensure_recurring( Janitor::HOOK, DAY_IN_SECONDS, 'daily' );
+	}
+
+	/**
+	 * Re-apply the schedule after a settings change so a new scan interval
+	 * replaces the already-registered recurring job.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return void
+	 */
+	public function reschedule(): void {
+		$this->app->make( Scheduler::class )->clear( AbandonmentDetector::HOOK );
+		$this->sync_schedule();
 	}
 
 	/**

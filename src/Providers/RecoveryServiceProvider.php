@@ -36,8 +36,10 @@ final class RecoveryServiceProvider extends ServiceProvider {
 
 		$linker = $this->app->make( OrderLinker::class );
 
+		// Front-end checkout only (classic + block). woocommerce_new_order is
+		// intentionally NOT hooked: it fires for admin/programmatic orders too and
+		// would mis-attribute them to an unrelated tracked cart.
 		add_action( 'woocommerce_checkout_order_processed', array( $linker, 'on_order_created' ), 20, 1 );
-		add_action( 'woocommerce_new_order', array( $linker, 'on_order_created' ), 20, 1 );
 		add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'on_store_api_order' ), 20, 1 );
 		add_action( 'woocommerce_order_status_changed', array( $linker, 'on_status_changed' ), 20, 3 );
 	}

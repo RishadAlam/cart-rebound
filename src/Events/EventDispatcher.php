@@ -25,6 +25,20 @@ use WC_Order;
 final class EventDispatcher {
 
 	/**
+	 * Lifetime abandoned-cart counter option (purge-immune; used for recovery rate).
+	 *
+	 * @var string
+	 */
+	public const OPTION_ABANDONED = 'cart_rebound_lifetime_abandoned';
+
+	/**
+	 * Lifetime recovered-cart counter option.
+	 *
+	 * @var string
+	 */
+	public const OPTION_RECOVERED = 'cart_rebound_lifetime_recovered';
+
+	/**
 	 * Recovery link builder.
 	 *
 	 * @since 0.1.0
@@ -58,6 +72,8 @@ final class EventDispatcher {
 
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- intentional back-compat alias for integrations already listening on the legacy event name.
 		do_action( 'cart_abandonment', $payload );
+
+		$this->increment( self::OPTION_ABANDONED );
 	}
 
 	/**
@@ -78,6 +94,20 @@ final class EventDispatcher {
 		$payload['recovery_method']  = $method;
 
 		do_action( 'cart_rebound_recovered', $payload );
+
+		$this->increment( self::OPTION_RECOVERED );
+	}
+
+	/**
+	 * Increment a lifetime counter option.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string $key Option key.
+	 * @return void
+	 */
+	private function increment( string $key ): void {
+		update_option( $key, (int) get_option( $key, 0 ) + 1, false );
 	}
 
 	/**
