@@ -1,0 +1,91 @@
+{
+	"name": "cart-rebound/cart-rebound",
+	"description": "Track WooCommerce carts, detect abandonment, recover sales with tokenized links and automated emails, and attribute recovered revenue.",
+	"version": "0.1.0",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"wordpress",
+		"woocommerce",
+		"abandoned-cart",
+		"cart-recovery",
+		"ecommerce"
+	],
+	"homepage": "https://github.com/RishadAlam/cart-rebound",
+	"authors": [
+		{
+			"name": "Rishad Alam",
+			"homepage": "https://profiles.wordpress.org/rishadbitcode/"
+		}
+	],
+	"require": {
+		"php": ">=7.4"
+	},
+	"require-dev": {
+		"brain/monkey": "^2.6",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"friendsofphp/php-cs-fixer": "^3.64",
+		"php-stubs/woocommerce-stubs": "^10.9",
+		"php-stubs/wordpress-stubs": "^6.7",
+		"php-stubs/wp-cli-stubs": "^2.10",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"phpstan/phpstan": "^2.0",
+		"phpunit/phpunit": "^9.6",
+		"rector/rector": "^2.0",
+		"szepeviktor/phpstan-wordpress": "^2.0",
+		"wp-coding-standards/wpcs": "^3.1",
+		"yoast/phpunit-polyfills": "^2.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"CartRebound\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"CartRebound\\Tests\\": "tests/"
+		}
+	},
+	"config": {
+		"sort-packages": true,
+		"optimize-autoloader": true,
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"minimum-stability": "stable",
+	"prefer-stable": true,
+	"scripts": {
+		"phpcs": "phpcs",
+		"phpcbf": "phpcbf",
+		"phpstan": "phpstan analyse --memory-limit=2G",
+		"cs-fix": "php-cs-fixer fix",
+		"cs-check": "php-cs-fixer fix --dry-run --diff",
+		"test:lint": [
+			"@cs-check",
+			"@phpcs"
+		],
+		"compat": "phpcs -p --standard=PHPCompatibilityWP --runtime-set testVersion 7.4- ./src",
+		"rector": "rector process --dry-run",
+		"rector:fix": "rector process",
+		"test": "phpunit",
+		"test:coverage": "phpunit --coverage-html coverage",
+		"qa": [
+			"@test:lint",
+			"@phpstan",
+			"@compat",
+			"@rector",
+			"@test"
+		]
+	},
+	"scripts-descriptions": {
+		"phpcs": "Lint PHP against the WordPress-Extra coding standard.",
+		"phpcbf": "Auto-fix fixable PHPCS violations.",
+		"phpstan": "Static analysis at level 8 with WordPress stubs.",
+		"cs-check": "PHP-CS-Fixer dry-run (no writes).",
+		"compat": "Check PHP 7.4+ compatibility of src/.",
+		"rector": "Rector dry-run (no writes).",
+		"test": "Run the PHPUnit suite.",
+		"qa": "Run the full PHP quality gate."
+	}
+}

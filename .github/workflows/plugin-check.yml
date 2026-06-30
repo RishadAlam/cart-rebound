@@ -1,0 +1,43 @@
+name: Plugin Check
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    plugin-check:
+        name: WordPress Plugin Check
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.2'
+                  coverage: none
+                  tools: composer:v2
+
+            - name: Set up pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Set up Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: pnpm
+
+            - name: Install JS dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build the distributable plugin
+              run: bash scripts/build-zip.sh
+
+            - name: Run Plugin Check on the built plugin
+              uses: wordpress/plugin-check-action@v1
+              with:
+                  build-dir: ./dist/cart-rebound

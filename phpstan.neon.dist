@@ -1,0 +1,19 @@
+# PHPStan static analysis — level 8 with WordPress stubs.
+includes:
+	- phpstan-baseline.neon
+	- vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+	level: 8
+	phpVersion: 70400
+	paths:
+		- src
+	excludePaths:
+		- vendor
+		- node_modules
+		- tests
+	scanFiles:
+		- vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+		- vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+		- vendor/php-stubs/woocommerce-stubs/woocommerce-packages-stubs.php
+	treatPhpDocTypesAsCertain: false

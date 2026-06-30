@@ -1,0 +1,7 @@
+. "$(dirname -- "$0")/common.sh"
+
+if command -v node >/dev/null 2>&1; then
+	npx lint-staged
+else
+	echo "lint-staged skipped (Node not found in PATH; CI enforces formatting/linting)."
+fi

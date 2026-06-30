@@ -1,0 +1,8 @@
+node_modules
+vendor
+public/build
+languages
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+composer.lock

@@ -1,0 +1,7 @@
+# PHPStan baseline — intentionally empty.
+#
+# A boilerplate ships with zero baselined errors. If you must temporarily
+# baseline a finding, regenerate this file with:
+#   composer phpstan -- --generate-baseline
+parameters:
+	ignoreErrors: []

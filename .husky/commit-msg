@@ -1,0 +1,7 @@
+. "$(dirname -- "$0")/common.sh"
+
+if command -v node >/dev/null 2>&1; then
+	npx --no-install commitlint --edit "$1"
+else
+	echo "commitlint skipped (Node not found in PATH)."
+fi

@@ -1,0 +1,29 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build output
+/public/build/
+/dist/
+
+# Tooling caches
+/coverage/
+.phpunit.result.cache
+.php-cs-fixer.cache
+.eslintcache
+.stylelintcache
+
+# Generated translations
+/languages/*.mo
+
+# Logs & OS cruft
+*.log
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+
+# Impeccable design-hook cache
+.impeccable/

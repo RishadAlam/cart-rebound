@@ -1,0 +1,21 @@
+. "$(dirname -- "$0")/common.sh"
+
+set -e
+
+if command -v node >/dev/null 2>&1; then
+	echo "▶ JS/TS QA"      && npx run-s ts-check pretty lint stylelint
+else
+	echo "▶ JS/TS QA       … skipped (Node not found in PATH; CI enforces it)"
+fi
+
+echo "▶ PHP-CS-Fixer"      && composer cs-check
+echo "▶ PHPCS (WPCS)"      && composer phpcs
+echo "▶ PHPStan"           && composer phpstan
+echo "▶ PHP Compatibility" && composer compat
+echo "▶ Rector (dry-run)"  && composer rector
+echo "▶ PHPUnit"           && composer test
+
+# Plugin Check runs in CI (.github/workflows/plugin-check.yml) against the
+# built plugin — no local Docker required.
+
+echo "✅ All checks passed."
