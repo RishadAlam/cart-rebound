@@ -137,6 +137,9 @@ export const RichTextEditor = ({
 	const seeded = useRef(false);
 	const savedRange = useRef<Range | null>(null);
 	const [active, setActive] = useState<Record<string, boolean>>({});
+	const [selectedImg, setSelectedImg] = useState<HTMLImageElement | null>(
+		null
+	);
 
 	useEffect(() => {
 		if (ref.current && !seeded.current) {
@@ -302,6 +305,89 @@ export const RichTextEditor = ({
 	// Keep the editor's selection when a toolbar button is pressed.
 	const keepSelection = (event: MouseEvent) => {
 		event.preventDefault();
+	};
+
+	const selectNode = (node: Node) => {
+		const selection = getSelection();
+		const doc = ref.current?.ownerDocument;
+
+		if (!selection || !doc) {
+			return;
+		}
+
+		const range = doc.createRange();
+		range.selectNode(node);
+		selection.removeAllRanges();
+		selection.addRange(range);
+	};
+
+	// Click-to-select an image so the contextual image toolbar can resize it
+	// (Chromium removed native image resize handles in contentEditable).
+	const onContentClick = (event: MouseEvent) => {
+		const target = event.target;
+
+		if (
+			target instanceof HTMLImageElement &&
+			ref.current?.contains(target)
+		) {
+			setSelectedImg(target);
+			selectNode(target);
+		} else {
+			setSelectedImg(null);
+		}
+	};
+
+	const sizeImage = (width: string) => {
+		if (!selectedImg) {
+			return;
+		}
+
+		if (width === '') {
+			selectedImg.style.removeProperty('width');
+		} else {
+			selectedImg.style.width = width;
+		}
+
+		selectedImg.style.maxWidth = '100%';
+		selectedImg.style.height = 'auto';
+		emit();
+		selectNode(selectedImg);
+	};
+
+	const alignImage = (align: 'left' | 'center' | 'right') => {
+		if (!selectedImg) {
+			return;
+		}
+
+		const style = selectedImg.style;
+		style.removeProperty('float');
+		style.removeProperty('margin');
+		style.removeProperty('display');
+
+		if (align === 'center') {
+			style.display = 'block';
+			style.marginLeft = 'auto';
+			style.marginRight = 'auto';
+		} else if (align === 'left') {
+			style.float = 'left';
+			style.margin = '0 14px 8px 0';
+		} else {
+			style.float = 'right';
+			style.margin = '0 0 8px 14px';
+		}
+
+		emit();
+		selectNode(selectedImg);
+	};
+
+	const removeImage = () => {
+		if (!selectedImg) {
+			return;
+		}
+
+		selectedImg.remove();
+		setSelectedImg(null);
+		emit();
 	};
 
 	const button = (
@@ -480,6 +566,54 @@ export const RichTextEditor = ({
 				)}
 			</div>
 
+			{selectedImg && (
+				<div
+					className="cr-rte__imagebar"
+					role="toolbar"
+					aria-label="Image"
+				>
+					<span className="cr-rte__imagebar-label">Image size</span>
+					<div className="cr-rte__group">
+						{['25%', '50%', '75%', '100%'].map((width) =>
+							button(
+								`w${width}`,
+								`Width ${width}`,
+								() => sizeImage(width),
+								width
+							)
+						)}
+						{button(
+							'wauto',
+							'Original size',
+							() => sizeImage(''),
+							'Auto'
+						)}
+					</div>
+					<div className="cr-rte__group">
+						{button(
+							'imgleft',
+							'Align left',
+							() => alignImage('left'),
+							<IconAlign dir="Left" />
+						)}
+						{button(
+							'imgcenter',
+							'Align center',
+							() => alignImage('center'),
+							<IconAlign dir="Center" />
+						)}
+						{button(
+							'imgright',
+							'Align right',
+							() => alignImage('right'),
+							<IconAlign dir="Right" />
+						)}
+					</div>
+					<span className="cr-rte__spacer" />
+					{button('imgremove', 'Remove image', removeImage, 'Remove')}
+				</div>
+			)}
+
 			<div className="cr-rte__canvas">
 				<div
 					ref={ref}
@@ -490,9 +624,13 @@ export const RichTextEditor = ({
 					tabIndex={0}
 					aria-multiline="true"
 					aria-label={ariaLabel}
-					onInput={emit}
+					onInput={() => {
+						emit();
+						setSelectedImg(null);
+					}}
 					onKeyUp={refresh}
 					onMouseUp={refresh}
+					onClick={onContentClick}
 					onFocus={syncActive}
 					onBlur={() => {
 						saveSelection();

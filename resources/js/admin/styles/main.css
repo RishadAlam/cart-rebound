@@ -1231,6 +1231,23 @@ textarea.cr-input {
 	flex: 1;
 }
 
+/* Contextual image toolbar (shown while an image is selected). */
+.cr-rte__imagebar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 2px 10px;
+	padding: 6px 10px;
+	border-bottom: 1px solid var(--cr-border);
+	background: var(--cr-accent-soft);
+}
+
+.cr-rte__imagebar-label {
+	color: var(--cr-accent);
+	font-size: 12px;
+	font-weight: 600;
+}
+
 /* Email canvas — the body renders on an email-like white sheet. */
 .cr-rte__canvas {
 	max-height: 520px;
@@ -1300,6 +1317,7 @@ textarea.cr-input {
 	max-width: 100%;
 	height: auto;
 	border-radius: 4px;
+	cursor: pointer;
 }
 
 .cr-rte__content:empty::before {
