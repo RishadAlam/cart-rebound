@@ -17,6 +17,14 @@ plugin itself. They are excluded from the shipped zip (`.gitattributes`
 | `banner-1544x500.png` | Header banner (retina)   |                                    |
 | `banner-772x250.png`  | Header banner (standard) |                                    |
 
+## Credits
+
+The cart glyph is the Heroicons `shopping-cart` icon (MIT). See
+[`CREDITS.txt`](CREDITS.txt) for the notice. Everything else (badge,
+gradient, layout, copy) is original.
+
+## Screenshots
+
 Screenshots (`screenshot-1.png`, `screenshot-2.png`, …) are **not** generated
 here — capture them from the real running admin (Dashboard, Carts, Templates
 editor, Log) and add a matching `== Screenshots ==` section to `readme.txt`.
