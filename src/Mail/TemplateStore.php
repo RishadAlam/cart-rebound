@@ -61,10 +61,7 @@ final class TemplateStore {
 		$stored = get_option( self::OPTION, null );
 
 		if ( ! is_array( $stored ) || array() === $stored ) {
-			$seeded = array( $this->seed() );
-			update_option( self::OPTION, $seeded, false );
-
-			return $seeded;
+			return $this->seed_and_persist();
 		}
 
 		$templates = array();
@@ -73,6 +70,12 @@ final class TemplateStore {
 			if ( is_array( $row ) ) {
 				$templates[] = $this->normalise( $row );
 			}
+		}
+
+		// A stored-but-corrupted option (e.g. all-scalar rows) filters down to
+		// nothing; re-seed so the invariant "always at least one template" holds.
+		if ( array() === $templates ) {
+			return $this->seed_and_persist();
 		}
 
 		return $this->ensure_one_default( $templates );
@@ -106,7 +109,7 @@ final class TemplateStore {
 			}
 		}
 
-		return $templates[0];
+		return $templates[0] ?? $this->seed();
 	}
 
 	/**
@@ -170,32 +173,28 @@ final class TemplateStore {
 	/**
 	 * Delete a template by id.
 	 *
-	 * Deleting the last template clears the option so the next read re-seeds a
-	 * default; deleting the default promotes the first remaining template.
+	 * The default template cannot be deleted (set another as default first),
+	 * which also guarantees at least one template always survives.
 	 *
 	 * @since 0.2.0
 	 *
 	 * @param string $id Template id.
-	 * @return bool
+	 * @return bool True when a template was deleted.
 	 */
 	public function delete( string $id ): bool {
 		$templates = $this->all();
+		$target    = $this->by_id( $templates, $id );
+
+		if ( null === $target || ! empty( $target['is_default'] ) ) {
+			return false;
+		}
+
 		$remaining = array();
 
 		foreach ( $templates as $template ) {
 			if ( (string) $template['id'] !== $id ) {
 				$remaining[] = $template;
 			}
-		}
-
-		if ( count( $remaining ) === count( $templates ) ) {
-			return false;
-		}
-
-		if ( array() === $remaining ) {
-			delete_option( self::OPTION );
-
-			return true;
 		}
 
 		$this->save( $this->apply_default( $remaining, $this->default_id( $remaining ) ) );
@@ -241,6 +240,20 @@ final class TemplateStore {
 			'coupon'     => (string) $this->settings->get( 'email_coupon' ),
 			'is_default' => true,
 		);
+	}
+
+	/**
+	 * Seed a single default template and persist it.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function seed_and_persist(): array {
+		$seeded = array( $this->seed() );
+		update_option( self::OPTION, $seeded, false );
+
+		return $seeded;
 	}
 
 	/**

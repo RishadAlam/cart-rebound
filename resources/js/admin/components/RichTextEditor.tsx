@@ -5,6 +5,12 @@
  * initial HTML is written once on mount, and edits are emitted via onChange.
  * Remount it (change its `key`) to load a different value — this keeps the
  * caret stable while typing instead of fighting React re-renders.
+ *
+ * Selection handling: formatting buttons preventDefault on mousedown so the
+ * editor keeps focus and the current selection (execCommand applies to it
+ * directly — no focus() call, which would collapse it). The merge-tag <select>
+ * cannot preventDefault (that would stop it opening), so the caret/selection is
+ * saved on blur and restored before inserting.
  */
 import { useEffect, useRef, type MouseEvent } from 'react';
 
@@ -42,6 +48,7 @@ export const RichTextEditor = ({
 }) => {
 	const ref = useRef<HTMLDivElement>(null);
 	const seeded = useRef(false);
+	const savedRange = useRef<Range | null>(null);
 
 	useEffect(() => {
 		if (ref.current && !seeded.current) {
@@ -56,18 +63,47 @@ export const RichTextEditor = ({
 		}
 	};
 
+	const getSelection = (): Selection | null =>
+		ref.current?.ownerDocument.defaultView?.getSelection() ?? null;
+
+	// Remember the current selection while it is still inside the editor, so a
+	// control that steals focus (the tag <select>) can restore it afterwards.
+	const saveSelection = () => {
+		const selection = getSelection();
+
+		if (
+			selection &&
+			selection.rangeCount > 0 &&
+			ref.current?.contains(selection.anchorNode)
+		) {
+			savedRange.current = selection.getRangeAt(0).cloneRange();
+		}
+	};
+
+	const restoreSelection = () => {
+		const selection = getSelection();
+
+		if (selection && savedRange.current) {
+			selection.removeAllRanges();
+			selection.addRange(savedRange.current);
+		}
+	};
+
 	const run = (command: string, argument?: string) => {
-		ref.current?.focus();
 		// execCommand is deprecated but remains the only broadly-supported,
-		// dependency-free way to apply inline formatting to a contentEditable.
+		// dependency-free way to format a contentEditable. No focus() call: the
+		// button's mousedown-preventDefault already kept focus + selection.
 		document.execCommand(command, false, argument);
 		emit();
+		saveSelection();
 	};
 
 	const insert = (text: string) => {
 		ref.current?.focus();
+		restoreSelection();
 		document.execCommand('insertText', false, text);
 		emit();
+		saveSelection();
 	};
 
 	const addLink = () => {
@@ -79,7 +115,7 @@ export const RichTextEditor = ({
 		}
 	};
 
-	// Keep the editor's selection when a toolbar control is pressed.
+	// Keep the editor's selection when a toolbar button is pressed.
 	const keepSelection = (event: MouseEvent) => {
 		event.preventDefault();
 	};
@@ -180,10 +216,12 @@ export const RichTextEditor = ({
 							className="cr-select is-compact"
 							aria-label="Insert merge tag"
 							value=""
-							onMouseDown={keepSelection}
 							onChange={(event) => {
-								if (event.target.value !== '') {
-									insert(event.target.value);
+								const tag = event.target.value;
+
+								if (tag !== '') {
+									insert(tag);
+									event.target.value = '';
 								}
 							}}
 						>
@@ -204,10 +242,16 @@ export const RichTextEditor = ({
 				contentEditable
 				suppressContentEditableWarning
 				role="textbox"
+				tabIndex={0}
 				aria-multiline="true"
 				aria-label={ariaLabel}
 				onInput={emit}
-				onBlur={emit}
+				onKeyUp={saveSelection}
+				onMouseUp={saveSelection}
+				onBlur={() => {
+					saveSelection();
+					emit();
+				}}
 			/>
 		</div>
 	);

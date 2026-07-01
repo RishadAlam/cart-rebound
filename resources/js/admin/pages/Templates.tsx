@@ -62,16 +62,27 @@ export const Templates = () => {
 		setEditorKey((key) => key + 1);
 	};
 
-	// Select the default (or first) template once the list arrives.
+	// Keep a valid template selected: pick the default on first load, and
+	// re-select after the current one disappears (e.g. was deleted, so the
+	// refetched list no longer contains selectedId). Skips the "new" draft.
 	useEffect(() => {
-		if (templates && selectedId === null) {
-			const initial =
-				templates.find((template) => template.is_default) ??
-				templates[0];
+		if (!templates || selectedId === 'new') {
+			return;
+		}
 
-			if (initial) {
-				load(initial, initial.id);
-			}
+		const stillExists =
+			selectedId !== null &&
+			templates.some((template) => template.id === selectedId);
+
+		if (stillExists) {
+			return;
+		}
+
+		const initial =
+			templates.find((template) => template.is_default) ?? templates[0];
+
+		if (initial) {
+			load(initial, initial.id);
 		}
 	}, [templates, selectedId]);
 
@@ -270,16 +281,12 @@ export const Templates = () => {
 						</button>
 					))}
 					{isNew && (
-						<button
-							type="button"
-							className="cr-templates__item is-active"
-							onClick={startNew}
-						>
+						<div className="cr-templates__item is-active">
 							<span className="cr-templates__name">
 								{form.name !== '' ? form.name : 'New template'}
 							</span>
 							<span className="cr-tag is-muted">Draft</span>
-						</button>
+						</div>
 					)}
 				</aside>
 
@@ -437,7 +444,14 @@ export const Templates = () => {
 							type="button"
 							className="cr-btn is-danger"
 							onClick={onDelete}
-							disabled={remove.isPending}
+							disabled={
+								remove.isPending || (!isNew && form.is_default)
+							}
+							title={
+								!isNew && form.is_default
+									? 'Set another template as default before deleting this one'
+									: undefined
+							}
 						>
 							{isNew ? 'Discard' : 'Delete'}
 						</button>

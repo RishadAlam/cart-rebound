@@ -122,22 +122,28 @@ final class TemplateStoreTest extends TestCase {
 		$this->assertSame( $promo['id'], $store->default()['id'] );
 	}
 
-	public function test_delete_default_promotes_another(): void {
+	public function test_delete_refuses_the_default(): void {
 		$store  = $this->store();
 		$seeded = $store->all()[0];
-		$promo  = $store->create(
+
+		$this->assertFalse( $store->delete( $seeded['id'] ) );
+		$this->assertCount( 1, $store->all() );
+	}
+
+	public function test_delete_removes_a_non_default(): void {
+		$store = $this->store();
+		$promo = $store->create(
 			array(
 				'name'    => 'Promo',
 				'subject' => 'Hi',
 			)
 		);
 
-		$this->assertTrue( $store->delete( $seeded['id'] ) );
+		$this->assertTrue( $store->delete( $promo['id'] ) );
 
 		$remaining = $store->all();
 		$this->assertCount( 1, $remaining );
 		$this->assertTrue( $remaining[0]['is_default'] );
-		$this->assertSame( 'Promo', $remaining[0]['name'] );
 	}
 
 	public function test_update_changes_fields(): void {
