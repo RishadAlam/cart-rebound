@@ -7,6 +7,12 @@ import type { LogEntry } from '../types/api';
 
 const LEVELS = ['', 'info', 'success', 'warning', 'error'];
 const KNOWN_LEVELS = new Set(LEVELS.filter((value) => value !== ''));
+const EVENTS = [
+	{ value: '', label: 'All events' },
+	{ value: 'email_sent', label: 'Emails sent' },
+	{ value: 'abandoned', label: 'Abandoned' },
+	{ value: 'recovered', label: 'Recovered' },
+];
 const PER_PAGE = 30;
 const COLUMN_COUNT = 5;
 
@@ -58,9 +64,14 @@ const SkeletonRows = () => (
 
 export const Log = () => {
 	const [level, setLevel] = useState('');
+	const [event, setEvent] = useState('');
+	const [cart, setCart] = useState('');
 	const [page, setPage] = useState(1);
+	const cartId = Number.parseInt(cart, 10);
 	const { data, isLoading, isError } = useLogs({
 		level,
+		event,
+		cart_id: cartId > 0 ? cartId : 0,
 		page,
 		per_page: PER_PAGE,
 	});
@@ -91,8 +102,8 @@ export const Log = () => {
 					className="cr-select is-compact"
 					aria-label="Filter log by level"
 					value={level}
-					onChange={(event) => {
-						setLevel(event.target.value);
+					onChange={(changeEvent) => {
+						setLevel(changeEvent.target.value);
 						setPage(1);
 					}}
 				>
@@ -105,6 +116,36 @@ export const Log = () => {
 						</option>
 					))}
 				</select>
+				<span className="cr-toolbar__label">Event</span>
+				<select
+					className="cr-select is-compact"
+					aria-label="Filter log by event"
+					value={event}
+					onChange={(changeEvent) => {
+						setEvent(changeEvent.target.value);
+						setPage(1);
+					}}
+				>
+					{EVENTS.map((option) => (
+						<option key={option.value} value={option.value}>
+							{option.label}
+						</option>
+					))}
+				</select>
+				<span className="cr-toolbar__label">Cart</span>
+				<input
+					className="cr-input is-compact"
+					style={{ width: 96 }}
+					type="number"
+					min={1}
+					value={cart}
+					placeholder="Cart ID"
+					aria-label="Filter log by cart ID"
+					onChange={(changeEvent) => {
+						setCart(changeEvent.target.value);
+						setPage(1);
+					}}
+				/>
 				<span className="cr-toolbar__spacer" />
 				{data && (
 					<span className="cr-toolbar__label">

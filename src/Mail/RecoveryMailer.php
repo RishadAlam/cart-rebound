@@ -108,7 +108,8 @@ final class RecoveryMailer {
 			return;
 		}
 
-		$sent = $this->dispatch( $email, $row, $this->templates->default() );
+		$template = $this->templates->default();
+		$sent     = $this->dispatch( $email, $row, $template );
 
 		if ( $sent ) {
 			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
@@ -118,10 +119,11 @@ final class RecoveryMailer {
 			 *
 			 * @since 0.2.0
 			 *
-			 * @param int                  $cart_id The cart id.
-			 * @param array<string, mixed> $row     The cart row.
+			 * @param int                  $cart_id  The cart id.
+			 * @param array<string, mixed> $row      The cart row.
+			 * @param array<string, mixed> $template The template that was sent.
 			 */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row );
+			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
 		}
 	}
 
@@ -163,14 +165,15 @@ final class RecoveryMailer {
 			return false;
 		}
 
-		$template = '' !== $template_id ? $this->templates->get( $template_id ) : null;
-		$sent     = $this->dispatch( $email, $row, is_array( $template ) ? $template : $this->templates->default() );
+		$chosen   = '' !== $template_id ? $this->templates->get( $template_id ) : null;
+		$template = is_array( $chosen ) ? $chosen : $this->templates->default();
+		$sent     = $this->dispatch( $email, $row, $template );
 
 		if ( $sent ) {
 			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
 
 			/** This action is documented in src/Mail/RecoveryMailer.php */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row );
+			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
 		}
 
 		return $sent;

@@ -111,6 +111,8 @@ export interface LogList {
 
 export interface LogsQuery {
 	level: string;
+	event: string;
+	cart_id: number;
 	page: number;
 	per_page: number;
 }

@@ -73,6 +73,8 @@ final class LogRepository {
 	 *     Optional. Query arguments.
 	 *
 	 *     @type string $level    Level filter.
+	 *     @type string $event    Event-key filter (e.g. `email_sent`).
+	 *     @type int    $cart_id  Filter to a single cart.
 	 *     @type int    $page     1-based page number.
 	 *     @type int    $per_page Page size (max 100).
 	 * }
@@ -83,9 +85,8 @@ final class LogRepository {
 		$per_page = (int) ( $args['per_page'] ?? 0 );
 		$per_page = $per_page > 0 ? min( 100, $per_page ) : 20;
 		$offset   = ( $page - 1 ) * $per_page;
-		$level    = (string) ( $args['level'] ?? '' );
 
-		$rows = $this->filtered( $level )
+		$rows = $this->filtered( $args )
 			->order_by( 'id', 'DESC' )
 			->limit( $per_page )
 			->offset( $offset )
@@ -93,7 +94,7 @@ final class LogRepository {
 
 		return array(
 			'items'    => array_map( array( $this, 'present' ), $rows ),
-			'total'    => $this->filtered( $level )->count(),
+			'total'    => $this->filtered( $args )->count(),
 			'page'     => $page,
 			'per_page' => $per_page,
 		);
@@ -134,18 +135,32 @@ final class LogRepository {
 	}
 
 	/**
-	 * Build a level-filtered query.
+	 * Build a query constrained by the level, event, and cart filters.
 	 *
 	 * @since 0.2.0
 	 *
-	 * @param string $level Level filter (ignored unless a known level).
+	 * @param array<string, mixed> $args Query arguments (level, event, cart_id).
 	 * @return \CartRebound\Models\QueryBuilder
 	 */
-	private function filtered( string $level ) {
+	private function filtered( array $args ) {
 		$query = LogEntry::query();
+
+		$level = (string) ( $args['level'] ?? '' );
 
 		if ( in_array( $level, LogEntry::LEVELS, true ) ) {
 			$query->where( 'level', '=', $level );
+		}
+
+		$event = (string) ( $args['event'] ?? '' );
+
+		if ( '' !== $event ) {
+			$query->where( 'event', '=', $event );
+		}
+
+		$cart_id = (int) ( $args['cart_id'] ?? 0 );
+
+		if ( $cart_id > 0 ) {
+			$query->where( 'cart_id', '=', $cart_id );
 		}
 
 		return $query;

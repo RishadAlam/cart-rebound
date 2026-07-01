@@ -57,6 +57,8 @@ final class LogController extends Controller {
 			$this->logs->paginate(
 				array(
 					'level'    => sanitize_key( (string) $request->get_param( 'level' ) ),
+					'event'    => sanitize_key( (string) $request->get_param( 'event' ) ),
+					'cart_id'  => (int) $request->get_param( 'cart_id' ),
 					'page'     => (int) $request->get_param( 'page' ),
 					'per_page' => (int) $request->get_param( 'per_page' ),
 				)

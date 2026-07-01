@@ -105,23 +105,30 @@ final class LogSubscriber {
 	 *
 	 * @since 0.2.0
 	 *
-	 * @param int   $cart_id The cart id.
-	 * @param mixed $row     The cart row (for the recipient).
+	 * @param int   $cart_id  The cart id.
+	 * @param mixed $row      The cart row (for the recipient).
+	 * @param mixed $template The template that was sent.
 	 * @return void
 	 */
-	public function on_email_sent( $cart_id, $row = array() ): void {
-		$email = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
+	public function on_email_sent( $cart_id, $row = array(), $template = array() ): void {
+		$email     = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
+		$recipient = '' !== $email ? $email : __( 'the shopper', 'cart-rebound' );
+		$name      = is_array( $template ) ? (string) ( $template['name'] ?? '' ) : '';
 
-		$this->logs->log(
-			LogEntry::LEVEL_INFO,
-			'email_sent',
-			sprintf(
+		$message = '' !== $name
+			? sprintf(
+				/* translators: 1: template name, 2: recipient email. */
+				__( 'Recovery email “%1$s” sent to %2$s.', 'cart-rebound' ),
+				$name,
+				$recipient
+			)
+			: sprintf(
 				/* translators: %s: recipient email. */
 				__( 'Recovery email sent to %s.', 'cart-rebound' ),
-				'' !== $email ? $email : __( 'the shopper', 'cart-rebound' )
-			),
-			(int) $cart_id
-		);
+				$recipient
+			);
+
+		$this->logs->log( LogEntry::LEVEL_INFO, 'email_sent', $message, (int) $cart_id );
 	}
 
 	/**
