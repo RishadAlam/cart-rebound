@@ -9,6 +9,8 @@ import type {
 	CartsQuery,
 	Coupon,
 	EmailTemplate,
+	LogList,
+	LogsQuery,
 	Order,
 	PingResponse,
 	Settings,
@@ -150,6 +152,16 @@ export const bulkCarts = async (input: {
 	);
 
 	return data.affected;
+};
+
+export const fetchLogs = async (query: LogsQuery): Promise<LogList> => {
+	const { data } = await apiClient.get<LogList>('logs', { params: query });
+
+	return data;
+};
+
+export const clearLogs = async (): Promise<void> => {
+	await apiClient.delete('logs');
 };
 
 export const fetchSettings = async (): Promise<Settings> => {

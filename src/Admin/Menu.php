@@ -100,6 +100,7 @@ final class Menu {
 			self::SLUG                => array( __( 'Dashboard', 'cart-rebound' ), '/' ),
 			self::SLUG . '-carts'     => array( __( 'Carts', 'cart-rebound' ), '/carts' ),
 			self::SLUG . '-templates' => array( __( 'Templates', 'cart-rebound' ), '/templates' ),
+			self::SLUG . '-logs'      => array( __( 'Log', 'cart-rebound' ), '/logs' ),
 			self::SLUG . '-settings'  => array( __( 'Settings', 'cart-rebound' ), '/settings' ),
 		);
 

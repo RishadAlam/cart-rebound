@@ -93,6 +93,28 @@ export interface EmailTemplate {
 	is_default: boolean;
 }
 
+export interface LogEntry {
+	id: number;
+	created_at: string;
+	level: string;
+	event: string;
+	message: string;
+	cart_id: number;
+}
+
+export interface LogList {
+	items: LogEntry[];
+	total: number;
+	page: number;
+	per_page: number;
+}
+
+export interface LogsQuery {
+	level: string;
+	page: number;
+	per_page: number;
+}
+
 export type SortOrder = 'asc' | 'desc';
 
 export type BulkAction = 'delete' | 'status';

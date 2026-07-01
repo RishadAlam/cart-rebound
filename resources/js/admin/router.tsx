@@ -5,6 +5,7 @@ import { createHashRouter } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Carts } from './pages/Carts';
 import { Dashboard } from './pages/Dashboard';
+import { Log } from './pages/Log';
 import { Settings } from './pages/Settings';
 import { Templates } from './pages/Templates';
 
@@ -16,6 +17,7 @@ export const router = createHashRouter([
 			{ index: true, element: <Dashboard /> },
 			{ path: 'carts', element: <Carts /> },
 			{ path: 'templates', element: <Templates /> },
+			{ path: 'logs', element: <Log /> },
 			{ path: 'settings', element: <Settings /> },
 		],
 	},

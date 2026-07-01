@@ -4,11 +4,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
 	bulkCarts,
+	clearLogs,
 	createTemplate,
 	deleteCart,
 	deleteTemplate,
 	fetchCarts,
 	fetchCoupons,
+	fetchLogs,
 	fetchOrders,
 	fetchPing,
 	fetchSettings,
@@ -26,6 +28,8 @@ import type {
 	CartsQuery,
 	Coupon,
 	EmailTemplate,
+	LogList,
+	LogsQuery,
 	Order,
 	PingResponse,
 	Settings,
@@ -184,6 +188,23 @@ export const useSetDefaultTemplate = () => {
 		mutationFn: setDefaultTemplate,
 		onSuccess: () => {
 			invalidateTemplates(queryClient);
+		},
+	});
+};
+
+export const useLogs = (query: LogsQuery) =>
+	useQuery<LogList>({
+		queryKey: ['logs', query],
+		queryFn: () => fetchLogs(query),
+	});
+
+export const useClearLog = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: clearLogs,
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ['logs'] });
 		},
 	});
 };

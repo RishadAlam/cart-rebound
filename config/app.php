@@ -17,6 +17,7 @@ use CartRebound\Providers\AppServiceProvider;
 use CartRebound\Providers\AssetServiceProvider;
 use CartRebound\Providers\CaptureServiceProvider;
 use CartRebound\Providers\CartReboundServiceProvider;
+use CartRebound\Providers\LogServiceProvider;
 use CartRebound\Providers\RecoveryServiceProvider;
 use CartRebound\Providers\RouteServiceProvider;
 use CartRebound\Providers\SchedulerServiceProvider;
@@ -32,5 +33,6 @@ return array(
 		CaptureServiceProvider::class,
 		RecoveryServiceProvider::class,
 		SchedulerServiceProvider::class,
+		LogServiceProvider::class,
 	),
 );

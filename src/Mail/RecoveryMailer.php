@@ -112,6 +112,16 @@ final class RecoveryMailer {
 
 		if ( $sent ) {
 			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+
+			/**
+			 * Fires after a recovery email is sent (drives the activity log).
+			 *
+			 * @since 0.2.0
+			 *
+			 * @param int                  $cart_id The cart id.
+			 * @param array<string, mixed> $row     The cart row.
+			 */
+			do_action( 'cart_rebound_email_sent', $cart_id, $row );
 		}
 	}
 
@@ -158,6 +168,9 @@ final class RecoveryMailer {
 
 		if ( $sent ) {
 			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+
+			/** This action is documented in src/Mail/RecoveryMailer.php */
+			do_action( 'cart_rebound_email_sent', $cart_id, $row );
 		}
 
 		return $sent;

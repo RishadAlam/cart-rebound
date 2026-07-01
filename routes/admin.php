@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Http\Controllers\CartsController;
 use CartRebound\Http\Controllers\CouponsController;
+use CartRebound\Http\Controllers\LogController;
 use CartRebound\Http\Controllers\OrdersController;
 use CartRebound\Http\Controllers\SettingsController;
 use CartRebound\Http\Controllers\StatsController;
@@ -35,6 +36,8 @@ Route::post( 'carts/(?P<id>\d+)/send-email', array( CartsController::class, 'sen
 Route::get( 'orders', array( OrdersController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::get( 'coupons', array( CouponsController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::get( 'stats', array( StatsController::class, 'index' ) )->middleware( $cart_rebound_admin );
+Route::get( 'logs', array( LogController::class, 'index' ) )->middleware( $cart_rebound_admin );
+Route::delete( 'logs', array( LogController::class, 'clear' ) )->middleware( $cart_rebound_admin );
 Route::get( 'templates', array( TemplatesController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::post( 'templates', array( TemplatesController::class, 'store' ) )->middleware( $cart_rebound_admin );
 Route::post( 'templates/(?P<id>[\w-]+)', array( TemplatesController::class, 'update' ) )->middleware( $cart_rebound_admin );

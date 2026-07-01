@@ -915,6 +915,58 @@ textarea.cr-input {
 	color: var(--cr-muted);
 }
 
+/* ---- Log level badges + inline code ---- */
+.cr-logbadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 10px;
+	border-radius: 999px;
+	color: var(--cr-muted);
+	background: var(--cr-panel);
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.6;
+	text-transform: capitalize;
+}
+
+.cr-logbadge::before {
+	content: "";
+	width: 6px;
+	height: 6px;
+	border-radius: 999px;
+	background: currentcolor;
+}
+
+.cr-logbadge.is-info {
+	color: var(--cr-info);
+	background: var(--cr-info-soft);
+}
+
+.cr-logbadge.is-success {
+	color: var(--cr-success);
+	background: var(--cr-success-soft);
+}
+
+.cr-logbadge.is-warning {
+	color: var(--cr-warning);
+	background: var(--cr-warning-soft);
+}
+
+.cr-logbadge.is-error {
+	color: var(--cr-danger);
+	background: var(--cr-danger-soft);
+}
+
+.cr-code {
+	padding: 1px 6px;
+	border-radius: 5px;
+	background: var(--cr-panel);
+	color: var(--cr-ink-soft);
+	font-family: ui-monospace, sfmono-regular, menlo, monospace;
+	font-size: 12px;
+}
+
 /* ---- Templates (master / detail) ---- */
 .cr-templates {
 	display: grid;
