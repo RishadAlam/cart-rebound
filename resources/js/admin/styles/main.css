@@ -637,6 +637,32 @@ textarea.cr-input {
 	box-shadow: var(--cr-ring);
 }
 
+.cr-status-wrap {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* ---- Loading spinner ---- */
+.cr-spinner {
+	flex: none;
+	animation: cr-spin 0.7s linear infinite;
+}
+
+@keyframes cr-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.cr-toolbar__working {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--cr-muted);
+	font-size: 13px;
+}
+
 /* ---- Icon action buttons ---- */
 .cr-iconbtn {
 	display: inline-flex;

@@ -116,30 +116,60 @@ const TrashIcon = () => (
 
 const Dash = () => <span className="cr-muted">—</span>;
 
+const Spinner = ({ size = 15 }: { size?: number }) => (
+	<svg
+		className="cr-spinner"
+		width={size}
+		height={size}
+		viewBox="0 0 16 16"
+		aria-hidden="true"
+	>
+		<circle
+			cx="8"
+			cy="8"
+			r="6"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			opacity="0.25"
+		/>
+		<path
+			d="M8 2a6 6 0 0 1 6 6"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+		/>
+	</svg>
+);
+
 const StatusSelect = ({
 	cart,
-	disabled,
+	pending,
 	onChange,
 }: {
 	cart: Cart;
-	disabled: boolean;
+	pending: boolean;
 	onChange: (next: string) => void;
 }) => (
-	<select
-		className={`cr-status cr-status--${cart.status}`}
-		aria-label={`Status: ${cart.status}. Change it`}
-		value={cart.status}
-		disabled={disabled}
-		onChange={(event) => {
-			onChange(event.target.value);
-		}}
-	>
-		{CHANGE_STATUSES.map((value) => (
-			<option key={value} value={value}>
-				{value}
-			</option>
-		))}
-	</select>
+	<span className="cr-status-wrap">
+		<select
+			className={`cr-status cr-status--${cart.status}`}
+			aria-label={`Status: ${cart.status}. Change it`}
+			value={cart.status}
+			disabled={pending}
+			onChange={(event) => {
+				onChange(event.target.value);
+			}}
+		>
+			{CHANGE_STATUSES.map((value) => (
+				<option key={value} value={value}>
+					{value}
+				</option>
+			))}
+		</select>
+		{pending && <Spinner size={14} />}
+	</span>
 );
 
 const SortHeader = ({
@@ -263,7 +293,7 @@ const CartRow = ({
 			<td>
 				<StatusSelect
 					cart={cart}
-					disabled={status.isPending}
+					pending={status.isPending}
 					onChange={onStatusChange}
 				/>
 			</td>
@@ -298,7 +328,7 @@ const CartRow = ({
 						title={emailButtonTitle(cart)}
 						aria-label="Send recovery email now"
 					>
-						<MailIcon />
+						{email.isPending ? <Spinner /> : <MailIcon />}
 					</button>
 					<button
 						type="button"
@@ -308,7 +338,7 @@ const CartRow = ({
 						title="Delete cart"
 						aria-label="Delete this cart"
 					>
-						<TrashIcon />
+						{remove.isPending ? <Spinner /> : <TrashIcon />}
 					</button>
 				</div>
 			</td>
@@ -463,6 +493,7 @@ const RecoverDialog = ({
 						onClick={confirm}
 						disabled={!canSubmit}
 					>
+						{mark.isPending && <Spinner size={14} />}
 						{mark.isPending ? 'Linking…' : 'Mark recovered'}
 					</button>
 				</div>
@@ -508,7 +539,7 @@ export const Carts = () => {
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
 	const [recoverCart, setRecoverCart] = useState<Cart | null>(null);
 
-	const { data, isLoading, isError } = useCarts({
+	const { data, isLoading, isFetching, isError } = useCarts({
 		status,
 		email: '',
 		page,
@@ -651,6 +682,12 @@ export const Carts = () => {
 					))}
 				</select>
 				<span className="cr-toolbar__spacer" />
+				{isFetching && !isLoading && (
+					<span className="cr-toolbar__working">
+						<Spinner size={14} />
+						Updating…
+					</span>
+				)}
 				{data && (
 					<span className="cr-toolbar__label">
 						{data.total} cart{data.total === 1 ? '' : 's'}
@@ -673,6 +710,7 @@ export const Carts = () => {
 					<span className="cr-bulkbar__count">
 						{selected.size} selected
 					</span>
+					{bulk.isPending && <Spinner size={14} />}
 					<span className="cr-bulkbar__spacer" />
 					<select
 						className="cr-select is-compact"
