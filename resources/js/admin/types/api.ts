@@ -82,6 +82,17 @@ export interface Coupon {
 	type: string;
 }
 
+export interface EmailTemplate {
+	id: string;
+	name: string;
+	subject: string;
+	body: string;
+	from_name: string;
+	from_email: string;
+	coupon: string;
+	is_default: boolean;
+}
+
 export type SortOrder = 'asc' | 'desc';
 
 export type BulkAction = 'delete' | 'status';

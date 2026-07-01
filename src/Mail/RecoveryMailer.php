@@ -49,16 +49,26 @@ final class RecoveryMailer {
 	private $links;
 
 	/**
+	 * Email template store.
+	 *
+	 * @since 0.2.0
+	 * @var TemplateStore
+	 */
+	private $templates;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param Settings     $settings Settings store.
-	 * @param RecoveryLink $links    Recovery link builder.
+	 * @param Settings      $settings  Settings store.
+	 * @param RecoveryLink  $links     Recovery link builder.
+	 * @param TemplateStore $templates Email template store.
 	 */
-	public function __construct( Settings $settings, RecoveryLink $links ) {
-		$this->settings = $settings;
-		$this->links    = $links;
+	public function __construct( Settings $settings, RecoveryLink $links, TemplateStore $templates ) {
+		$this->settings  = $settings;
+		$this->links     = $links;
+		$this->templates = $templates;
 	}
 
 	/**
@@ -98,7 +108,7 @@ final class RecoveryMailer {
 			return;
 		}
 
-		$sent = $this->dispatch( $email, $row );
+		$sent = $this->dispatch( $email, $row, $this->templates->default() );
 
 		if ( $sent ) {
 			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
@@ -115,10 +125,11 @@ final class RecoveryMailer {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param int $cart_id Cart id.
+	 * @param int    $cart_id     Cart id.
+	 * @param string $template_id Optional template id to send; defaults to the default template.
 	 * @return bool True when the email was handed to wp_mail successfully.
 	 */
-	public function send_now( int $cart_id ): bool {
+	public function send_now( int $cart_id, string $template_id = '' ): bool {
 		$row = CartSession::find( $cart_id );
 
 		if ( ! is_array( $row ) ) {
@@ -142,7 +153,8 @@ final class RecoveryMailer {
 			return false;
 		}
 
-		$sent = $this->dispatch( $email, $row );
+		$template = '' !== $template_id ? $this->templates->get( $template_id ) : null;
+		$sent     = $this->dispatch( $email, $row, is_array( $template ) ? $template : $this->templates->default() );
 
 		if ( $sent ) {
 			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
@@ -156,18 +168,19 @@ final class RecoveryMailer {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param string               $email Recipient.
-	 * @param array<string, mixed> $row   Cart row.
+	 * @param string               $email    Recipient.
+	 * @param array<string, mixed> $row      Cart row.
+	 * @param array<string, mixed> $template The email template to render.
 	 * @return bool
 	 */
-	private function dispatch( string $email, array $row ): bool {
+	private function dispatch( string $email, array $row, array $template ): bool {
 		$subject = str_replace(
 			array( '{first_name}', '{coupon_code}' ),
-			array( (string) ( $row['first_name'] ?? '' ), (string) $this->settings->get( 'email_coupon' ) ),
-			(string) $this->settings->get( 'email_subject' )
+			array( (string) ( $row['first_name'] ?? '' ), (string) ( $template['coupon'] ?? '' ) ),
+			(string) ( $template['subject'] ?? '' )
 		);
-		$body    = $this->build_body( $row );
-		$headers = $this->headers();
+		$body    = $this->build_body( $row, $template );
+		$headers = $this->headers( $template );
 
 		add_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
 		$sent = wp_mail( $email, $subject, $body, $headers );
@@ -177,23 +190,24 @@ final class RecoveryMailer {
 	}
 
 	/**
-	 * Build the HTML body from the configured template + tokens.
+	 * Build the HTML body from the given template + tokens.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row Cart row.
+	 * @param array<string, mixed> $row      Cart row.
+	 * @param array<string, mixed> $template The email template to render.
 	 * @return string
 	 */
-	private function build_body( array $row ): string {
+	private function build_body( array $row, array $template ): string {
 		$recovery_url  = $this->links->url( (string) ( $row['recovery_token'] ?? '' ) );
 		$first_name    = (string) ( $row['first_name'] ?? '' );
-		$coupon_code   = (string) $this->settings->get( 'email_coupon' );
+		$coupon_code   = (string) ( $template['coupon'] ?? '' );
 		$products_html = $this->products_html( $row );
 
 		$content = str_replace(
 			array( '{first_name}', '{products}', '{recovery_url}', '{coupon_code}' ),
 			array( esc_html( $first_name ), $products_html, esc_url( $recovery_url ), esc_html( $coupon_code ) ),
-			(string) $this->settings->get( 'email_body' )
+			(string) ( $template['body'] ?? '' )
 		);
 
 		$template = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/recovery.php' : '';
@@ -246,15 +260,16 @@ final class RecoveryMailer {
 	}
 
 	/**
-	 * Build the From header from settings, if configured.
+	 * Build the From header from the template, if configured.
 	 *
 	 * @since 0.1.0
 	 *
+	 * @param array<string, mixed> $template The email template.
 	 * @return array<int, string>
 	 */
-	private function headers(): array {
-		$name = (string) $this->settings->get( 'email_from_name' );
-		$from = (string) $this->settings->get( 'email_from_email' );
+	private function headers( array $template ): array {
+		$name = (string) ( $template['from_name'] ?? '' );
+		$from = (string) ( $template['from_email'] ?? '' );
 
 		if ( '' === $from || ! is_email( $from ) ) {
 			return array();

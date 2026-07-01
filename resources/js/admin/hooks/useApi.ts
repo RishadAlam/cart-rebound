@@ -4,22 +4,28 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
 	bulkCarts,
+	createTemplate,
 	deleteCart,
+	deleteTemplate,
 	fetchCarts,
 	fetchCoupons,
 	fetchOrders,
 	fetchPing,
 	fetchSettings,
 	fetchStats,
+	fetchTemplates,
 	markCartRecovered,
 	sendCartEmail,
+	setDefaultTemplate,
 	updateCartStatus,
 	updateSettings,
+	updateTemplate,
 } from '../api/endpoints';
 import type {
 	CartList,
 	CartsQuery,
 	Coupon,
+	EmailTemplate,
 	Order,
 	PingResponse,
 	Settings,
@@ -122,6 +128,62 @@ export const useBulkCarts = () => {
 		mutationFn: bulkCarts,
 		onSuccess: () => {
 			invalidateCarts(queryClient);
+		},
+	});
+};
+
+export const useTemplates = () =>
+	useQuery<EmailTemplate[]>({
+		queryKey: ['templates'],
+		queryFn: fetchTemplates,
+	});
+
+const invalidateTemplates = (
+	queryClient: ReturnType<typeof useQueryClient>
+) => {
+	void queryClient.invalidateQueries({ queryKey: ['templates'] });
+};
+
+export const useCreateTemplate = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: createTemplate,
+		onSuccess: () => {
+			invalidateTemplates(queryClient);
+		},
+	});
+};
+
+export const useUpdateTemplate = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: updateTemplate,
+		onSuccess: () => {
+			invalidateTemplates(queryClient);
+		},
+	});
+};
+
+export const useDeleteTemplate = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: deleteTemplate,
+		onSuccess: () => {
+			invalidateTemplates(queryClient);
+		},
+	});
+};
+
+export const useSetDefaultTemplate = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: setDefaultTemplate,
+		onSuccess: () => {
+			invalidateTemplates(queryClient);
 		},
 	});
 };

@@ -20,6 +20,7 @@ use CartRebound\Http\Controllers\CouponsController;
 use CartRebound\Http\Controllers\OrdersController;
 use CartRebound\Http\Controllers\SettingsController;
 use CartRebound\Http\Controllers\StatsController;
+use CartRebound\Http\Controllers\TemplatesController;
 use CartRebound\Support\Facades\Route;
 
 $cart_rebound_admin = array( 'nonce', 'can:manage_woocommerce' );
@@ -34,5 +35,10 @@ Route::post( 'carts/(?P<id>\d+)/send-email', array( CartsController::class, 'sen
 Route::get( 'orders', array( OrdersController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::get( 'coupons', array( CouponsController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::get( 'stats', array( StatsController::class, 'index' ) )->middleware( $cart_rebound_admin );
+Route::get( 'templates', array( TemplatesController::class, 'index' ) )->middleware( $cart_rebound_admin );
+Route::post( 'templates', array( TemplatesController::class, 'store' ) )->middleware( $cart_rebound_admin );
+Route::post( 'templates/(?P<id>[\w-]+)', array( TemplatesController::class, 'update' ) )->middleware( $cart_rebound_admin );
+Route::delete( 'templates/(?P<id>[\w-]+)', array( TemplatesController::class, 'destroy' ) )->middleware( $cart_rebound_admin );
+Route::post( 'templates/(?P<id>[\w-]+)/default', array( TemplatesController::class, 'set_default' ) )->middleware( $cart_rebound_admin );
 Route::get( 'settings', array( SettingsController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::post( 'settings', array( SettingsController::class, 'update' ) )->middleware( $cart_rebound_admin );

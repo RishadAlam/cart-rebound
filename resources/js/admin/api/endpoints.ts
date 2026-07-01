@@ -8,11 +8,14 @@ import type {
 	CartList,
 	CartsQuery,
 	Coupon,
+	EmailTemplate,
 	Order,
 	PingResponse,
 	Settings,
 	Stats,
 } from '../types/api';
+
+export type TemplateInput = Omit<EmailTemplate, 'id'>;
 
 export const fetchPing = async (): Promise<PingResponse> => {
 	const { data } = await apiClient.get<PingResponse>('ping');
@@ -84,17 +87,56 @@ export const updateCartStatus = async (input: {
 	}
 };
 
-export const sendCartEmail = async (id: number): Promise<void> => {
+export const sendCartEmail = async (input: {
+	id: number;
+	template_id?: string;
+}): Promise<void> => {
 	const { data } = await apiClient.post<{ sent: boolean }>(
-		`carts/${id}/send-email`,
-		{}
+		`carts/${input.id}/send-email`,
+		input.template_id ? { template_id: input.template_id } : {}
 	);
 
 	if (!data.sent) {
 		throw new Error(
-			'Email not sent — the cart needs a valid email and at least one item.'
+			'Email not sent — the cart needs a valid email, at least one item, and no linked order.'
 		);
 	}
+};
+
+export const fetchTemplates = async (): Promise<EmailTemplate[]> => {
+	const { data } = await apiClient.get<{ items: EmailTemplate[] }>(
+		'templates'
+	);
+
+	return data.items;
+};
+
+export const createTemplate = async (
+	input: TemplateInput
+): Promise<EmailTemplate> => {
+	const { data } = await apiClient.post<EmailTemplate>('templates', input);
+
+	return data;
+};
+
+export const updateTemplate = async (
+	input: EmailTemplate
+): Promise<EmailTemplate> => {
+	const { id, ...rest } = input;
+	const { data } = await apiClient.post<EmailTemplate>(
+		`templates/${id}`,
+		rest
+	);
+
+	return data;
+};
+
+export const deleteTemplate = async (id: string): Promise<void> => {
+	await apiClient.delete(`templates/${id}`);
+};
+
+export const setDefaultTemplate = async (id: string): Promise<void> => {
+	await apiClient.post(`templates/${id}/default`, {});
 };
 
 export const bulkCarts = async (input: {

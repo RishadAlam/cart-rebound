@@ -10,7 +10,7 @@ import {
 	type FormEvent,
 	type ReactNode,
 } from 'react';
-import { useCoupons, useSettings, useUpdateSettings } from '../hooks/useApi';
+import { useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
 type NumberKey =
@@ -18,12 +18,6 @@ type NumberKey =
 	| 'scan_interval'
 	| 'cleanup_days'
 	| 'email_delay_minutes';
-
-type TextKey =
-	| 'email_subject'
-	| 'email_body'
-	| 'email_from_name'
-	| 'email_from_email';
 
 type ToggleKey = 'guest_tracking' | 'recovery_email_enabled';
 
@@ -49,7 +43,6 @@ const Field = ({
 
 export const Settings = () => {
 	const { data, isLoading } = useSettings();
-	const { data: coupons } = useCoupons();
 	const update = useUpdateSettings();
 	const [form, setForm] = useState<SettingsData | null>(null);
 
@@ -92,12 +85,6 @@ export const Settings = () => {
 			const parsed = Number.parseInt(event.target.value, 10);
 
 			setField(key, Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
-		};
-
-	const onText =
-		(key: TextKey) =>
-		(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-			setField(key, event.target.value);
 		};
 
 	const onToggle =
@@ -236,83 +223,12 @@ export const Settings = () => {
 					</Field>
 				</div>
 
-				<Field id="cr-subject" label="Email subject">
-					<input
-						id="cr-subject"
-						className="cr-input"
-						type="text"
-						value={form.email_subject}
-						onChange={onText('email_subject')}
-					/>
-				</Field>
-
-				<Field
-					id="cr-body"
-					label="Email body"
-					hint="Tokens: {first_name}, {products}, {recovery_url}, {coupon_code}"
-				>
-					<textarea
-						id="cr-body"
-						className="cr-input"
-						rows={4}
-						value={form.email_body}
-						onChange={onText('email_body')}
-					/>
-				</Field>
-
-				<Field
-					id="cr-coupon"
-					label="Coupon"
-					hint="Inserted wherever the email uses the {coupon_code} token."
-				>
-					<select
-						id="cr-coupon"
-						className="cr-select"
-						value={form.email_coupon}
-						onChange={(event) => {
-							setField('email_coupon', event.target.value);
-						}}
-					>
-						<option value="">No coupon</option>
-						{(coupons ?? []).map((coupon) => (
-							<option key={coupon.code} value={coupon.code}>
-								{coupon.code}
-								{coupon.description !== ''
-									? ` — ${coupon.description}`
-									: ''}
-							</option>
-						))}
-						{form.email_coupon !== '' &&
-							!(coupons ?? []).some(
-								(coupon) => coupon.code === form.email_coupon
-							) && (
-								<option value={form.email_coupon}>
-									{form.email_coupon}
-								</option>
-							)}
-					</select>
-				</Field>
-
-				<div className="cr-field__grid">
-					<Field id="cr-from-name" label="From name">
-						<input
-							id="cr-from-name"
-							className="cr-input"
-							type="text"
-							value={form.email_from_name}
-							onChange={onText('email_from_name')}
-						/>
-					</Field>
-					<Field id="cr-from-email" label="From email">
-						<input
-							id="cr-from-email"
-							className="cr-input"
-							type="email"
-							value={form.email_from_email}
-							onChange={onText('email_from_email')}
-						/>
-					</Field>
-				</div>
+				<p className="cr-section__desc" style={{ marginTop: 4 }}>
+					Email content — subject, rich-text body, sender, and coupon
+					— is managed per template on the{' '}
+					<a href="#/templates">Templates</a> tab. Automatic recovery
+					emails use the template marked default.
+				</p>
 			</div>
 
 			<div className="cr-savebar">

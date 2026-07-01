@@ -12,6 +12,7 @@ interface Tab {
 const tabs: Tab[] = [
 	{ to: '/', label: 'Dashboard', end: true },
 	{ to: '/carts', label: 'Carts', end: false },
+	{ to: '/templates', label: 'Templates', end: false },
 	{ to: '/settings', label: 'Settings', end: false },
 ];
 

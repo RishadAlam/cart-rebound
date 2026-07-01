@@ -97,9 +97,10 @@ final class Menu {
 		 * from "Cart Rebound" to "Dashboard".
 		 */
 		$submenus = array(
-			self::SLUG               => array( __( 'Dashboard', 'cart-rebound' ), '/' ),
-			self::SLUG . '-carts'    => array( __( 'Carts', 'cart-rebound' ), '/carts' ),
-			self::SLUG . '-settings' => array( __( 'Settings', 'cart-rebound' ), '/settings' ),
+			self::SLUG                => array( __( 'Dashboard', 'cart-rebound' ), '/' ),
+			self::SLUG . '-carts'     => array( __( 'Carts', 'cart-rebound' ), '/carts' ),
+			self::SLUG . '-templates' => array( __( 'Templates', 'cart-rebound' ), '/templates' ),
+			self::SLUG . '-settings'  => array( __( 'Settings', 'cart-rebound' ), '/settings' ),
 		);
 
 		foreach ( $submenus as $slug => $meta ) {

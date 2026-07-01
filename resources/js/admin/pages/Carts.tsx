@@ -253,14 +253,20 @@ const CartRow = ({
 	};
 
 	const onSend = () => {
-		email.mutate(cart.id, {
-			onSuccess: () => {
-				notify({ type: 'success', message: 'Recovery email sent.' });
-			},
-			onError: (error: unknown) => {
-				notify({ type: 'error', message: messageOf(error) });
-			},
-		});
+		email.mutate(
+			{ id: cart.id },
+			{
+				onSuccess: () => {
+					notify({
+						type: 'success',
+						message: 'Recovery email sent.',
+					});
+				},
+				onError: (error: unknown) => {
+					notify({ type: 'error', message: messageOf(error) });
+				},
+			}
+		);
 	};
 
 	const onDelete = () => {

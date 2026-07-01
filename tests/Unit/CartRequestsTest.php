@@ -12,6 +12,7 @@ namespace CartRebound\Tests\Unit;
 use Brain\Monkey\Functions;
 use CartRebound\Http\Requests\BulkActionRequest;
 use CartRebound\Http\Requests\CaptureEmailRequest;
+use CartRebound\Http\Requests\EmailTemplateRequest;
 use CartRebound\Http\Requests\MarkRecoveredRequest;
 use CartRebound\Http\Requests\UpdateStatusRequest;
 use CartRebound\Tests\TestCase;
@@ -21,6 +22,7 @@ use WP_REST_Request;
 /**
  * @covers \CartRebound\Http\Requests\BulkActionRequest
  * @covers \CartRebound\Http\Requests\CaptureEmailRequest
+ * @covers \CartRebound\Http\Requests\EmailTemplateRequest
  * @covers \CartRebound\Http\Requests\MarkRecoveredRequest
  * @covers \CartRebound\Http\Requests\UpdateStatusRequest
  */
@@ -111,6 +113,27 @@ final class CartRequestsTest extends TestCase {
 		$result = ( new BulkActionRequest( $this->request( array( 'action' => 'delete' ) ) ) )->validate();
 
 		$this->assertSame( array( 'action' => 'delete' ), $result );
+	}
+
+	public function test_email_template_requires_name_and_subject(): void {
+		$result = ( new EmailTemplateRequest( $this->request( array( 'name' => 'Promo' ) ) ) )->validate();
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 422, $result->get_error_data()['status'] );
+	}
+
+	public function test_email_template_accepts_valid_payload(): void {
+		$result = ( new EmailTemplateRequest(
+			$this->request(
+				array(
+					'name'    => 'Promo',
+					'subject' => 'Your cart is waiting',
+				)
+			)
+		) )->validate();
+
+		$this->assertSame( 'Promo', $result['name'] );
+		$this->assertSame( 'Your cart is waiting', $result['subject'] );
 	}
 
 	public function test_capture_email_rejects_invalid_email(): void {

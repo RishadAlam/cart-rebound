@@ -213,7 +213,8 @@ final class CartsController extends Controller {
 	 * @return WP_REST_Response
 	 */
 	public function send_email( WP_REST_Request $request ): WP_REST_Response {
-		$sent = $this->mailer->send_now( (int) $request->get_param( 'id' ) );
+		$template_id = sanitize_text_field( (string) $request->get_param( 'template_id' ) );
+		$sent        = $this->mailer->send_now( (int) $request->get_param( 'id' ), $template_id );
 
 		return $this->respond( array( 'sent' => $sent ) );
 	}
