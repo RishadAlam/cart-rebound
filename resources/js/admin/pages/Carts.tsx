@@ -14,9 +14,10 @@ import {
 	useMarkRecovered,
 	useOrders,
 	useSendEmail,
+	useTemplates,
 	useUpdateStatus,
 } from '../hooks/useApi';
-import type { Cart, Order, SortOrder } from '../types/api';
+import type { Cart, EmailTemplate, Order, SortOrder } from '../types/api';
 
 const FILTER_STATUSES = [
 	'',
@@ -223,17 +224,18 @@ const CartRow = ({
 	selected,
 	onToggle,
 	onRecover,
+	onSendEmail,
 	notify,
 }: {
 	cart: Cart;
 	selected: boolean;
 	onToggle: (id: number, checked: boolean) => void;
 	onRecover: (cart: Cart) => void;
+	onSendEmail: (cart: Cart) => void;
 	notify: (feedback: Feedback) => void;
 }) => {
 	const remove = useDeleteCart();
 	const status = useUpdateStatus();
-	const email = useSendEmail();
 
 	const onStatusChange = (next: string) => {
 		status.mutate(
@@ -243,23 +245,6 @@ const CartRow = ({
 					notify({
 						type: 'success',
 						message: `Status set to ${next}.`,
-					});
-				},
-				onError: (error: unknown) => {
-					notify({ type: 'error', message: messageOf(error) });
-				},
-			}
-		);
-	};
-
-	const onSend = () => {
-		email.mutate(
-			{ id: cart.id },
-			{
-				onSuccess: () => {
-					notify({
-						type: 'success',
-						message: 'Recovery email sent.',
 					});
 				},
 				onError: (error: unknown) => {
@@ -325,16 +310,14 @@ const CartRow = ({
 					<button
 						type="button"
 						className="cr-iconbtn"
-						onClick={onSend}
-						disabled={
-							email.isPending ||
-							cart.email === '' ||
-							cart.order_id > 0
-						}
+						onClick={() => {
+							onSendEmail(cart);
+						}}
+						disabled={cart.email === '' || cart.order_id > 0}
 						title={emailButtonTitle(cart)}
-						aria-label="Send recovery email now"
+						aria-label="Send recovery email"
 					>
-						{email.isPending ? <Spinner /> : <MailIcon />}
+						<MailIcon />
 					</button>
 					<button
 						type="button"
@@ -508,6 +491,142 @@ const RecoverDialog = ({
 	);
 };
 
+const SendDialog = ({
+	cart,
+	templates,
+	onClose,
+	notify,
+}: {
+	cart: Cart | null;
+	templates: EmailTemplate[];
+	onClose: () => void;
+	notify: (feedback: Feedback) => void;
+}) => {
+	const ref = useRef<HTMLDialogElement>(null);
+	const [templateId, setTemplateId] = useState('');
+	const send = useSendEmail();
+
+	useEffect(() => {
+		const el = ref.current;
+
+		if (!el) {
+			return;
+		}
+
+		if (cart) {
+			const initial =
+				templates.find((template) => template.is_default) ??
+				templates[0];
+			setTemplateId(initial ? initial.id : '');
+
+			if (!el.open) {
+				el.showModal();
+			}
+		} else if (el.open) {
+			el.close();
+		}
+		// Only re-run when the target cart changes, not on template refetch.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [cart]);
+
+	const confirm = () => {
+		if (!cart) {
+			return;
+		}
+
+		send.mutate(
+			templateId !== ''
+				? { id: cart.id, template_id: templateId }
+				: { id: cart.id },
+			{
+				onSuccess: () => {
+					notify({
+						type: 'success',
+						message: 'Recovery email sent.',
+					});
+					onClose();
+				},
+				onError: (error: unknown) => {
+					notify({ type: 'error', message: messageOf(error) });
+				},
+			}
+		);
+	};
+
+	return (
+		// Backdrop click-to-close is a mouse nicety; Esc is handled natively.
+		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
+		<dialog
+			ref={ref}
+			className="cr-dialog"
+			aria-labelledby="cr-send-title"
+			onClose={onClose}
+			onClick={(event) => {
+				if (event.target === ref.current) {
+					onClose();
+				}
+			}}
+		>
+			<div className="cr-dialog__body">
+				<h2 id="cr-send-title" className="cr-dialog__title">
+					Send recovery email
+				</h2>
+				<p className="cr-dialog__desc">
+					Email{' '}
+					{cart && cart.email !== '' ? cart.email : 'this shopper'}{' '}
+					now, using the template you choose.
+				</p>
+
+				<div className="cr-field">
+					<label
+						htmlFor="cr-send-template"
+						className="cr-field__label"
+					>
+						Template
+					</label>
+					<select
+						id="cr-send-template"
+						className="cr-select"
+						value={templateId}
+						onChange={(event) => {
+							setTemplateId(event.target.value);
+						}}
+					>
+						{templates.map((template) => (
+							<option key={template.id} value={template.id}>
+								{template.name !== ''
+									? template.name
+									: 'Untitled'}
+								{template.is_default ? ' (default)' : ''}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<div className="cr-dialog__actions">
+					<button
+						type="button"
+						className="cr-btn is-ghost"
+						onClick={onClose}
+						disabled={send.isPending}
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						className="cr-btn is-primary"
+						onClick={confirm}
+						disabled={send.isPending}
+					>
+						{send.isPending && <Spinner size={14} />}
+						{send.isPending ? 'Sending…' : 'Send email'}
+					</button>
+				</div>
+			</div>
+		</dialog>
+	);
+};
+
 const skeletonWidth = (col: number): number | string => {
 	if (col === 0) {
 		return 16;
@@ -544,6 +663,7 @@ export const Carts = () => {
 	const [bulkStatus, setBulkStatus] = useState('');
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
 	const [recoverCart, setRecoverCart] = useState<Cart | null>(null);
+	const [sendCart, setSendCart] = useState<Cart | null>(null);
 
 	const { data, isLoading, isFetching, isError } = useCarts({
 		status,
@@ -554,6 +674,7 @@ export const Carts = () => {
 		order: sort.order,
 	});
 	const { data: orders } = useOrders();
+	const { data: templates } = useTemplates();
 	const bulk = useBulkCarts();
 
 	const items = useMemo(() => data?.items ?? [], [data]);
@@ -853,6 +974,7 @@ export const Carts = () => {
 												selected={selected.has(cart.id)}
 												onToggle={toggleOne}
 												onRecover={setRecoverCart}
+												onSendEmail={setSendCart}
 												notify={setFeedback}
 											/>
 										))
@@ -900,6 +1022,15 @@ export const Carts = () => {
 				orders={orders ?? []}
 				onClose={() => {
 					setRecoverCart(null);
+				}}
+				notify={setFeedback}
+			/>
+
+			<SendDialog
+				cart={sendCart}
+				templates={templates ?? []}
+				onClose={() => {
+					setSendCart(null);
 				}}
 				notify={setFeedback}
 			/>
