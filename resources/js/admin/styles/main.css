@@ -1325,6 +1325,143 @@ textarea.cr-input {
 	color: var(--cr-muted);
 }
 
+/* ---- Combobox (searchable select) ---- */
+.cr-combo {
+	position: relative;
+	display: inline-block;
+	width: 100%;
+}
+
+.cr-combo.is-compact {
+	width: auto;
+}
+
+.cr-combo__trigger {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--cr-border-strong);
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-surface);
+	color: var(--cr-ink);
+	font-size: 14px;
+	line-height: 1.4;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		border-color 140ms var(--cr-ease),
+		box-shadow 140ms var(--cr-ease);
+}
+
+.cr-combo.is-compact .cr-combo__trigger {
+	padding: 6px 10px;
+	font-size: 13px;
+}
+
+.cr-combo__trigger:hover:not(:disabled) {
+	border-color: var(--cr-accent);
+}
+
+.cr-combo__trigger:focus-visible {
+	outline: none;
+	border-color: var(--cr-accent);
+	box-shadow: var(--cr-ring);
+}
+
+.cr-combo__trigger:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.cr-combo__value {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cr-combo__value.is-placeholder {
+	color: var(--cr-muted);
+}
+
+.cr-combo__chevron {
+	flex: none;
+	color: var(--cr-muted);
+}
+
+.cr-combo__pop {
+	position: fixed;
+	z-index: 60;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--cr-surface);
+	border: 1px solid var(--cr-border-strong);
+	border-radius: var(--cr-radius-sm);
+	box-shadow: 0 10px 30px oklch(0 0 0 / 0.16);
+}
+
+.cr-combo__search {
+	flex: none;
+	margin: 6px;
+	padding: 7px 10px;
+	border: 1px solid var(--cr-border-strong);
+	border-radius: 6px;
+	background: var(--cr-surface);
+	color: var(--cr-ink);
+	font-size: 13px;
+}
+
+.cr-combo__search:focus {
+	outline: none;
+	border-color: var(--cr-accent);
+	box-shadow: var(--cr-ring);
+}
+
+.cr-combo__list {
+	flex: 1;
+	padding: 4px;
+	overflow-y: auto;
+}
+
+.cr-combo__option {
+	display: block;
+	width: 100%;
+	padding: 7px 10px;
+	border: 0;
+	border-radius: 6px;
+	background: none;
+	color: var(--cr-ink);
+	font-size: 13px;
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+.cr-combo__option.is-active {
+	background: var(--cr-panel);
+}
+
+.cr-combo__option.is-selected {
+	color: var(--cr-accent);
+	font-weight: 600;
+}
+
+.cr-combo__option.is-selected.is-active {
+	background: var(--cr-accent-soft);
+}
+
+.cr-combo__empty {
+	padding: 12px;
+	color: var(--cr-muted);
+	font-size: 13px;
+	text-align: center;
+}
+
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
 	.cr-skeleton {

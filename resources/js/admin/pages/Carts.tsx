@@ -7,6 +7,7 @@
  * scroll container instead of being clipped by it.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Combobox } from '../components/Combobox';
 import {
 	useBulkCarts,
 	useCarts,
@@ -424,27 +425,20 @@ const RecoverDialog = ({
 				</p>
 
 				<div className="cr-field">
-					<label
-						htmlFor="cr-recover-order"
-						className="cr-field__label"
-					>
-						Recent order
-					</label>
-					<select
-						id="cr-recover-order"
-						className="cr-select"
+					<span className="cr-field__label">Recent order</span>
+					<Combobox
+						ariaLabel="Recent order"
+						placeholder="Select an order…"
 						value={picked}
-						onChange={(event) => {
-							setPicked(event.target.value);
-						}}
-					>
-						<option value="">Select an order…</option>
-						{orders.map((order) => (
-							<option key={order.id} value={order.id}>
-								{orderLabel(order)}
-							</option>
-						))}
-					</select>
+						onChange={setPicked}
+						options={[
+							{ value: '', label: 'Select an order…' },
+							...orders.map((order) => ({
+								value: String(order.id),
+								label: orderLabel(order),
+							})),
+						]}
+					/>
 				</div>
 
 				<div className="cr-field">
@@ -578,29 +572,20 @@ const SendDialog = ({
 				</p>
 
 				<div className="cr-field">
-					<label
-						htmlFor="cr-send-template"
-						className="cr-field__label"
-					>
-						Template
-					</label>
-					<select
-						id="cr-send-template"
-						className="cr-select"
+					<span className="cr-field__label">Template</span>
+					<Combobox
+						ariaLabel="Template"
 						value={templateId}
-						onChange={(event) => {
-							setTemplateId(event.target.value);
-						}}
-					>
-						{templates.map((template) => (
-							<option key={template.id} value={template.id}>
-								{template.name !== ''
+						onChange={setTemplateId}
+						options={templates.map((template) => ({
+							value: template.id,
+							label: `${
+								template.name !== ''
 									? template.name
-									: 'Untitled'}
-								{template.is_default ? ' (default)' : ''}
-							</option>
-						))}
-					</select>
+									: 'Untitled'
+							}${template.is_default ? ' (default)' : ''}`,
+						}))}
+					/>
 				</div>
 
 				<div className="cr-dialog__actions">
@@ -790,24 +775,19 @@ export const Carts = () => {
 		<div>
 			<div className="cr-toolbar">
 				<span className="cr-toolbar__label">Status</span>
-				<select
-					className="cr-select is-compact"
-					aria-label="Filter carts by status"
+				<Combobox
+					compact
+					ariaLabel="Filter carts by status"
 					value={status}
-					onChange={(event) => {
-						setStatus(event.target.value);
+					options={FILTER_STATUSES.map((option) => ({
+						value: option,
+						label: option === '' ? 'All statuses' : option,
+					}))}
+					onChange={(next) => {
+						setStatus(next);
 						setPage(1);
 					}}
-				>
-					{FILTER_STATUSES.map((value) => (
-						<option
-							key={value === '' ? 'all' : value}
-							value={value}
-						>
-							{value === '' ? 'All statuses' : value}
-						</option>
-					))}
-				</select>
+				/>
 				<span className="cr-toolbar__spacer" />
 				{isFetching && !isLoading && (
 					<span className="cr-toolbar__working">
@@ -839,28 +819,27 @@ export const Carts = () => {
 					</span>
 					{bulk.isPending && <Spinner size={14} />}
 					<span className="cr-bulkbar__spacer" />
-					<select
-						className="cr-select is-compact"
-						aria-label="Set status for selected carts"
+					<Combobox
+						compact
+						ariaLabel="Set status for selected carts"
+						placeholder="Set status…"
 						value={bulkStatus}
 						disabled={bulk.isPending}
-						onChange={(event) => {
-							const next = event.target.value;
-
+						options={[
+							{ value: '', label: 'Set status…' },
+							...CHANGE_STATUSES.map((option) => ({
+								value: option,
+								label: option,
+							})),
+						]}
+						onChange={(next) => {
 							setBulkStatus(next);
 
 							if (next !== '') {
 								runBulk({ action: 'status', status: next });
 							}
 						}}
-					>
-						<option value="">Set status…</option>
-						{CHANGE_STATUSES.map((value) => (
-							<option key={value} value={value}>
-								{value}
-							</option>
-						))}
-					</select>
+					/>
 					<button
 						type="button"
 						className="cr-btn is-danger is-sm"

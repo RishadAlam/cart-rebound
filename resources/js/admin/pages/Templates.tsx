@@ -6,6 +6,7 @@
  * the one automatic abandonment emails use.
  */
 import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { Combobox } from '../components/Combobox';
 import { RichTextEditor, type MergeTag } from '../components/RichTextEditor';
 import type { TemplatePreview } from '../api/endpoints';
 import {
@@ -414,39 +415,37 @@ export const Templates = () => {
 								/>
 							</div>
 							<div className="cr-field">
-								<label
-									htmlFor="cr-tpl-coupon"
-									className="cr-field__label"
-								>
-									Coupon
-								</label>
-								<select
-									id="cr-tpl-coupon"
-									className="cr-select"
+								<span className="cr-field__label">Coupon</span>
+								<Combobox
+									ariaLabel="Coupon"
+									placeholder="No coupon"
 									value={form.coupon}
-									onChange={(event) => {
-										setField('coupon', event.target.value);
+									onChange={(next) => {
+										setField('coupon', next);
 									}}
-								>
-									<option value="">No coupon</option>
-									{(coupons ?? []).map((coupon) => (
-										<option
-											key={coupon.code}
-											value={coupon.code}
-										>
-											{coupon.code}
-										</option>
-									))}
-									{form.coupon !== '' &&
+									options={[
+										{ value: '', label: 'No coupon' },
+										...(coupons ?? []).map((coupon) => ({
+											value: coupon.code,
+											label:
+												coupon.description !== ''
+													? `${coupon.code} — ${coupon.description}`
+													: coupon.code,
+										})),
+										...(form.coupon !== '' &&
 										!(coupons ?? []).some(
 											(coupon) =>
 												coupon.code === form.coupon
-										) && (
-											<option value={form.coupon}>
-												{form.coupon}
-											</option>
-										)}
-								</select>
+										)
+											? [
+													{
+														value: form.coupon,
+														label: form.coupon,
+													},
+												]
+											: []),
+									]}
+								/>
 							</div>
 						</div>
 

@@ -2,6 +2,7 @@
  * Log page — a filterable, paginated view of the plugin's activity log.
  */
 import { useState } from 'react';
+import { Combobox } from '../components/Combobox';
 import { useClearLog, useLogs } from '../hooks/useApi';
 import type { LogEntry } from '../types/api';
 
@@ -98,40 +99,30 @@ export const Log = () => {
 		<div>
 			<div className="cr-toolbar">
 				<span className="cr-toolbar__label">Level</span>
-				<select
-					className="cr-select is-compact"
-					aria-label="Filter log by level"
+				<Combobox
+					compact
+					ariaLabel="Filter log by level"
 					value={level}
-					onChange={(changeEvent) => {
-						setLevel(changeEvent.target.value);
+					options={LEVELS.map((option) => ({
+						value: option,
+						label: option === '' ? 'All levels' : option,
+					}))}
+					onChange={(next) => {
+						setLevel(next);
 						setPage(1);
 					}}
-				>
-					{LEVELS.map((value) => (
-						<option
-							key={value === '' ? 'all' : value}
-							value={value}
-						>
-							{value === '' ? 'All levels' : value}
-						</option>
-					))}
-				</select>
+				/>
 				<span className="cr-toolbar__label">Event</span>
-				<select
-					className="cr-select is-compact"
-					aria-label="Filter log by event"
+				<Combobox
+					compact
+					ariaLabel="Filter log by event"
 					value={event}
-					onChange={(changeEvent) => {
-						setEvent(changeEvent.target.value);
+					options={EVENTS}
+					onChange={(next) => {
+						setEvent(next);
 						setPage(1);
 					}}
-				>
-					{EVENTS.map((option) => (
-						<option key={option.value} value={option.value}>
-							{option.label}
-						</option>
-					))}
-				</select>
+				/>
 				<span className="cr-toolbar__label">Cart</span>
 				<input
 					className="cr-input is-compact"
