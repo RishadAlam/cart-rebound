@@ -5,7 +5,7 @@
  * subject, sender, coupon) on the right. Exactly one template is the default —
  * the one automatic abandonment emails use.
  */
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { Fragment, useEffect, useState, type ChangeEvent } from 'react';
 import { RichTextEditor, type MergeTag } from '../components/RichTextEditor';
 import {
 	useCoupons,
@@ -35,6 +35,27 @@ const TAGS: MergeTag[] = [
 	{ label: 'Products', value: '{products}' },
 	{ label: 'Recovery link', value: '{recovery_url}' },
 	{ label: 'Coupon code', value: '{coupon_code}' },
+];
+
+const TOKEN_DOCS = [
+	{
+		token: '{first_name}',
+		description: "The shopper's first name (blank if it wasn't captured).",
+	},
+	{
+		token: '{products}',
+		description: 'A bulleted list of the items left in the cart.',
+	},
+	{
+		token: '{recovery_url}',
+		description:
+			'A one-click link that restores the cart and reopens checkout.',
+	},
+	{
+		token: '{coupon_code}',
+		description:
+			'The coupon code selected below (blank if none is chosen).',
+	},
 ];
 
 const messageOf = (error: unknown): string =>
@@ -389,12 +410,28 @@ export const Templates = () => {
 									setField('body', html);
 								}}
 							/>
-							<p className="cr-field__hint">
-								Tokens: {'{first_name}'}, {'{products}'},{' '}
-								{'{recovery_url}'}, {'{coupon_code}'}. A
-								“Complete your order” button is added
-								automatically.
-							</p>
+							<div className="cr-tokens">
+								<p className="cr-tokens__title">
+									Merge tags — replaced with real values when
+									the email is sent:
+								</p>
+								<dl className="cr-tokens__list">
+									{TOKEN_DOCS.map((doc) => (
+										<Fragment key={doc.token}>
+											<dt>
+												<code className="cr-code">
+													{doc.token}
+												</code>
+											</dt>
+											<dd>{doc.description}</dd>
+										</Fragment>
+									))}
+								</dl>
+								<p className="cr-field__hint">
+									A “Complete your order” button is added
+									automatically below the body.
+								</p>
+							</div>
 						</div>
 
 						<div className="cr-field__grid">

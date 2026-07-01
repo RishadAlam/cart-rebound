@@ -967,6 +967,45 @@ textarea.cr-input {
 	font-size: 12px;
 }
 
+/* ---- Merge-tag legend ---- */
+.cr-tokens {
+	margin-top: 10px;
+	padding: 12px 14px;
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-panel);
+}
+
+.cr-tokens__title {
+	margin: 0 0 10px;
+	color: var(--cr-ink-soft);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.cr-tokens__list {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 6px 14px;
+	margin: 0;
+	align-items: baseline;
+}
+
+.cr-tokens__list dt {
+	margin: 0;
+}
+
+.cr-tokens__list dd {
+	margin: 0;
+	color: var(--cr-muted);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.cr-tokens .cr-field__hint {
+	margin-top: 10px;
+}
+
 /* ---- Templates (master / detail) ---- */
 .cr-templates {
 	display: grid;
