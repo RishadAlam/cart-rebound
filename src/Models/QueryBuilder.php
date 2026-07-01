@@ -435,6 +435,55 @@ final class QueryBuilder {
 	}
 
 	/**
+	 * Update every row matching the current constraints in one atomic statement.
+	 *
+	 * Unlike {@see update()} (which targets a single id), this compiles the WHERE
+	 * clause into the UPDATE so the change only lands on rows that still satisfy
+	 * the conditions — enabling compare-and-set flips such as "abandon this cart
+	 * only while it is still active". Refuses to run without a WHERE condition so
+	 * it can never rewrite the whole table by accident.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $attributes Column => value pairs (fillable only).
+	 * @return int Number of rows actually updated.
+	 */
+	public function update_where( array $attributes ): int {
+		global $wpdb;
+
+		if ( array() === $this->wheres ) {
+			return 0;
+		}
+
+		$data = $this->only_fillable( $attributes );
+
+		if ( array() === $data ) {
+			return 0;
+		}
+
+		$bindings    = array( $this->model->get_table() );
+		$assignments = array();
+
+		foreach ( $data as $column => $value ) {
+			$assignments[] = '%i = %s';
+			$bindings[]    = $column;
+			$bindings[]    = $value;
+		}
+
+		$sql  = 'UPDATE %i SET ' . implode( ', ', $assignments );
+		$sql .= $this->compile_wheres( $bindings );
+
+		/*
+		 * Assembled only from literal fragments and %i/%s placeholders, bound
+		 * through $wpdb->prepare(); a guarded compare-and-set over a custom table.
+		 */
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$updated = $wpdb->query( $wpdb->prepare( $sql, $bindings ) );
+
+		return is_int( $updated ) ? $updated : (int) $updated;
+	}
+
+	/**
 	 * Build the WHERE clause and append its bindings.
 	 *
 	 * @since 0.1.0

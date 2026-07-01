@@ -155,6 +155,39 @@ final class QueryBuilderTest extends TestCase {
 		$this->assertSame( 0, $deleted );
 		$this->assertSame( array(), $this->wpdb->prepared );
 	}
+
+	public function test_update_where_updates_matching_rows(): void {
+		$this->wpdb->affected = 3;
+
+		$updated = ExampleModel::query()
+			->where( 'status', '=', 'active' )
+			->update_where( array( 'title' => 'done' ) );
+
+		$this->assertSame( 3, $updated );
+
+		$call = $this->wpdb->prepared[0];
+		$this->assertSame( 'UPDATE %i SET %i = %s WHERE %i = %s', $call['query'] );
+		$this->assertSame(
+			array( 'wp_cart_rebound_examples', 'title', 'done', 'status', 'active' ),
+			$call['args']
+		);
+	}
+
+	public function test_update_where_refuses_without_conditions(): void {
+		$updated = ExampleModel::query()->update_where( array( 'title' => 'x' ) );
+
+		$this->assertSame( 0, $updated );
+		$this->assertSame( array(), $this->wpdb->prepared );
+	}
+
+	public function test_update_where_ignores_non_fillable_columns(): void {
+		$updated = ExampleModel::query()
+			->where( 'id', '=', 1 )
+			->update_where( array( 'ignored' => 'nope' ) );
+
+		$this->assertSame( 0, $updated );
+		$this->assertSame( array(), $this->wpdb->prepared );
+	}
 }
 
 // phpcs:disable -- lightweight test fixtures.
