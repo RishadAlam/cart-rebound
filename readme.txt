@@ -30,8 +30,12 @@ Requires an active WooCommerce installation.
 * **Accurate revenue attribution**: orders are linked to carts by explicit order meta, never by fuzzy total
   matching, so coupons, shipping, and tax never break the link. Carts resolve to *recovered* or *completed*
   with separate timestamps and a dedicated recovered-amount field.
-* **Optional built-in recovery email** scheduled a configurable delay after abandonment, with `{first_name}`,
-  `{products}`, and `{recovery_url}` tokens.
+* **Recovery emails with a rich-text template editor** — create and manage multiple templates, mark the default
+  used for automatic sends, format with a full toolbar, insert images from the Media Library, preview against
+  sample data, and send on demand per cart (choosing which template). Merge tags: `{first_name}`, `{products}`,
+  `{recovery_url}`, and `{coupon_code}` (pick a WooCommerce coupon per template). A single follow-up email is
+  scheduled a configurable delay after abandonment.
+* **Activity log** of abandonments, recoveries, and sent emails — filterable by level, event, and cart.
 * **Event & REST API** for integrations: `do_action( 'cart_rebound_abandoned', $payload )` and
   `do_action( 'cart_rebound_recovered', $payload )` (plus a legacy `cart_abandonment` alias for back-compat),
   and a read API for carts, stats, and recovered revenue.
@@ -79,7 +83,9 @@ legacy `cart_abandonment` alias for back-compatibility.
 = 0.1.0 =
 * Initial release: cart tracking (logged-in + guest, classic + block checkout), configurable abandonment
   detection via Action Scheduler, tokenized recovery links, explicit order-to-cart linking with recovered/completed
-  attribution, optional recovery email, event + REST API, and an admin dashboard.
+  attribution, recovery emails with a rich-text multi-template editor (Media Library images, preview, per-cart
+  send, `{coupon_code}` and WooCommerce coupon selection), an activity log filterable by level/event/cart,
+  event + REST API, and an admin dashboard.
 
 == Upgrade Notice ==
 

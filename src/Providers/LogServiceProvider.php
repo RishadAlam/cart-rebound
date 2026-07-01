@@ -65,6 +65,6 @@ final class LogServiceProvider extends ServiceProvider {
 		}
 
 		$this->app->make( Migrator::class )->run();
-		update_option( self::VERSION_OPTION, CART_REBOUND_VERSION );
+		update_option( self::VERSION_OPTION, CART_REBOUND_VERSION, false );
 	}
 }

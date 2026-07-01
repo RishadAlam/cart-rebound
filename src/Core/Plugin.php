@@ -74,7 +74,21 @@ final class Plugin {
 	public static function uninstall(): void {
 		$app = Application::get_instance();
 
+		// Drops the custom tables and deletes the cart_rebound_migrations option.
 		$app->make( Migrator::class )->rollback();
+
+		// Remove every remaining plugin option so uninstall leaves nothing behind.
+		$options = array(
+			'cart_rebound_settings',
+			'cart_rebound_email_templates',
+			'cart_rebound_db_version',
+			'cart_rebound_lifetime_abandoned',
+			'cart_rebound_lifetime_recovered',
+		);
+
+		foreach ( $options as $option ) {
+			delete_option( $option );
+		}
 
 		/**
 		 * Fires after CartRebound has finished its uninstall routine.

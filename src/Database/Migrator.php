@@ -65,7 +65,7 @@ final class Migrator {
 
 			// Persist after each migration so a later failure cannot orphan
 			// the migrations that already succeeded in this batch.
-			update_option( self::OPTION, array_values( array_unique( $ran ) ) );
+			update_option( self::OPTION, array_values( array_unique( $ran ) ), false );
 		}
 	}
 

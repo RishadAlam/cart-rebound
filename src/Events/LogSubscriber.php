@@ -85,16 +85,21 @@ final class LogSubscriber {
 		$order  = (int) ( $payload['order_id'] ?? 0 );
 		$method = (string) ( $payload['recovery_method'] ?? '' );
 
+		$via = '' !== $method
+			/* translators: %s: recovery method, e.g. email_link or direct. */
+			? sprintf( __( ' via %s', 'cart-rebound' ), $method )
+			: '';
+
 		$this->logs->log(
 			LogEntry::LEVEL_SUCCESS,
 			'recovered',
 			sprintf(
-				/* translators: 1: shopper email, 2: formatted amount, 3: order id, 4: method. */
+				/* translators: 1: shopper email, 2: formatted amount, 3: order id, 4: " via <method>" or empty. */
 				__( 'Cart recovered by %1$s (%2$s) — order #%3$d%4$s.', 'cart-rebound' ),
 				$this->who( $payload ),
 				$this->money( $payload, 'recovered_amount' ),
 				$order,
-				'' !== $method ? ' via ' . $method : ''
+				$via
 			),
 			(int) ( $payload['cart_id'] ?? 0 )
 		);

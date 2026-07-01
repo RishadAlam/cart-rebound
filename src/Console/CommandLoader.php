@@ -11,8 +11,6 @@ namespace CartRebound\Console;
 
 defined( 'ABSPATH' ) || exit;
 
-use CartRebound\Console\Commands\MakeControllerCommand;
-use CartRebound\Console\Commands\MakeModelCommand;
 use CartRebound\Console\Commands\MigrateCommand;
 use CartRebound\Core\Application;
 use WP_CLI;
@@ -57,8 +55,6 @@ final class CommandLoader {
 			return;
 		}
 
-		WP_CLI::add_command( 'cart-rebound make:controller', $this->app->make( MakeControllerCommand::class ) );
-		WP_CLI::add_command( 'cart-rebound make:model', $this->app->make( MakeModelCommand::class ) );
 		WP_CLI::add_command( 'cart-rebound migrate', $this->app->make( MigrateCommand::class ) );
 	}
 }
