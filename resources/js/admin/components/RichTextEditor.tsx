@@ -115,6 +115,58 @@ export const RichTextEditor = ({
 		}
 	};
 
+	const insertImage = (url: string, alt: string) => {
+		if (url === '') {
+			return;
+		}
+
+		ref.current?.focus();
+		restoreSelection();
+
+		const safeUrl = url.replace(/"/g, '&quot;');
+		const safeAlt = alt.replace(/"/g, '&quot;');
+
+		document.execCommand(
+			'insertHTML',
+			false,
+			`<img src="${safeUrl}" alt="${safeAlt}" style="max-width:100%;height:auto;" />`
+		);
+		emit();
+		saveSelection();
+	};
+
+	const addImage = () => {
+		const media = window.wp?.media;
+
+		if (!media) {
+			// eslint-disable-next-line no-alert
+			const url = window.prompt('Image URL (https://…)');
+
+			if (url) {
+				insertImage(url, '');
+			}
+
+			return;
+		}
+
+		saveSelection();
+
+		const frame = media({
+			title: 'Insert image',
+			button: { text: 'Insert into email' },
+			multiple: false,
+			library: { type: 'image' },
+		});
+
+		frame.on('select', () => {
+			const attachment = frame.state().get('selection').first().toJSON();
+
+			insertImage(attachment.url ?? '', attachment.alt ?? '');
+		});
+
+		frame.open();
+	};
+
 	// Keep the editor's selection when a toolbar button is pressed.
 	const keepSelection = (event: MouseEvent) => {
 		event.preventDefault();
@@ -195,6 +247,16 @@ export const RichTextEditor = ({
 					onClick={addLink}
 				>
 					Link
+				</button>
+				<button
+					type="button"
+					className="cr-rte__btn"
+					title="Insert image"
+					aria-label="Insert image"
+					onMouseDown={keepSelection}
+					onClick={addImage}
+				>
+					Image
 				</button>
 				<button
 					type="button"

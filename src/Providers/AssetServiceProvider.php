@@ -68,6 +68,12 @@ final class AssetServiceProvider extends ServiceProvider {
 
 		$route = $menu->route_for_hook( $hook_suffix );
 
+		// Make the WordPress media library available so the template editor can
+		// open the media frame to insert images.
+		if ( function_exists( 'wp_enqueue_media' ) ) {
+			wp_enqueue_media();
+		}
+
 		$version   = $this->app->version();
 		$base_file = $this->app->base_path( 'cart-rebound.php' );
 

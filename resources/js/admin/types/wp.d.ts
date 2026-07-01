@@ -16,8 +16,27 @@ declare global {
 		};
 	}
 
+	interface WpMediaAttachment {
+		url?: string;
+		alt?: string;
+	}
+
+	interface WpMediaFrame {
+		on: (event: string, handler: () => void) => void;
+		open: () => void;
+		state: () => {
+			get: (key: string) => {
+				first: () => { toJSON: () => WpMediaAttachment };
+			};
+		};
+	}
+
 	interface Window {
 		// Injected by wp_add_inline_script; absent if the boot script failed to run.
 		CartRebound?: CartReboundBootData;
+		// The WordPress media library (present when wp_enqueue_media() has run).
+		wp?: {
+			media?: (options?: Record<string, unknown>) => WpMediaFrame;
+		};
 	}
 }

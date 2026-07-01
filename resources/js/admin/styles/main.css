@@ -1119,6 +1119,13 @@ textarea.cr-input {
 	margin: 0;
 }
 
+.cr-templates__editactions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
 @media (max-width: 782px) {
 	.cr-templates {
 		grid-template-columns: 1fr;
@@ -1225,6 +1232,12 @@ textarea.cr-input {
 
 .cr-rte__content a {
 	color: var(--cr-accent);
+}
+
+.cr-rte__content img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 4px;
 }
 
 .cr-rte__content:empty::before {
