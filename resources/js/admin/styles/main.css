@@ -751,7 +751,12 @@ textarea.cr-input {
 	color: var(--cr-ink);
 	box-shadow: 0 12px 40px oklch(0 0 0 / 0.18);
 	opacity: 1;
-	transform: scale(1);
+
+	/* Rest at transform:none — a non-none transform would make position:fixed
+	   descendants (the Combobox popover) resolve against the dialog, not the
+	   viewport, mispositioning/clipping them. The entrance still animates from
+	   the scale(0.96) start below. */
+	transform: none;
 	transition:
 		opacity 200ms var(--cr-ease),
 		transform 200ms var(--cr-ease),
