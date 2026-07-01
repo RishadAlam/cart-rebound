@@ -5,6 +5,7 @@
 # Build output
 /public/build/
 /dist/
+/build/
 
 # Tooling caches
 /coverage/

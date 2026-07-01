@@ -22,6 +22,8 @@
 		"qa": "run-s ts-check pretty lint stylelint",
 		"qa:all": "run-s qa qa:php",
 		"qa:php": "composer qa",
+		"build-zip": "bash scripts/build-zip.sh",
+		"production-zip": "run-s qa:all build-zip",
 		"prepare": "husky"
 	},
 	"dependencies": {

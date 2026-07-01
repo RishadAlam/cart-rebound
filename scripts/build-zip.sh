@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 #
-# Build a production-ready plugin archive at dist/cart-rebound.zip.
+# Build a production-ready plugin archive at build/cart-rebound.zip.
 #
 # Steps: build the front-end assets, install production-only Composer
 # dependencies, stage the runtime files (excluding all dev/source/config),
 # zip them, then restore the development dependencies.
+#
+# QA is run separately by the `production-zip` npm script, which invokes this
+# after `qa:all` passes. Run `bash scripts/build-zip.sh` directly to skip QA.
 set -euo pipefail
 
 SLUG="cart-rebound"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIST="${ROOT}/dist"
-STAGE="${DIST}/${SLUG}"
+BUILD="${ROOT}/build"
+STAGE="${BUILD}/${SLUG}"
 
 cd "${ROOT}"
 
@@ -21,22 +24,27 @@ echo "▶ Installing production Composer dependencies"
 composer install --no-dev --optimize-autoloader --no-interaction --quiet
 
 echo "▶ Staging plugin files"
-rm -rf "${DIST}"
+rm -rf "${BUILD}"
 mkdir -p "${STAGE}"
 
+# Ship only WordPress runtime files: cart-rebound.php, uninstall.php,
+# readme.txt, LICENSE, composer.json, assets/, config/, languages/,
+# public/build/, routes/, src/, vendor/. Everything below is dev tooling,
+# source, or repo metadata.
 rsync -a \
 	--exclude='.git' \
 	--exclude='.github' \
 	--exclude='.wordpress-org' \
 	--exclude='.husky' \
+	--exclude='.impeccable' \
 	--exclude='node_modules' \
+	--exclude='build' \
+	--exclude='dist' \
+	--exclude='coverage' \
 	--exclude='tests' \
 	--exclude='docs' \
 	--exclude='scripts' \
-	--exclude='dist' \
-	--exclude='coverage' \
-	--exclude='resources/js' \
-		--exclude='.impeccable' \
+	--exclude='resources' \
 	--exclude='.gitkeep' \
 	--exclude='.editorconfig' \
 	--exclude='.eslintignore' \
@@ -74,6 +82,6 @@ echo "▶ Restoring development Composer dependencies"
 composer install --no-interaction --quiet
 
 echo "▶ Creating archive"
-( cd "${DIST}" && zip -rqX "${SLUG}.zip" "${SLUG}" )
+( cd "${BUILD}" && zip -rqX "${SLUG}.zip" "${SLUG}" )
 
-echo "✅ Built ${DIST}/${SLUG}.zip"
+echo "✅ Built ${BUILD}/${SLUG}.zip"
