@@ -155,21 +155,19 @@ const StatusSelect = ({
 	onChange: (next: string) => void;
 }) => (
 	<span className="cr-status-wrap">
-		<select
-			className={`cr-status cr-status--${cart.status}`}
-			aria-label={`Status: ${cart.status}. Change it`}
+		<Combobox
+			compact
+			pill
+			tone={cart.status}
+			ariaLabel={`Status: ${cart.status}. Change it`}
 			value={cart.status}
 			disabled={pending}
-			onChange={(event) => {
-				onChange(event.target.value);
-			}}
-		>
-			{CHANGE_STATUSES.map((value) => (
-				<option key={value} value={value}>
-					{value}
-				</option>
-			))}
-		</select>
+			options={CHANGE_STATUSES.map((option) => ({
+				value: option,
+				label: option,
+			}))}
+			onChange={onChange}
+		/>
 		{pending && <Spinner size={14} />}
 	</span>
 );

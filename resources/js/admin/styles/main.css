@@ -1391,6 +1391,50 @@ textarea.cr-input {
 	color: var(--cr-muted);
 }
 
+.cr-combo__trigger.is-pill {
+	gap: 4px;
+	padding: 4px 10px;
+	border-color: transparent;
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: capitalize;
+}
+
+.cr-combo__trigger.is-pill .cr-combo__chevron {
+	color: currentcolor;
+	opacity: 0.7;
+}
+
+.cr-combo__trigger.is-pill:hover:not(:disabled) {
+	border-color: transparent;
+	filter: brightness(0.97);
+}
+
+.cr-combo__trigger--active {
+	color: var(--cr-info);
+	background: var(--cr-info-soft);
+}
+
+.cr-combo__trigger--abandoned {
+	color: var(--cr-warning);
+	background: var(--cr-warning-soft);
+}
+
+.cr-combo__trigger--recovered {
+	color: var(--cr-success);
+	background: var(--cr-success-soft);
+}
+
+.cr-combo__trigger--completed {
+	color: var(--cr-ink-soft);
+	background: var(--cr-panel);
+}
+
+.cr-combo__trigger--lost {
+	color: var(--cr-muted);
+	background: var(--cr-panel);
+}
+
 .cr-combo__pop {
 	position: fixed;
 	z-index: 60;

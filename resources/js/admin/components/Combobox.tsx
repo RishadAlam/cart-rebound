@@ -42,6 +42,8 @@ export const Combobox = ({
 	disabled = false,
 	compact = false,
 	searchable,
+	tone,
+	pill = false,
 }: {
 	options: ComboOption[];
 	value: string;
@@ -51,6 +53,10 @@ export const Combobox = ({
 	disabled?: boolean;
 	compact?: boolean;
 	searchable?: boolean;
+	// Colour the trigger (e.g. a lifecycle status); adds cr-combo__trigger--<tone>.
+	tone?: string;
+	// Render the trigger as a rounded pill.
+	pill?: boolean;
 }) => {
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState('');
@@ -203,7 +209,9 @@ export const Combobox = ({
 			<button
 				ref={triggerRef}
 				type="button"
-				className="cr-combo__trigger"
+				className={`cr-combo__trigger${pill ? ' is-pill' : ''}${
+					tone ? ` cr-combo__trigger--${tone}` : ''
+				}`}
 				disabled={disabled}
 				aria-haspopup="listbox"
 				aria-expanded={open}

@@ -9,7 +9,7 @@
  * Selection handling: toolbar buttons preventDefault on mousedown so the editor
  * keeps focus and the live selection (execCommand applies to it directly — no
  * focus() call, which would collapse it). Controls that must steal focus (the
- * colour inputs, the merge-tag <select>) save the caret on blur and restore it
+ * colour inputs, the merge-tag combobox) save the caret on blur and restore it
  * before acting. Colours use styleWithCSS so they emit inline styles that
  * survive wp_kses_post (which strips legacy <font> tags).
  */
@@ -20,6 +20,7 @@ import {
 	type MouseEvent,
 	type ReactNode,
 } from 'react';
+import { Combobox } from './Combobox';
 
 export interface MergeTag {
 	label: string;
@@ -545,23 +546,18 @@ export const RichTextEditor = ({
 				{tags.length > 0 && (
 					<>
 						<span className="cr-rte__spacer" />
-						<select
-							className="cr-select is-compact"
-							aria-label="Insert merge tag"
+						<Combobox
+							compact
+							ariaLabel="Insert merge tag"
+							placeholder="Insert tag…"
 							value=""
-							onChange={(changeEvent) => {
-								if (changeEvent.target.value !== '') {
-									insert(changeEvent.target.value);
+							options={tags}
+							onChange={(next) => {
+								if (next !== '') {
+									insert(next);
 								}
 							}}
-						>
-							<option value="">Insert tag…</option>
-							{tags.map((tag) => (
-								<option key={tag.value} value={tag.value}>
-									{tag.label}
-								</option>
-							))}
-						</select>
+						/>
 					</>
 				)}
 			</div>
