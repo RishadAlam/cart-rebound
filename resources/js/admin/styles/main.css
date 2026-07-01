@@ -800,6 +800,41 @@ textarea.cr-input {
 	margin-top: 22px;
 }
 
+.cr-dialog.is-wide {
+	width: min(760px, calc(100vw - 32px));
+}
+
+/* ---- Email preview ---- */
+.cr-savebar__spacer {
+	flex: 1;
+}
+
+.cr-preview__subject {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	margin: 0 0 12px;
+	color: var(--cr-ink);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cr-preview__label {
+	color: var(--cr-muted);
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.cr-preview__frame {
+	width: 100%;
+	height: min(60vh, 520px);
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-surface);
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.cr-dialog {
 		transform: none;

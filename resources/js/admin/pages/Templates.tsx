@@ -5,12 +5,14 @@
  * subject, sender, coupon) on the right. Exactly one template is the default —
  * the one automatic abandonment emails use.
  */
-import { Fragment, useEffect, useState, type ChangeEvent } from 'react';
+import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { RichTextEditor, type MergeTag } from '../components/RichTextEditor';
+import type { TemplatePreview } from '../api/endpoints';
 import {
 	useCoupons,
 	useCreateTemplate,
 	useDeleteTemplate,
+	usePreviewTemplate,
 	useSetDefaultTemplate,
 	useTemplates,
 	useUpdateTemplate,
@@ -68,11 +70,16 @@ export const Templates = () => {
 	const update = useUpdateTemplate();
 	const remove = useDeleteTemplate();
 	const setDefault = useSetDefaultTemplate();
+	const preview = usePreviewTemplate();
 
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [form, setForm] = useState<EmailTemplate>(BLANK);
 	const [editorKey, setEditorKey] = useState(0);
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
+	const [previewData, setPreviewData] = useState<TemplatePreview | null>(
+		null
+	);
+	const previewRef = useRef<HTMLDialogElement>(null);
 
 	const isNew = selectedId === 'new';
 	const busy = create.isPending || update.isPending;
@@ -120,6 +127,34 @@ export const Templates = () => {
 			window.clearTimeout(timer);
 		};
 	}, [feedback]);
+
+	useEffect(() => {
+		const el = previewRef.current;
+
+		if (!el) {
+			return;
+		}
+
+		if (previewData && !el.open) {
+			el.showModal();
+		} else if (!previewData && el.open) {
+			el.close();
+		}
+	}, [previewData]);
+
+	const onPreview = () => {
+		preview.mutate(
+			{ subject: form.subject, body: form.body, coupon: form.coupon },
+			{
+				onSuccess: (data) => {
+					setPreviewData(data);
+				},
+				onError: (error: unknown) => {
+					setFeedback({ type: 'error', message: messageOf(error) });
+				},
+			}
+		);
+	};
 
 	const setField = <K extends keyof EmailTemplate>(
 		key: K,
@@ -479,6 +514,15 @@ export const Templates = () => {
 						</button>
 						<button
 							type="button"
+							className="cr-btn is-ghost"
+							onClick={onPreview}
+							disabled={preview.isPending}
+						>
+							{preview.isPending ? 'Rendering…' : 'Preview'}
+						</button>
+						<span className="cr-savebar__spacer" />
+						<button
+							type="button"
 							className="cr-btn is-danger"
 							onClick={onDelete}
 							disabled={
@@ -495,6 +539,55 @@ export const Templates = () => {
 					</div>
 				</section>
 			</div>
+
+			{/* Backdrop click-to-close is a mouse nicety; Esc is handled natively. */}
+			{/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
+			<dialog
+				ref={previewRef}
+				className="cr-dialog is-wide"
+				aria-labelledby="cr-preview-title"
+				onClose={() => {
+					setPreviewData(null);
+				}}
+				onClick={(event) => {
+					if (event.target === previewRef.current) {
+						setPreviewData(null);
+					}
+				}}
+			>
+				<div className="cr-dialog__body">
+					<h2 id="cr-preview-title" className="cr-dialog__title">
+						Email preview
+					</h2>
+					<p className="cr-preview__subject">
+						<span className="cr-preview__label">Subject</span>
+						{previewData?.subject !== ''
+							? previewData?.subject
+							: '(no subject)'}
+					</p>
+					<iframe
+						className="cr-preview__frame"
+						title="Email preview"
+						sandbox=""
+						srcDoc={previewData?.html ?? ''}
+					/>
+					<p className="cr-field__hint">
+						Rendered with sample data (name “Jordan”, two demo
+						items).
+					</p>
+					<div className="cr-dialog__actions">
+						<button
+							type="button"
+							className="cr-btn is-ghost"
+							onClick={() => {
+								setPreviewData(null);
+							}}
+						>
+							Close
+						</button>
+					</div>
+				</div>
+			</dialog>
 		</div>
 	);
 };

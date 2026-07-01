@@ -40,8 +40,9 @@ Route::get( 'logs', array( LogController::class, 'index' ) )->middleware( $cart_
 Route::delete( 'logs', array( LogController::class, 'clear' ) )->middleware( $cart_rebound_admin );
 Route::get( 'templates', array( TemplatesController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::post( 'templates', array( TemplatesController::class, 'store' ) )->middleware( $cart_rebound_admin );
-Route::post( 'templates/(?P<id>[\w-]+)', array( TemplatesController::class, 'update' ) )->middleware( $cart_rebound_admin );
-Route::delete( 'templates/(?P<id>[\w-]+)', array( TemplatesController::class, 'destroy' ) )->middleware( $cart_rebound_admin );
-Route::post( 'templates/(?P<id>[\w-]+)/default', array( TemplatesController::class, 'set_default' ) )->middleware( $cart_rebound_admin );
+Route::post( 'templates/preview', array( TemplatesController::class, 'preview' ) )->middleware( $cart_rebound_admin );
+Route::post( 'templates/(?P<id>[0-9a-f-]+)', array( TemplatesController::class, 'update' ) )->middleware( $cart_rebound_admin );
+Route::delete( 'templates/(?P<id>[0-9a-f-]+)', array( TemplatesController::class, 'destroy' ) )->middleware( $cart_rebound_admin );
+Route::post( 'templates/(?P<id>[0-9a-f-]+)/default', array( TemplatesController::class, 'set_default' ) )->middleware( $cart_rebound_admin );
 Route::get( 'settings', array( SettingsController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::post( 'settings', array( SettingsController::class, 'update' ) )->middleware( $cart_rebound_admin );

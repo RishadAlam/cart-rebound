@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Core\Application;
 use CartRebound\Http\Requests\EmailTemplateRequest;
+use CartRebound\Mail\RecoveryMailer;
 use CartRebound\Mail\TemplateStore;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -33,16 +34,26 @@ final class TemplatesController extends Controller {
 	private $templates;
 
 	/**
+	 * Recovery mailer (used to render previews).
+	 *
+	 * @since 0.2.0
+	 * @var RecoveryMailer
+	 */
+	private $mailer;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.2.0
 	 *
-	 * @param Application   $app       Application instance.
-	 * @param TemplateStore $templates Template store.
+	 * @param Application    $app       Application instance.
+	 * @param TemplateStore  $templates Template store.
+	 * @param RecoveryMailer $mailer    Recovery mailer.
 	 */
-	public function __construct( Application $app, TemplateStore $templates ) {
+	public function __construct( Application $app, TemplateStore $templates, RecoveryMailer $mailer ) {
 		parent::__construct( $app );
 		$this->templates = $templates;
+		$this->mailer    = $mailer;
 	}
 
 	/**
@@ -99,6 +110,29 @@ final class TemplatesController extends Controller {
 		$deleted = $this->templates->delete( sanitize_text_field( (string) $request->get_param( 'id' ) ) );
 
 		return $this->respond( array( 'deleted' => $deleted ) );
+	}
+
+	/**
+	 * Render a preview of a template against sample data.
+	 *
+	 * Accepts the current (possibly unsaved) editor fields so an admin can
+	 * preview edits before saving.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param WP_REST_Request $request The request.
+	 * @return WP_REST_Response
+	 */
+	public function preview( WP_REST_Request $request ): WP_REST_Response {
+		return $this->respond(
+			$this->mailer->preview(
+				array(
+					'subject' => sanitize_text_field( (string) $request->get_param( 'subject' ) ),
+					'body'    => wp_kses_post( (string) $request->get_param( 'body' ) ),
+					'coupon'  => sanitize_text_field( (string) $request->get_param( 'coupon' ) ),
+				)
+			)
+		);
 	}
 
 	/**

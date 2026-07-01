@@ -141,6 +141,24 @@ export const setDefaultTemplate = async (id: string): Promise<void> => {
 	await apiClient.post(`templates/${id}/default`, {});
 };
 
+export interface TemplatePreview {
+	subject: string;
+	html: string;
+}
+
+export const previewTemplate = async (input: {
+	subject: string;
+	body: string;
+	coupon: string;
+}): Promise<TemplatePreview> => {
+	const { data } = await apiClient.post<TemplatePreview>(
+		'templates/preview',
+		input
+	);
+
+	return data;
+};
+
 export const bulkCarts = async (input: {
 	action: BulkAction;
 	ids: number[];

@@ -180,6 +180,69 @@ final class RecoveryMailer {
 	}
 
 	/**
+	 * Render a template against sample data for an on-screen preview.
+	 *
+	 * Uses the real subject/body token substitution and the real email shell,
+	 * so the preview matches what a shopper would receive.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array<string, mixed> $template The (unsaved) template to preview.
+	 * @return array{subject: string, html: string}
+	 */
+	public function preview( array $template ): array {
+		$row = $this->sample_row();
+
+		return array(
+			'subject' => $this->subject( $template, $row ),
+			'html'    => $this->build_body( $row, $template ),
+		);
+	}
+
+	/**
+	 * A representative cart row for previews.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function sample_row(): array {
+		return array(
+			'first_name'     => 'Jordan',
+			'recovery_token' => 'sample-token',
+			'cart_contents'  => wp_json_encode(
+				array(
+					array(
+						'name'     => 'Blue T-Shirt',
+						'quantity' => 2,
+					),
+					array(
+						'name'     => 'Leather Wallet',
+						'quantity' => 1,
+					),
+				)
+			),
+		);
+	}
+
+	/**
+	 * Build the token-substituted subject line.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array<string, mixed> $template The email template.
+	 * @param array<string, mixed> $row      The cart row.
+	 * @return string
+	 */
+	private function subject( array $template, array $row ): string {
+		return str_replace(
+			array( '{first_name}', '{coupon_code}' ),
+			array( (string) ( $row['first_name'] ?? '' ), (string) ( $template['coupon'] ?? '' ) ),
+			(string) ( $template['subject'] ?? '' )
+		);
+	}
+
+	/**
 	 * Render and send the HTML email.
 	 *
 	 * @since 0.1.0
@@ -190,11 +253,7 @@ final class RecoveryMailer {
 	 * @return bool
 	 */
 	private function dispatch( string $email, array $row, array $template ): bool {
-		$subject = str_replace(
-			array( '{first_name}', '{coupon_code}' ),
-			array( (string) ( $row['first_name'] ?? '' ), (string) ( $template['coupon'] ?? '' ) ),
-			(string) ( $template['subject'] ?? '' )
-		);
+		$subject = $this->subject( $template, $row );
 		$body    = $this->build_body( $row, $template );
 		$headers = $this->headers( $template );
 

@@ -17,6 +17,7 @@ import {
 	fetchStats,
 	fetchTemplates,
 	markCartRecovered,
+	previewTemplate,
 	sendCartEmail,
 	setDefaultTemplate,
 	updateCartStatus,
@@ -191,6 +192,9 @@ export const useSetDefaultTemplate = () => {
 		},
 	});
 };
+
+export const usePreviewTemplate = () =>
+	useMutation({ mutationFn: previewTemplate });
 
 export const useLogs = (query: LogsQuery) =>
 	useQuery<LogList>({
