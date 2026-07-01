@@ -3,6 +3,7 @@
 
 # Files and directories excluded from the distributed plugin archive.
 /.github            export-ignore
+/.wordpress-org     export-ignore
 /.husky             export-ignore
 /docs               export-ignore
 /resources          export-ignore

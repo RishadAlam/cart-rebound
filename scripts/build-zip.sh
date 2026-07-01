@@ -27,6 +27,7 @@ mkdir -p "${STAGE}"
 rsync -a \
 	--exclude='.git' \
 	--exclude='.github' \
+	--exclude='.wordpress-org' \
 	--exclude='.husky' \
 	--exclude='node_modules' \
 	--exclude='tests' \

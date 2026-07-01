@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1544" height="500" viewBox="0 0 1544 500" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#312e81"/>
+      <stop offset="1" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#4338ca"/>
+    </linearGradient>
+  </defs>
+  <rect width="1544" height="500" fill="url(#bg)"/>
+
+  <!-- decorative rings + cart bleeding off the right -->
+  <circle cx="1300" cy="250" r="250" fill="none" stroke="#4f46e5" stroke-opacity="0.35" stroke-width="3"/>
+  <circle cx="1300" cy="250" r="185" fill="none" stroke="#818cf8" stroke-opacity="0.16" stroke-width="2"/>
+  <g transform="translate(1150 118) scale(11.6)" fill="#4f46e5" fill-opacity="0.30">
+    <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"/>
+  </g>
+
+  <!-- left badge icon -->
+  <g transform="translate(96 174) scale(0.58)">
+    <rect width="256" height="256" rx="58" fill="url(#badge)"/>
+    <g transform="translate(65 70) scale(5.35)" fill="#ffffff">
+      <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"/>
+    </g>
+  </g>
+
+  <!-- wordmark + copy -->
+  <text x="300" y="214" fill="#ffffff" font-size="78" font-weight="700" letter-spacing="-1.5">Cart Rebound</text>
+  <text x="303" y="270" fill="#c7d2fe" font-size="31">Recover abandoned WooCommerce carts — automatically.</text>
+  <text x="303" y="340" fill="#a5b4fc" font-size="24" font-weight="700" letter-spacing="0.4">Tokenized recovery links &#8226; Rich-text email templates &#8226; Activity log</text>
+</svg>
