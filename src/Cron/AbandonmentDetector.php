@@ -124,6 +124,35 @@ final class AbandonmentDetector {
 	}
 
 	/**
+	 * Manually abandon a single cart by id (admin action).
+	 *
+	 * Reuses the exact detector transition so a hand-abandoned cart fires the
+	 * abandonment event, bumps the lifetime counter, and queues the recovery
+	 * email just like an auto-detected one. No-ops on an unknown row or one that
+	 * is already abandoned (so the event can never double-fire).
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param int $cart_id Cart id.
+	 * @return bool True when the cart was abandoned by this call.
+	 */
+	public function abandon( int $cart_id ): bool {
+		$row = CartSession::find( $cart_id );
+
+		if ( ! is_array( $row ) ) {
+			return false;
+		}
+
+		if ( CartSession::STATUS_ABANDONED === (string) ( $row['status'] ?? '' ) ) {
+			return false;
+		}
+
+		$this->mark_abandoned( $row );
+
+		return true;
+	}
+
+	/**
 	 * Flip a single row to abandoned, dispatch the event, and queue an email.
 	 *
 	 * @since 0.1.0

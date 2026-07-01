@@ -150,6 +150,23 @@ abstract class FormRequest {
 	}
 
 	/**
+	 * Read a raw (unvalidated) parameter from the underlying REST request.
+	 *
+	 * For payloads the rule engine cannot express — e.g. arrays such as a bulk
+	 * id list — a controller may read them directly after validating the rest of
+	 * the request. A {@see FormRequest} does not extend WP_REST_Request, so this
+	 * is the supported accessor for the wrapped request's params.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string $key Parameter name.
+	 * @return mixed
+	 */
+	public function param( string $key ) {
+		return $this->request->get_param( $key );
+	}
+
+	/**
 	 * Check a single rule against a value.
 	 *
 	 * @since 0.1.0

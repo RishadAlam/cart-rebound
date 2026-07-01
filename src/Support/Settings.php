@@ -48,6 +48,7 @@ final class Settings {
 			'email_body'             => __( 'Hi {first_name}, your cart is still waiting: {products} {recovery_url}', 'cart-rebound' ),
 			'email_from_name'        => '',
 			'email_from_email'       => '',
+			'email_coupon'           => '',
 		);
 	}
 
@@ -120,6 +121,7 @@ final class Settings {
 			'email_body'             => sanitize_textarea_field( (string) ( $values['email_body'] ?? '' ) ),
 			'email_from_name'        => sanitize_text_field( (string) ( $values['email_from_name'] ?? '' ) ),
 			'email_from_email'       => sanitize_email( (string) ( $values['email_from_email'] ?? '' ) ),
+			'email_coupon'           => sanitize_text_field( (string) ( $values['email_coupon'] ?? '' ) ),
 		);
 	}
 }

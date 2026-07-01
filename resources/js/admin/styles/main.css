@@ -504,12 +504,116 @@ textarea.cr-input {
 
 .cr-row-actions {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
 }
 
 .cr-money {
 	font-variant-numeric: tabular-nums;
+}
+
+/* ---- Selection column ---- */
+.cr-table th.cr-check,
+.cr-table td.cr-check {
+	width: 34px;
+	padding-right: 0;
+}
+
+.cr-check input[type="checkbox"] {
+	width: 15px;
+	height: 15px;
+	margin: 0;
+	accent-color: var(--cr-accent);
+	cursor: pointer;
+}
+
+.cr-table tbody tr.is-selected {
+	background: var(--cr-accent-soft);
+}
+
+/* ---- Sortable headers ---- */
+.cr-sort {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-weight: 600;
+	letter-spacing: inherit;
+	cursor: pointer;
+	transition: color 140ms var(--cr-ease);
+}
+
+.cr-sort:hover {
+	color: var(--cr-ink);
+}
+
+.cr-sort.is-active {
+	color: var(--cr-accent);
+}
+
+.cr-sort:focus-visible {
+	outline: none;
+	border-radius: 4px;
+	box-shadow: var(--cr-ring);
+}
+
+.cr-sort__arrow {
+	font-size: 11px;
+	line-height: 1;
+}
+
+/* ---- Inline status + recover controls ---- */
+.cr-status-cell {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cr-recover {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.cr-select.is-xs,
+.cr-input.is-xs {
+	padding: 4px 8px;
+	font-size: 12px;
+}
+
+.cr-select.is-xs {
+	padding-right: 26px;
+	background-position: right 7px center;
+	max-width: 150px;
+}
+
+/* ---- Bulk action bar ---- */
+.cr-bulkbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+	padding: 10px 14px;
+	background: var(--cr-accent-soft);
+	border: 1px solid transparent;
+	border-radius: var(--cr-radius-sm);
+}
+
+.cr-bulkbar__count {
+	color: var(--cr-accent);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.cr-notice.is-success {
+	color: var(--cr-success);
+	background: var(--cr-success-soft);
 }
 
 /* ---- Pagination ---- */

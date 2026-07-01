@@ -106,6 +106,52 @@ final class RecoveryMailer {
 	}
 
 	/**
+	 * Send the recovery email right now, on demand (admin "send email" action).
+	 *
+	 * Unlike {@see send()} this ignores the scheduled-delay guards — the
+	 * enabled toggle, the abandoned-only rule, and the already-sent flag — so an
+	 * admin can (re)send at will. It still refuses to mail an empty cart or an
+	 * address that is missing / invalid.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param int $cart_id Cart id.
+	 * @return bool True when the email was handed to wp_mail successfully.
+	 */
+	public function send_now( int $cart_id ): bool {
+		$row = CartSession::find( $cart_id );
+
+		if ( ! is_array( $row ) ) {
+			return false;
+		}
+
+		$email = (string) ( $row['email'] ?? '' );
+
+		if ( '' === $email || ! is_email( $email ) ) {
+			return false;
+		}
+
+		if ( (int) ( $row['items_count'] ?? 0 ) <= 0 ) {
+			return false;
+		}
+
+		// Never re-pitch a cart that already converted to an order: recovered and
+		// completed carts are order-linked, and mailing "you left something in
+		// your cart" (with a coupon) to a paid customer is wrong.
+		if ( (int) ( $row['order_id'] ?? 0 ) > 0 ) {
+			return false;
+		}
+
+		$sent = $this->dispatch( $email, $row );
+
+		if ( $sent ) {
+			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		}
+
+		return $sent;
+	}
+
+	/**
 	 * Render and send the HTML email.
 	 *
 	 * @since 0.1.0
@@ -115,7 +161,11 @@ final class RecoveryMailer {
 	 * @return bool
 	 */
 	private function dispatch( string $email, array $row ): bool {
-		$subject = (string) $this->settings->get( 'email_subject' );
+		$subject = str_replace(
+			array( '{first_name}', '{coupon_code}' ),
+			array( (string) ( $row['first_name'] ?? '' ), (string) $this->settings->get( 'email_coupon' ) ),
+			(string) $this->settings->get( 'email_subject' )
+		);
 		$body    = $this->build_body( $row );
 		$headers = $this->headers();
 
@@ -137,11 +187,12 @@ final class RecoveryMailer {
 	private function build_body( array $row ): string {
 		$recovery_url  = $this->links->url( (string) ( $row['recovery_token'] ?? '' ) );
 		$first_name    = (string) ( $row['first_name'] ?? '' );
+		$coupon_code   = (string) $this->settings->get( 'email_coupon' );
 		$products_html = $this->products_html( $row );
 
 		$content = str_replace(
-			array( '{first_name}', '{products}', '{recovery_url}' ),
-			array( esc_html( $first_name ), $products_html, esc_url( $recovery_url ) ),
+			array( '{first_name}', '{products}', '{recovery_url}', '{coupon_code}' ),
+			array( esc_html( $first_name ), $products_html, esc_url( $recovery_url ), esc_html( $coupon_code ) ),
 			(string) $this->settings->get( 'email_body' )
 		);
 

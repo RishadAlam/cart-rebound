@@ -10,15 +10,19 @@ declare( strict_types=1 );
 namespace CartRebound\Tests\Unit;
 
 use Brain\Monkey\Functions;
+use CartRebound\Http\Requests\BulkActionRequest;
 use CartRebound\Http\Requests\CaptureEmailRequest;
 use CartRebound\Http\Requests\MarkRecoveredRequest;
+use CartRebound\Http\Requests\UpdateStatusRequest;
 use CartRebound\Tests\TestCase;
 use WP_Error;
 use WP_REST_Request;
 
 /**
+ * @covers \CartRebound\Http\Requests\BulkActionRequest
  * @covers \CartRebound\Http\Requests\CaptureEmailRequest
  * @covers \CartRebound\Http\Requests\MarkRecoveredRequest
+ * @covers \CartRebound\Http\Requests\UpdateStatusRequest
  */
 final class CartRequestsTest extends TestCase {
 
@@ -68,6 +72,45 @@ final class CartRequestsTest extends TestCase {
 			),
 			$result
 		);
+	}
+
+	public function test_update_status_requires_id_and_status(): void {
+		$result = ( new UpdateStatusRequest( $this->request( array( 'id' => 5 ) ) ) )->validate();
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 422, $result->get_error_data()['status'] );
+	}
+
+	public function test_update_status_accepts_valid_payload(): void {
+		$result = ( new UpdateStatusRequest(
+			$this->request(
+				array(
+					'id'     => '7',
+					'status' => 'lost',
+				)
+			)
+		) )->validate();
+
+		$this->assertSame(
+			array(
+				'id'     => 7,
+				'status' => 'lost',
+			),
+			$result
+		);
+	}
+
+	public function test_bulk_action_requires_action(): void {
+		$result = ( new BulkActionRequest( $this->request( array() ) ) )->validate();
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 422, $result->get_error_data()['status'] );
+	}
+
+	public function test_bulk_action_accepts_action(): void {
+		$result = ( new BulkActionRequest( $this->request( array( 'action' => 'delete' ) ) ) )->validate();
+
+		$this->assertSame( array( 'action' => 'delete' ), $result );
 	}
 
 	public function test_capture_email_rejects_invalid_email(): void {

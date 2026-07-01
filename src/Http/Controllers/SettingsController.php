@@ -75,6 +75,7 @@ final class SettingsController extends Controller {
 			'email_body',
 			'email_from_name',
 			'email_from_email',
+			'email_coupon',
 		);
 
 		$input = array();

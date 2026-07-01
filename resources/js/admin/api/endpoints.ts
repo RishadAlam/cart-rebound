@@ -3,9 +3,12 @@
  */
 import { apiClient } from './client';
 import type {
+	BulkAction,
 	Cart,
 	CartList,
 	CartsQuery,
+	Coupon,
+	Order,
 	PingResponse,
 	Settings,
 	Stats,
@@ -35,6 +38,18 @@ export const fetchCart = async (id: number): Promise<Cart> => {
 	return data;
 };
 
+export const fetchOrders = async (): Promise<Order[]> => {
+	const { data } = await apiClient.get<{ items: Order[] }>('orders');
+
+	return data.items;
+};
+
+export const fetchCoupons = async (): Promise<Coupon[]> => {
+	const { data } = await apiClient.get<{ items: Coupon[] }>('coupons');
+
+	return data.items;
+};
+
 export const deleteCart = async (id: number): Promise<void> => {
 	await apiClient.delete(`carts/${id}`);
 };
@@ -43,9 +58,56 @@ export const markCartRecovered = async (input: {
 	id: number;
 	order_id: number;
 }): Promise<void> => {
-	await apiClient.post(`carts/${input.id}/mark-recovered`, {
-		order_id: input.order_id,
-	});
+	const { data } = await apiClient.post<{ updated: boolean }>(
+		`carts/${input.id}/mark-recovered`,
+		{ order_id: input.order_id }
+	);
+
+	if (!data.updated) {
+		throw new Error(
+			'Could not mark recovered — the order ID may be invalid, or this cart is already linked to an order.'
+		);
+	}
+};
+
+export const updateCartStatus = async (input: {
+	id: number;
+	status: string;
+}): Promise<void> => {
+	const { data } = await apiClient.post<{ updated: boolean }>(
+		`carts/${input.id}/status`,
+		{ status: input.status }
+	);
+
+	if (!data.updated) {
+		throw new Error('Could not change the cart status.');
+	}
+};
+
+export const sendCartEmail = async (id: number): Promise<void> => {
+	const { data } = await apiClient.post<{ sent: boolean }>(
+		`carts/${id}/send-email`,
+		{}
+	);
+
+	if (!data.sent) {
+		throw new Error(
+			'Email not sent — the cart needs a valid email and at least one item.'
+		);
+	}
+};
+
+export const bulkCarts = async (input: {
+	action: BulkAction;
+	ids: number[];
+	status?: string;
+}): Promise<number> => {
+	const { data } = await apiClient.post<{ affected: number }>(
+		'carts/bulk',
+		input
+	);
+
+	return data.affected;
 };
 
 export const fetchSettings = async (): Promise<Settings> => {

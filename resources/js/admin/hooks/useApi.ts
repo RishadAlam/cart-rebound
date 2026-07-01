@@ -3,17 +3,24 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+	bulkCarts,
 	deleteCart,
 	fetchCarts,
+	fetchCoupons,
+	fetchOrders,
 	fetchPing,
 	fetchSettings,
 	fetchStats,
 	markCartRecovered,
+	sendCartEmail,
+	updateCartStatus,
 	updateSettings,
 } from '../api/endpoints';
 import type {
 	CartList,
 	CartsQuery,
+	Coupon,
+	Order,
 	PingResponse,
 	Settings,
 	Stats,
@@ -35,6 +42,20 @@ export const useCarts = (query: CartsQuery) =>
 	useQuery<CartList>({
 		queryKey: ['carts', query],
 		queryFn: () => fetchCarts(query),
+	});
+
+export const useOrders = () =>
+	useQuery<Order[]>({
+		queryKey: ['orders'],
+		queryFn: fetchOrders,
+		staleTime: 60_000,
+	});
+
+export const useCoupons = () =>
+	useQuery<Coupon[]>({
+		queryKey: ['coupons'],
+		queryFn: fetchCoupons,
+		staleTime: 60_000,
 	});
 
 export const useSettings = () =>
@@ -75,6 +96,30 @@ export const useMarkRecovered = () => {
 
 	return useMutation({
 		mutationFn: markCartRecovered,
+		onSuccess: () => {
+			invalidateCarts(queryClient);
+		},
+	});
+};
+
+export const useUpdateStatus = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: updateCartStatus,
+		onSuccess: () => {
+			invalidateCarts(queryClient);
+		},
+	});
+};
+
+export const useSendEmail = () => useMutation({ mutationFn: sendCartEmail });
+
+export const useBulkCarts = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: bulkCarts,
 		onSuccess: () => {
 			invalidateCarts(queryClient);
 		},

@@ -58,6 +58,19 @@ final class CartSession extends Model {
 	public const STATUS_LOST = 'lost';
 
 	/**
+	 * The full lifecycle status vocabulary, in funnel order.
+	 *
+	 * @var array<int, string>
+	 */
+	public const STATUSES = array(
+		self::STATUS_ACTIVE,
+		self::STATUS_ABANDONED,
+		self::STATUS_RECOVERED,
+		self::STATUS_COMPLETED,
+		self::STATUS_LOST,
+	);
+
+	/**
 	 * Unprefixed table suffix; resolves to `{$wpdb->prefix}cart_rebound_sessions`.
 	 *
 	 * @var string

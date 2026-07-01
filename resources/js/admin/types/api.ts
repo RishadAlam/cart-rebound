@@ -62,11 +62,35 @@ export interface Settings {
 	email_body: string;
 	email_from_name: string;
 	email_from_email: string;
+	email_coupon: string;
 }
+
+export interface Order {
+	id: number;
+	number: string;
+	email: string;
+	total: number;
+	currency: string;
+	status: string;
+	date: string;
+}
+
+export interface Coupon {
+	code: string;
+	description: string;
+	amount: number;
+	type: string;
+}
+
+export type SortOrder = 'asc' | 'desc';
+
+export type BulkAction = 'delete' | 'status';
 
 export interface CartsQuery {
 	status: string;
 	email: string;
 	page: number;
 	per_page: number;
+	orderby: string;
+	order: SortOrder;
 }

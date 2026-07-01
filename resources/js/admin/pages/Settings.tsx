@@ -10,7 +10,7 @@ import {
 	type FormEvent,
 	type ReactNode,
 } from 'react';
-import { useSettings, useUpdateSettings } from '../hooks/useApi';
+import { useCoupons, useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
 type NumberKey =
@@ -49,6 +49,7 @@ const Field = ({
 
 export const Settings = () => {
 	const { data, isLoading } = useSettings();
+	const { data: coupons } = useCoupons();
 	const update = useUpdateSettings();
 	const [form, setForm] = useState<SettingsData | null>(null);
 
@@ -248,7 +249,7 @@ export const Settings = () => {
 				<Field
 					id="cr-body"
 					label="Email body"
-					hint="Tokens: {first_name}, {products}, {recovery_url}"
+					hint="Tokens: {first_name}, {products}, {recovery_url}, {coupon_code}"
 				>
 					<textarea
 						id="cr-body"
@@ -257,6 +258,39 @@ export const Settings = () => {
 						value={form.email_body}
 						onChange={onText('email_body')}
 					/>
+				</Field>
+
+				<Field
+					id="cr-coupon"
+					label="Coupon"
+					hint="Inserted wherever the email uses the {coupon_code} token."
+				>
+					<select
+						id="cr-coupon"
+						className="cr-select"
+						value={form.email_coupon}
+						onChange={(event) => {
+							setField('email_coupon', event.target.value);
+						}}
+					>
+						<option value="">No coupon</option>
+						{(coupons ?? []).map((coupon) => (
+							<option key={coupon.code} value={coupon.code}>
+								{coupon.code}
+								{coupon.description !== ''
+									? ` — ${coupon.description}`
+									: ''}
+							</option>
+						))}
+						{form.email_coupon !== '' &&
+							!(coupons ?? []).some(
+								(coupon) => coupon.code === form.email_coupon
+							) && (
+								<option value={form.email_coupon}>
+									{form.email_coupon}
+								</option>
+							)}
+					</select>
 				</Field>
 
 				<div className="cr-field__grid">

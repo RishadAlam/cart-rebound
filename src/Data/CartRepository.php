@@ -24,6 +24,22 @@ use WC_Order;
 final class CartRepository {
 
 	/**
+	 * Columns the admin list may be sorted by.
+	 *
+	 * @since 0.1.0
+	 * @var array<int, string>
+	 */
+	private const SORTABLE = array(
+		'email',
+		'items_count',
+		'cart_total',
+		'status',
+		'last_activity',
+		'created_at',
+		'order_id',
+	);
+
+	/**
 	 * Event dispatcher.
 	 *
 	 * @since 0.1.0
@@ -54,6 +70,8 @@ final class CartRepository {
 	 *     @type string                    $email    Email substring filter.
 	 *     @type int                       $page     1-based page number.
 	 *     @type int                       $per_page Page size (max 100).
+	 *     @type string                    $orderby  Sort column (whitelisted).
+	 *     @type string                    $order    Sort direction (ASC|DESC).
 	 * }
 	 * @return array<string, mixed>
 	 */
@@ -63,8 +81,12 @@ final class CartRepository {
 		$per_page = $per_page > 0 ? min( 100, $per_page ) : 20;
 		$offset   = ( $page - 1 ) * $per_page;
 
+		$orderby = (string) ( $args['orderby'] ?? '' );
+		$orderby = in_array( $orderby, self::SORTABLE, true ) ? $orderby : 'last_activity';
+		$order   = 'ASC' === strtoupper( (string) ( $args['order'] ?? '' ) ) ? 'ASC' : 'DESC';
+
 		$rows = $this->apply_filters( CartSession::query(), $args )
-			->order_by( 'last_activity', 'DESC' )
+			->order_by( $orderby, $order )
 			->limit( $per_page )
 			->offset( $offset )
 			->get();
@@ -101,17 +123,9 @@ final class CartRepository {
 	 * @return array<string, mixed>
 	 */
 	public function get_stats(): array {
-		$statuses = array(
-			CartSession::STATUS_ACTIVE,
-			CartSession::STATUS_ABANDONED,
-			CartSession::STATUS_RECOVERED,
-			CartSession::STATUS_COMPLETED,
-			CartSession::STATUS_LOST,
-		);
-
 		$counts = array();
 
-		foreach ( $statuses as $status ) {
+		foreach ( CartSession::STATUSES as $status ) {
 			$counts[ $status ] = CartSession::query()->where( 'status', '=', $status )->count();
 		}
 
@@ -180,6 +194,65 @@ final class CartRepository {
 	}
 
 	/**
+	 * Manually set a cart's lifecycle status, applying the matching timestamps.
+	 *
+	 * This is the pure-data transition used for every status except a manual
+	 * abandon that should notify (that path runs through
+	 * {@see \CartRebound\Cron\AbandonmentDetector::abandon()} so the event fires
+	 * and the follow-up email is queued). No integration event is dispatched here.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param int    $cart_id Cart id.
+	 * @param string $status  Target status (must be a known lifecycle status).
+	 * @return bool True when the row exists and the status is valid.
+	 */
+	public function update_status( int $cart_id, string $status ): bool {
+		if ( ! in_array( $status, CartSession::STATUSES, true ) ) {
+			return false;
+		}
+
+		$row = CartSession::find( $cart_id );
+
+		if ( ! is_array( $row ) ) {
+			return false;
+		}
+
+		if ( (string) ( $row['status'] ?? '' ) === $status ) {
+			return true;
+		}
+
+		$now  = gmdate( 'Y-m-d H:i:s' );
+		$data = array( 'status' => $status );
+
+		switch ( $status ) {
+			case CartSession::STATUS_ACTIVE:
+				// Return the row to the live funnel so the detector can re-fire.
+				$data['abandoned_at']         = null;
+				$data['abandonment_notified'] = 0;
+				break;
+			case CartSession::STATUS_ABANDONED:
+				if ( '' === (string) ( $row['abandoned_at'] ?? '' ) ) {
+					$data['abandoned_at'] = $now;
+				}
+				$data['abandonment_notified'] = 1;
+				break;
+			case CartSession::STATUS_RECOVERED:
+				if ( '' === (string) ( $row['recovered_at'] ?? '' ) ) {
+					$data['recovered_at'] = $now;
+				}
+				break;
+			case CartSession::STATUS_COMPLETED:
+				if ( '' === (string) ( $row['completed_at'] ?? '' ) ) {
+					$data['completed_at'] = $now;
+				}
+				break;
+		}
+
+		return CartSession::update( $cart_id, $data );
+	}
+
+	/**
 	 * Delete a cart row.
 	 *
 	 * @since 0.1.0
@@ -189,6 +262,26 @@ final class CartRepository {
 	 */
 	public function delete_cart( int $id ): bool {
 		return CartSession::delete( $id );
+	}
+
+	/**
+	 * Delete many cart rows by id.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<int, int> $ids Cart ids.
+	 * @return int Number of rows deleted.
+	 */
+	public function delete_carts( array $ids ): int {
+		$deleted = 0;
+
+		foreach ( $ids as $id ) {
+			if ( CartSession::delete( (int) $id ) ) {
+				++$deleted;
+			}
+		}
+
+		return $deleted;
 	}
 
 	/**

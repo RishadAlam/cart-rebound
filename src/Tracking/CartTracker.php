@@ -148,6 +148,14 @@ final class CartTracker {
 			CartSession::update( $id, array( 'session_key' => $key . '#' . $id ) );
 		}
 
+		// Never open a brand-new row for an empty cart: WooCommerce fires
+		// `woocommerce_cart_updated` on ordinary page loads (shop, product,
+		// account) where the cart holds nothing, which would otherwise litter
+		// the list with 0-item rows. Existing rows are still updated above.
+		if ( (int) ( $data['items_count'] ?? 0 ) < 1 ) {
+			return 0;
+		}
+
 		$insert = array_merge(
 			$data,
 			$this->logged_in_identity(),
