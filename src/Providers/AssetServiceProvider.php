@@ -56,7 +56,7 @@ final class AssetServiceProvider extends ServiceProvider {
 	public function enqueue_admin_assets( string $hook_suffix ): void {
 		$menu = $this->app->make( Menu::class );
 
-		if ( $hook_suffix !== $menu->get_page_hook() ) {
+		if ( ! in_array( $hook_suffix, $menu->get_page_hooks(), true ) ) {
 			return;
 		}
 
@@ -65,6 +65,8 @@ final class AssetServiceProvider extends ServiceProvider {
 		if ( null === $entry ) {
 			return;
 		}
+
+		$route = $menu->route_for_hook( $hook_suffix );
 
 		$version   = $this->app->version();
 		$base_file = $this->app->base_path( 'cart-rebound.php' );
@@ -78,7 +80,7 @@ final class AssetServiceProvider extends ServiceProvider {
 				true
 			);
 
-			wp_add_inline_script( self::HANDLE, $this->boot_data(), 'before' );
+			wp_add_inline_script( self::HANDLE, $this->boot_data( $route ), 'before' );
 		}
 
 		if ( isset( $entry['css'] ) && is_array( $entry['css'] ) ) {
@@ -146,23 +148,35 @@ final class AssetServiceProvider extends ServiceProvider {
 	/**
 	 * Build the `window.CartRebound` bootstrap script.
 	 *
+	 * Also seeds the hash router with the submenu's route before the app module
+	 * evaluates, so each WordPress submenu item deep-links straight to its tab.
+	 * An existing hash (in-app navigation) is respected.
+	 *
 	 * @since 0.1.0
 	 *
+	 * @param string $route The SPA route this page should open on.
 	 * @return string
 	 */
-	private function boot_data(): string {
+	private function boot_data( string $route ): string {
 		$data = array(
-			'apiUrl'      => esc_url_raw( rest_url( 'cart-rebound/v1' ) ),
-			'nonce'       => wp_create_nonce( 'wp_rest' ),
-			'currentUser' => array(
+			'apiUrl'       => esc_url_raw( rest_url( 'cart-rebound/v1' ) ),
+			'nonce'        => wp_create_nonce( 'wp_rest' ),
+			'initialRoute' => $route,
+			'currentUser'  => array(
 				'id'   => get_current_user_id(),
 				'caps' => $this->current_user_caps(),
 			),
 		);
 
 		$json = wp_json_encode( $data );
+		$js   = 'window.CartRebound = ' . ( false === $json ? '{}' : $json ) . ';';
 
-		return 'window.CartRebound = ' . ( false === $json ? '{}' : $json ) . ';';
+		if ( '/' !== $route ) {
+			$hash = wp_json_encode( '#' . $route );
+			$js  .= 'if(!window.location.hash||"#/"===window.location.hash){window.location.hash=' . ( false === $hash ? '"#/"' : $hash ) . ';}';
+		}
+
+		return $js;
 	}
 
 	/**

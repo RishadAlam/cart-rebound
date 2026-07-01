@@ -8,6 +8,8 @@ declare global {
 	interface CartReboundBootData {
 		apiUrl: string;
 		nonce: string;
+		// Route the WordPress submenu seeded into the hash router at load.
+		initialRoute?: string;
 		currentUser: {
 			id: number;
 			caps: string[];
