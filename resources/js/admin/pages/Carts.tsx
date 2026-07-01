@@ -1,9 +1,12 @@
 /**
- * Carts page — filterable, sortable, paginated list of tracked carts with
- * per-row actions (change status, mark recovered, send email, delete) and bulk
- * actions over a multi-row selection.
+ * Carts page — filterable, sortable, paginated list of tracked carts.
+ *
+ * Each row keeps a calm surface: an inline color-coded status select and three
+ * icon actions (recover, send email, delete). The heavier "mark recovered"
+ * order picker lives in a native <dialog> so it escapes the table's horizontal
+ * scroll container instead of being clipped by it.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	useBulkCarts,
 	useCarts,
@@ -30,13 +33,12 @@ const CHANGE_STATUSES = [
 	'completed',
 	'lost',
 ];
-const KNOWN_STATUSES = new Set(CHANGE_STATUSES);
 const PER_PAGE = 20;
 const COLUMN_COUNT = 8;
 
 type Feedback = { type: 'success' | 'error'; message: string };
 
-// Column key → the backend sort column it maps to (omitted = not sortable).
+// Column key → the backend sort column it maps to.
 const SORTABLE = {
 	email: 'email',
 	items: 'items_count',
@@ -46,23 +48,99 @@ const SORTABLE = {
 	order: 'order_id',
 } as const;
 
-const StatusBadge = ({ status }: { status: string }) => (
-	<span
-		className={
-			KNOWN_STATUSES.has(status) ? `cr-badge is-${status}` : 'cr-badge'
-		}
-	>
-		{status}
-	</span>
-);
-
-const Dash = () => <span className="cr-muted">—</span>;
+const messageOf = (error: unknown): string =>
+	error instanceof Error ? error.message : 'Something went wrong.';
 
 const orderLabel = (order: Order): string => {
 	const who = order.email !== '' ? order.email : 'guest';
 
 	return `#${order.number} · ${who} · ${order.total.toFixed(2)} ${order.currency}`;
 };
+
+const emailButtonTitle = (cart: Cart): string => {
+	if (cart.order_id > 0) {
+		return 'This cart already converted to an order';
+	}
+
+	if (cart.email === '') {
+		return 'No email captured for this cart';
+	}
+
+	return 'Send the recovery email now';
+};
+
+const RecoverIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<path
+			d="M6.5 9.5 9.5 6.5M6.9 4.4l.8-.8a2.7 2.7 0 0 1 3.8 3.8l-.8.8M9.1 11.6l-.8.8a2.7 2.7 0 0 1-3.8-3.8l.8-.8"
+			stroke="currentColor"
+			strokeWidth="1.3"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		/>
+	</svg>
+);
+
+const MailIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<rect
+			x="2.5"
+			y="3.5"
+			width="11"
+			height="9"
+			rx="1.6"
+			stroke="currentColor"
+			strokeWidth="1.3"
+		/>
+		<path
+			d="m3.2 4.8 4.8 3.5 4.8-3.5"
+			stroke="currentColor"
+			strokeWidth="1.3"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		/>
+	</svg>
+);
+
+const TrashIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<path
+			d="M3.4 4.7h9.2M6.4 4.7V3.4a.9.9 0 0 1 .9-.9h1.4a.9.9 0 0 1 .9.9v1.3M5.2 4.7l.5 7.8a1 1 0 0 0 1 .9h2.6a1 1 0 0 0 1-.9l.5-7.8"
+			stroke="currentColor"
+			strokeWidth="1.3"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		/>
+	</svg>
+);
+
+const Dash = () => <span className="cr-muted">—</span>;
+
+const StatusSelect = ({
+	cart,
+	disabled,
+	onChange,
+}: {
+	cart: Cart;
+	disabled: boolean;
+	onChange: (next: string) => void;
+}) => (
+	<select
+		className={`cr-status cr-status--${cart.status}`}
+		aria-label={`Status: ${cart.status}. Change it`}
+		value={cart.status}
+		disabled={disabled}
+		onChange={(event) => {
+			onChange(event.target.value);
+		}}
+	>
+		{CHANGE_STATUSES.map((value) => (
+			<option key={value} value={value}>
+				{value}
+			</option>
+		))}
+	</select>
+);
 
 const SortHeader = ({
 	label,
@@ -89,7 +167,9 @@ const SortHeader = ({
 		>
 			<button
 				type="button"
-				className={`cr-sort${active ? ' is-active' : ''}`}
+				className={`cr-sort${active ? ' is-active' : ''}${
+					align === 'right' ? ' is-right' : ''
+				}`}
 				onClick={() => {
 					onSort(column);
 				}}
@@ -110,56 +190,20 @@ const SortHeader = ({
 
 const CartRow = ({
 	cart,
-	orders,
 	selected,
 	onToggle,
+	onRecover,
 	notify,
 }: {
 	cart: Cart;
-	orders: Order[];
 	selected: boolean;
 	onToggle: (id: number, checked: boolean) => void;
+	onRecover: (cart: Cart) => void;
 	notify: (feedback: Feedback) => void;
 }) => {
-	const [pickedOrder, setPickedOrder] = useState('');
-	const [customOrder, setCustomOrder] = useState('');
 	const remove = useDeleteCart();
-	const mark = useMarkRecovered();
 	const status = useUpdateStatus();
 	const email = useSendEmail();
-
-	const effectiveOrderId =
-		Number.parseInt(customOrder, 10) > 0
-			? Number.parseInt(customOrder, 10)
-			: Number.parseInt(pickedOrder, 10);
-
-	const onMark = () => {
-		if (!(effectiveOrderId > 0)) {
-			notify({
-				type: 'error',
-				message: 'Choose or type an order ID first.',
-			});
-
-			return;
-		}
-
-		mark.mutate(
-			{ id: cart.id, order_id: effectiveOrderId },
-			{
-				onSuccess: () => {
-					setPickedOrder('');
-					setCustomOrder('');
-					notify({
-						type: 'success',
-						message: 'Cart marked recovered.',
-					});
-				},
-				onError: (error: unknown) => {
-					notify({ type: 'error', message: messageOf(error) });
-				},
-			}
-		);
-	};
 
 	const onStatusChange = (next: string) => {
 		status.mutate(
@@ -209,79 +253,42 @@ const CartRow = ({
 					}}
 				/>
 			</td>
-			<td>{cart.email !== '' ? cart.email : <Dash />}</td>
+			<td className="cr-cell-email">
+				{cart.email !== '' ? cart.email : <Dash />}
+			</td>
 			<td>{cart.items_count}</td>
 			<td className="cr-money" style={{ textAlign: 'right' }}>
 				{cart.cart_total.toFixed(2)}
 			</td>
 			<td>
-				<div className="cr-status-cell">
-					<StatusBadge status={cart.status} />
-					<select
-						className="cr-select is-compact is-xs"
-						aria-label="Change status"
-						value={cart.status}
-						disabled={status.isPending}
-						onChange={(event) => {
-							onStatusChange(event.target.value);
-						}}
-					>
-						{CHANGE_STATUSES.map((value) => (
-							<option key={value} value={value}>
-								{value}
-							</option>
-						))}
-					</select>
-				</div>
+				<StatusSelect
+					cart={cart}
+					disabled={status.isPending}
+					onChange={onStatusChange}
+				/>
 			</td>
-			<td className="cr-muted">{cart.last_activity}</td>
+			<td className="cr-muted cr-nowrap">{cart.last_activity}</td>
 			<td style={{ textAlign: 'right' }}>
 				{cart.order_id > 0 ? `#${cart.order_id}` : <Dash />}
 			</td>
 			<td>
 				<div className="cr-row-actions">
 					{cart.order_id === 0 && (
-						<div className="cr-recover">
-							<select
-								className="cr-select is-compact is-xs"
-								aria-label="Pick an order to mark recovered"
-								value={pickedOrder}
-								onChange={(event) => {
-									setPickedOrder(event.target.value);
-								}}
-							>
-								<option value="">Order…</option>
-								{orders.map((order) => (
-									<option key={order.id} value={order.id}>
-										{orderLabel(order)}
-									</option>
-								))}
-							</select>
-							<input
-								className="cr-input is-compact is-xs"
-								style={{ width: 78 }}
-								type="number"
-								min={1}
-								value={customOrder}
-								placeholder="or ID"
-								aria-label="Custom order ID"
-								onChange={(event) => {
-									setCustomOrder(event.target.value);
-								}}
-							/>
-							<button
-								type="button"
-								className="cr-btn is-ghost is-sm"
-								onClick={onMark}
-								disabled={mark.isPending}
-							>
-								Mark recovered
-							</button>
-						</div>
+						<button
+							type="button"
+							className="cr-iconbtn"
+							onClick={() => {
+								onRecover(cart);
+							}}
+							title="Mark recovered"
+							aria-label="Mark this cart recovered against an order"
+						>
+							<RecoverIcon />
+						</button>
 					)}
 					<button
 						type="button"
-						className="cr-btn is-ghost is-sm"
+						className="cr-iconbtn"
 						onClick={onSend}
 						disabled={
 							email.isPending ||
@@ -289,20 +296,178 @@ const CartRow = ({
 							cart.order_id > 0
 						}
 						title={emailButtonTitle(cart)}
+						aria-label="Send recovery email now"
 					>
-						{email.isPending ? 'Sending…' : 'Send email'}
+						<MailIcon />
 					</button>
 					<button
 						type="button"
-						className="cr-btn is-danger is-sm"
+						className="cr-iconbtn is-danger"
 						onClick={onDelete}
 						disabled={remove.isPending}
+						title="Delete cart"
+						aria-label="Delete this cart"
 					>
-						Delete
+						<TrashIcon />
 					</button>
 				</div>
 			</td>
 		</tr>
+	);
+};
+
+const RecoverDialog = ({
+	cart,
+	orders,
+	onClose,
+	notify,
+}: {
+	cart: Cart | null;
+	orders: Order[];
+	onClose: () => void;
+	notify: (feedback: Feedback) => void;
+}) => {
+	const ref = useRef<HTMLDialogElement>(null);
+	const [picked, setPicked] = useState('');
+	const [custom, setCustom] = useState('');
+	const mark = useMarkRecovered();
+
+	useEffect(() => {
+		const el = ref.current;
+
+		if (!el) {
+			return;
+		}
+
+		if (cart) {
+			setPicked('');
+			setCustom('');
+
+			if (!el.open) {
+				el.showModal();
+			}
+		} else if (el.open) {
+			el.close();
+		}
+	}, [cart]);
+
+	const parsedCustom = Number.parseInt(custom, 10);
+	const parsedPicked = Number.parseInt(picked, 10);
+	const orderId = parsedCustom > 0 ? parsedCustom : parsedPicked;
+	const canSubmit = orderId > 0 && !mark.isPending;
+
+	const confirm = () => {
+		if (!cart || !(orderId > 0)) {
+			return;
+		}
+
+		mark.mutate(
+			{ id: cart.id, order_id: orderId },
+			{
+				onSuccess: () => {
+					notify({
+						type: 'success',
+						message: 'Cart marked recovered.',
+					});
+					onClose();
+				},
+				onError: (error: unknown) => {
+					notify({ type: 'error', message: messageOf(error) });
+				},
+			}
+		);
+	};
+
+	return (
+		// Backdrop click-to-close is a mouse nicety; keyboard dismissal (Esc) is
+		// handled natively by <dialog> via onClose, so the a11y interaction rules
+		// don't apply here.
+		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
+		<dialog
+			ref={ref}
+			className="cr-dialog"
+			aria-labelledby="cr-recover-title"
+			onClose={onClose}
+			onClick={(event) => {
+				if (event.target === ref.current) {
+					onClose();
+				}
+			}}
+		>
+			<div className="cr-dialog__body">
+				<h2 id="cr-recover-title" className="cr-dialog__title">
+					Mark cart recovered
+				</h2>
+				<p className="cr-dialog__desc">
+					Link {cart && cart.email !== '' ? cart.email : 'this cart'}{' '}
+					to the order it converted to so the recovered revenue is
+					attributed.
+				</p>
+
+				<div className="cr-field">
+					<label
+						htmlFor="cr-recover-order"
+						className="cr-field__label"
+					>
+						Recent order
+					</label>
+					<select
+						id="cr-recover-order"
+						className="cr-select"
+						value={picked}
+						onChange={(event) => {
+							setPicked(event.target.value);
+						}}
+					>
+						<option value="">Select an order…</option>
+						{orders.map((order) => (
+							<option key={order.id} value={order.id}>
+								{orderLabel(order)}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<div className="cr-field">
+					<label
+						htmlFor="cr-recover-custom"
+						className="cr-field__label"
+					>
+						Or enter an order ID
+					</label>
+					<input
+						id="cr-recover-custom"
+						className="cr-input"
+						type="number"
+						min={1}
+						value={custom}
+						placeholder="e.g. 1024"
+						onChange={(event) => {
+							setCustom(event.target.value);
+						}}
+					/>
+				</div>
+
+				<div className="cr-dialog__actions">
+					<button
+						type="button"
+						className="cr-btn is-ghost"
+						onClick={onClose}
+						disabled={mark.isPending}
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						className="cr-btn is-primary"
+						onClick={confirm}
+						disabled={!canSubmit}
+					>
+						{mark.isPending ? 'Linking…' : 'Mark recovered'}
+					</button>
+				</div>
+			</div>
+		</dialog>
 	);
 };
 
@@ -322,10 +487,7 @@ const SkeletonRows = () => (
 					<td key={col}>
 						<div
 							className="cr-skeleton"
-							style={{
-								height: 14,
-								width: skeletonWidth(col),
-							}}
+							style={{ height: 14, width: skeletonWidth(col) }}
 						/>
 					</td>
 				))}
@@ -333,21 +495,6 @@ const SkeletonRows = () => (
 		))}
 	</>
 );
-
-const messageOf = (error: unknown): string =>
-	error instanceof Error ? error.message : 'Something went wrong.';
-
-const emailButtonTitle = (cart: Cart): string => {
-	if (cart.order_id > 0) {
-		return 'This cart already converted to an order';
-	}
-
-	if (cart.email === '') {
-		return 'No email captured for this cart';
-	}
-
-	return 'Send the recovery email now';
-};
 
 export const Carts = () => {
 	const [status, setStatus] = useState('');
@@ -359,6 +506,7 @@ export const Carts = () => {
 	const [selected, setSelected] = useState<Set<number>>(new Set());
 	const [bulkStatus, setBulkStatus] = useState('');
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
+	const [recoverCart, setRecoverCart] = useState<Cart | null>(null);
 
 	const { data, isLoading, isError } = useCarts({
 		status,
@@ -373,10 +521,9 @@ export const Carts = () => {
 
 	const items = useMemo(() => data?.items ?? [], [data]);
 
-	// A selection only makes sense for rows currently on screen. Prune it to the
-	// visible ids on every list change — a filter/page/sort switch, or a refetch
-	// after a row action removed or moved rows — so the count, the select-all
-	// state, and bulk actions never operate on rows that are no longer shown.
+	// A selection only makes sense for rows currently on screen, so prune it to
+	// the visible ids on every list change — filter/page/sort switch, or a
+	// refetch after a row action removed or moved rows.
 	useEffect(() => {
 		const visible = new Set(items.map((cart) => cart.id));
 
@@ -387,8 +534,6 @@ export const Carts = () => {
 		});
 	}, [items]);
 
-	// Keep the bulk "Set status" select empty whenever nothing is selected, so a
-	// re-opened bulk bar never shows a stale choice.
 	useEffect(() => {
 		if (selected.size === 0) {
 			setBulkStatus('');
@@ -413,7 +558,6 @@ export const Carts = () => {
 		? Math.max(1, Math.ceil(data.total / data.per_page))
 		: 1;
 	const isEmpty = !isLoading && !isError && !!data && items.length === 0;
-
 	const allChecked = items.length > 0 && selected.size === items.length;
 
 	const toggleAll = (checked: boolean) => {
@@ -516,7 +660,7 @@ export const Carts = () => {
 
 			{feedback && (
 				<div
-					className={`cr-notice is-${feedback.type === 'success' ? 'success' : 'error'}`}
+					className={`cr-notice is-${feedback.type}`}
 					role="status"
 					style={{ marginBottom: 12 }}
 				>
@@ -529,6 +673,7 @@ export const Carts = () => {
 					<span className="cr-bulkbar__count">
 						{selected.size} selected
 					</span>
+					<span className="cr-bulkbar__spacer" />
 					<select
 						className="cr-select is-compact"
 						aria-label="Set status for selected carts"
@@ -557,7 +702,7 @@ export const Carts = () => {
 						onClick={onBulkDelete}
 						disabled={bulk.isPending}
 					>
-						Delete selected
+						Delete
 					</button>
 					<button
 						type="button"
@@ -661,9 +806,9 @@ export const Carts = () => {
 											<CartRow
 												key={cart.id}
 												cart={cart}
-												orders={orders ?? []}
 												selected={selected.has(cart.id)}
 												onToggle={toggleOne}
+												onRecover={setRecoverCart}
 												notify={setFeedback}
 											/>
 										))
@@ -705,6 +850,15 @@ export const Carts = () => {
 					</>
 				)}
 			</div>
+
+			<RecoverDialog
+				cart={recoverCart}
+				orders={orders ?? []}
+				onClose={() => {
+					setRecoverCart(null);
+				}}
+				notify={setFeedback}
+			/>
 		</div>
 	);
 };
