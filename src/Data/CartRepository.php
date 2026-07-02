@@ -123,10 +123,26 @@ final class CartRepository {
 	 * @return array<string, mixed>
 	 */
 	public function get_stats(): array {
-		$counts = array();
+		$counts = array_fill_keys( CartSession::STATUSES, 0 );
 
-		foreach ( CartSession::STATUSES as $status ) {
-			$counts[ $status ] = CartSession::query()->where( 'status', '=', $status )->count();
+		global $wpdb;
+		$table = ( new CartSession() )->get_table();
+
+		// Single GROUP BY query instead of one COUNT(*) per status.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( 'SELECT status, COUNT(*) AS cnt FROM %i GROUP BY status', $table ),
+			ARRAY_A
+		);
+
+		if ( is_array( $rows ) ) {
+			foreach ( $rows as $row ) {
+				$status = (string) ( $row['status'] ?? '' );
+
+				if ( isset( $counts[ $status ] ) ) {
+					$counts[ $status ] = (int) ( $row['cnt'] ?? 0 );
+				}
+			}
 		}
 
 		$revenue = CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->sum( 'recovered_amount' );

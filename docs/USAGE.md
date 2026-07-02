@@ -28,7 +28,7 @@ Cart Rebound is a WooCommerce abandoned-cart recovery plugin. It records every i
 - **Tokenized recovery links** that rebuild the cart (items, variations, and coupons) and send the shopper to checkout — no raw session key is exposed in the URL.
 - **Accurate revenue attribution**: orders are linked to carts by explicit order meta rather than fuzzy total matching, so coupons, shipping, and tax never break the link. Carts resolve to _recovered_ or _completed_, each with its own timestamp, plus a dedicated recovered-amount field.
 - **Optional built-in recovery email** scheduled a configurable delay after abandonment, supporting the `{first_name}`, `{products}`, and `{recovery_url}` tokens.
-- **Event & REST API for integrations**: fires `do_action( 'cart_rebound_abandoned', $payload )` and `do_action( 'cart_rebound_recovered', $payload )` (plus a legacy `cart_abandonment` alias for back-compatibility), and provides a read API for carts, stats, and recovered revenue.
+- **Event & REST API for integrations**: fires `do_action( 'cart_rebound_abandoned', $payload )` and `do_action( 'cart_rebound_recovered', $payload )`, and provides a read API for carts, stats, and recovered revenue.
 - **Admin dashboard** showing active / abandoned / recovered counts, recovered revenue, recovery rate, and a filterable list of cart sessions with row actions.
 
 ### Requirements
@@ -472,17 +472,16 @@ Cart Rebound exposes its abandonment and recovery lifecycle through standard Wor
 
 ### Actions
 
-| Action                   | When it fires                                                                                                                                                | Payload                              |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
-| `cart_rebound_abandoned` | A cart is detected as abandoned.                                                                                                                             | Base payload                         |
-| `cart_abandonment`       | Fired alongside `cart_rebound_abandoned` (same payload, same moment). Legacy alias kept for back-compat with integrations already listening on the old name. | Base payload                         |
-| `cart_rebound_recovered` | An abandoned cart is recovered by a completed order.                                                                                                         | Base payload + recovered-only fields |
+| Action                   | When it fires                                        | Payload                              |
+| ------------------------ | ---------------------------------------------------- | ------------------------------------ |
+| `cart_rebound_abandoned` | A cart is detected as abandoned.                     | Base payload                         |
+| `cart_rebound_recovered` | An abandoned cart is recovered by a completed order. | Base payload + recovered-only fields |
 
-When `EventDispatcher::abandoned()` runs it calls `do_action( 'cart_rebound_abandoned', $payload )` and then immediately `do_action( 'cart_abandonment', $payload )` with the identical payload, so a listener on either name receives the same data. The dispatcher also bumps lifetime counters after firing (`cart_rebound_lifetime_abandoned` on abandonment, `cart_rebound_lifetime_recovered` on recovery), but those are internal options, not part of the payload.
+When `EventDispatcher::abandoned()` runs it calls `do_action( 'cart_rebound_abandoned', $payload )` so a listener receives the cart data. The dispatcher also bumps lifetime counters after firing (`cart_rebound_lifetime_abandoned` on abandonment, `cart_rebound_lifetime_recovered` on recovery), but those are internal options, not part of the payload.
 
 ### Base payload (all events)
 
-Both abandoned events and the recovered event include these base fields, built by `base_payload()`:
+Both the abandoned and the recovered event include these base fields, built by `base_payload()`:
 
 | Key                | Type   | Source / notes                                                    |
 | ------------------ | ------ | ----------------------------------------------------------------- |
@@ -544,16 +543,6 @@ add_action( 'cart_rebound_abandoned', function ( array $payload ) {
 	}
 } );
 ```
-
-You can hook the legacy alias instead if your integration was already written against it; the payload is identical:
-
-```php
-add_action( 'cart_abandonment', function ( array $payload ) {
-	// Same flat $payload as cart_rebound_abandoned.
-} );
-```
-
-Note: because both fire on every abandonment, do not register the same handler on both `cart_rebound_abandoned` and `cart_abandonment` or it will run twice.
 
 ### Example: listen for recovery
 

@@ -37,8 +37,7 @@ Requires an active WooCommerce installation.
   scheduled a configurable delay after abandonment.
 * **Activity log** of abandonments, recoveries, and sent emails — filterable by level, event, and cart.
 * **Event & REST API** for integrations: `do_action( 'cart_rebound_abandoned', $payload )` and
-  `do_action( 'cart_rebound_recovered', $payload )` (plus a legacy `cart_abandonment` alias for back-compat),
-  and a read API for carts, stats, and recovered revenue.
+  `do_action( 'cart_rebound_recovered', $payload )`, and a read API for carts, stats, and recovered revenue.
 * **Admin dashboard**: active / abandoned / recovered counts, recovered revenue, recovery rate, and a filterable
   list of cart sessions with row actions.
 
@@ -75,8 +74,7 @@ abandoned are marked *completed* and contribute no recovered revenue.
 
 = Can other plugins react to abandonment and recovery? =
 
-Yes. Cart Rebound fires `cart_rebound_abandoned` and `cart_rebound_recovered` actions with a flat payload, plus a
-legacy `cart_abandonment` alias for back-compatibility.
+Yes. Cart Rebound fires `cart_rebound_abandoned` and `cart_rebound_recovered` actions with a flat payload.
 
 == Changelog ==
 

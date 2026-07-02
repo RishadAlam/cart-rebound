@@ -59,14 +59,13 @@ final class EventDispatcherTest extends TestCase {
 		);
 	}
 
-	public function test_abandoned_fires_event_and_legacy_alias(): void {
+	public function test_abandoned_fires_event(): void {
 		Actions\expectDone( 'cart_rebound_abandoned' )->once();
-		Actions\expectDone( 'cart_abandonment' )->once();
 
 		( new EventDispatcher( new RecoveryLink() ) )->abandoned( $this->row() );
 
-		// The two action expectations above are the assertions for this test.
-		$this->addToAssertionCount( 2 );
+		// The action expectation above is the assertion for this test.
+		$this->addToAssertionCount( 1 );
 	}
 
 	public function test_payload_has_flat_keys(): void {
@@ -77,7 +76,6 @@ final class EventDispatcherTest extends TestCase {
 				$captured = $payload;
 			}
 		);
-		Actions\expectDone( 'cart_abandonment' )->once();
 
 		( new EventDispatcher( new RecoveryLink() ) )->abandoned( $this->row() );
 

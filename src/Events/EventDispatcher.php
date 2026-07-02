@@ -58,7 +58,7 @@ final class EventDispatcher {
 	}
 
 	/**
-	 * Fire the cart-abandoned event (plus its legacy alias).
+	 * Fire the cart-abandoned event.
 	 *
 	 * @since 0.1.0
 	 *
@@ -69,9 +69,6 @@ final class EventDispatcher {
 		$payload = $this->base_payload( $row );
 
 		do_action( 'cart_rebound_abandoned', $payload );
-
-		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- intentional back-compat alias for integrations already listening on the legacy event name.
-		do_action( 'cart_abandonment', $payload );
 
 		$this->increment( self::OPTION_ABANDONED );
 	}

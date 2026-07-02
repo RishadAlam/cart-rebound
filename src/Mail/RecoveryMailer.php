@@ -285,14 +285,14 @@ final class RecoveryMailer {
 			(string) ( $template['body'] ?? '' )
 		);
 
-		$template = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/recovery.php' : '';
+		$template_path = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/recovery.php' : '';
 
-		if ( '' === $template || ! is_readable( $template ) ) {
+		if ( '' === $template_path || ! is_readable( $template_path ) ) {
 			return wpautop( $content );
 		}
 
 		ob_start();
-		require $template;
+		require $template_path;
 		$html = ob_get_clean();
 
 		return is_string( $html ) ? $html : wpautop( $content );
