@@ -38,13 +38,13 @@ rsync -a \
 	--exclude='.husky' \
 	--exclude='.impeccable' \
 	--exclude='node_modules' \
-	--exclude='build' \
-	--exclude='dist' \
+	--exclude='/build' \
+	--exclude='/dist' \
 	--exclude='coverage' \
 	--exclude='tests' \
 	--exclude='docs' \
 	--exclude='scripts' \
-	--exclude='resources' \
+	--exclude='/resources/js' \
 	--exclude='.gitkeep' \
 	--exclude='.editorconfig' \
 	--exclude='.eslintignore' \

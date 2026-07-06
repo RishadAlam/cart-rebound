@@ -6,7 +6,7 @@
 /.wordpress-org     export-ignore
 /.husky             export-ignore
 /docs               export-ignore
-/resources          export-ignore
+/resources/js        export-ignore
 /scripts            export-ignore
 /tests              export-ignore
 /node_modules       export-ignore
