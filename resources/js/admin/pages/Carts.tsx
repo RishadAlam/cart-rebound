@@ -68,6 +68,10 @@ const emailButtonTitle = (cart: Cart): string => {
 		return 'No email captured for this cart';
 	}
 
+	if (cart.items_count <= 0) {
+		return 'This cart has no items to recover';
+	}
+
 	return 'Send the recovery email now';
 };
 
@@ -312,7 +316,11 @@ const CartRow = ({
 						onClick={() => {
 							onSendEmail(cart);
 						}}
-						disabled={cart.email === '' || cart.order_id > 0}
+						disabled={
+							cart.email === '' ||
+							cart.items_count <= 0 ||
+							cart.order_id > 0
+						}
 						title={emailButtonTitle(cart)}
 						aria-label="Send recovery email"
 					>

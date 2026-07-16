@@ -14,6 +14,7 @@ defined( 'ABSPATH' ) || exit;
 use CartRebound\Models\CartSession;
 use CartRebound\Recovery\RecoveryLink;
 use CartRebound\Support\Settings;
+use WP_Error;
 
 /**
  * Sends the optional single recovery email, scheduled a delay after abandonment.
@@ -55,6 +56,14 @@ final class RecoveryMailer {
 	 * @var TemplateStore
 	 */
 	private $templates;
+
+	/**
+	 * Human-readable reason the most recent on-demand send failed.
+	 *
+	 * @since 0.2.0
+	 * @var string
+	 */
+	private $last_error = '';
 
 	/**
 	 * Constructor.
@@ -142,27 +151,29 @@ final class RecoveryMailer {
 	 * @return bool True when the email was handed to wp_mail successfully.
 	 */
 	public function send_now( int $cart_id, string $template_id = '' ): bool {
+		$this->last_error = '';
+
 		$row = CartSession::find( $cart_id );
 
 		if ( ! is_array( $row ) ) {
-			return false;
+			return $this->fail( __( 'The cart could not be found.', 'cart-rebound' ) );
 		}
 
 		$email = (string) ( $row['email'] ?? '' );
 
 		if ( '' === $email || ! is_email( $email ) ) {
-			return false;
+			return $this->fail( __( 'This cart does not have a valid email address.', 'cart-rebound' ) );
 		}
 
 		if ( (int) ( $row['items_count'] ?? 0 ) <= 0 ) {
-			return false;
+			return $this->fail( __( 'This cart has no items to recover.', 'cart-rebound' ) );
 		}
 
 		// Never re-pitch a cart that already converted to an order: recovered and
 		// completed carts are order-linked, and mailing "you left something in
 		// your cart" (with a coupon) to a paid customer is wrong.
 		if ( (int) ( $row['order_id'] ?? 0 ) > 0 ) {
-			return false;
+			return $this->fail( __( 'This cart is already linked to an order.', 'cart-rebound' ) );
 		}
 
 		$chosen   = '' !== $template_id ? $this->templates->get( $template_id ) : null;
@@ -177,6 +188,40 @@ final class RecoveryMailer {
 		}
 
 		return $sent;
+	}
+
+	/**
+	 * Get the reason the most recent on-demand send failed.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return string
+	 */
+	public function get_last_error(): string {
+		return $this->last_error;
+	}
+
+	/**
+	 * Capture the detailed error emitted by WordPress when wp_mail() fails.
+	 *
+	 * This callback is attached only for the duration of this mailer's own send,
+	 * so unrelated site email failures can never leak into the admin response.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param WP_Error $error WordPress mail error.
+	 * @return void
+	 */
+	public function capture_mail_error( WP_Error $error ): void {
+		$message = $error->get_error_message();
+
+		if ( '' !== $message ) {
+			$this->last_error = sprintf(
+				/* translators: %s: WordPress or SMTP mail error. */
+				__( 'WordPress could not send the email: %s', 'cart-rebound' ),
+				$message
+			);
+		}
 	}
 
 	/**
@@ -257,11 +302,36 @@ final class RecoveryMailer {
 		$body    = $this->build_body( $row, $template );
 		$headers = $this->headers( $template );
 
+		$this->last_error = __( 'WordPress could not send the email. Check the site SMTP or mail transport configuration and try again.', 'cart-rebound' );
 		add_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
-		$sent = wp_mail( $email, $subject, $body, $headers );
-		remove_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
+		add_action( 'wp_mail_failed', array( $this, 'capture_mail_error' ) );
+
+		try {
+			$sent = wp_mail( $email, $subject, $body, $headers );
+		} finally {
+			remove_action( 'wp_mail_failed', array( $this, 'capture_mail_error' ) );
+			remove_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
+		}
+
+		if ( $sent ) {
+			$this->last_error = '';
+		}
 
 		return $sent;
+	}
+
+	/**
+	 * Store an on-demand send failure and return false to the caller.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param string $message Failure message.
+	 * @return bool
+	 */
+	private function fail( string $message ): bool {
+		$this->last_error = $message;
+
+		return false;
 	}
 
 	/**

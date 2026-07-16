@@ -93,14 +93,15 @@ export const sendCartEmail = async (input: {
 	id: number;
 	template_id?: string;
 }): Promise<void> => {
-	const { data } = await apiClient.post<{ sent: boolean }>(
+	const { data } = await apiClient.post<{ sent: boolean; message?: string }>(
 		`carts/${input.id}/send-email`,
 		input.template_id ? { template_id: input.template_id } : {}
 	);
 
 	if (!data.sent) {
 		throw new Error(
-			'Email not sent — the cart needs a valid email, at least one item, and no linked order.'
+			data.message ??
+				'WordPress could not send the email. Check the site mail configuration and try again.'
 		);
 	}
 };

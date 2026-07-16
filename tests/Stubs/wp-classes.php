@@ -53,6 +53,13 @@ if ( ! class_exists( 'WP_Error' ) ) {
 			return (string) ( $codes[0] ?? '' );
 		}
 
+		/** @return string */
+		public function get_error_message(): string {
+			$code = $this->get_error_code();
+
+			return (string) ( $this->errors[ $code ][0] ?? '' );
+		}
+
 		/**
 		 * @param string $code Error code.
 		 * @return mixed
