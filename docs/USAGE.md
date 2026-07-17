@@ -85,9 +85,16 @@ Clone or download the source, then produce the same distributable zip the releas
 # from the plugin root (cart-rebound/)
 composer install      # PHP dependencies + generates vendor/autoload.php
 pnpm install --frozen-lockfile # JS/TS toolchain (React, Vite, etc.)
+pnpm dev              # optional: serve source assets with HMR during development
 pnpm build            # vite build → compiles resources/js into public/build assets
 bash scripts/build-zip.sh
 ```
+
+When `pnpm dev` is listening, Vite creates `public/hot`. On Cart Rebound admin
+pages, PHP reads that marker and enqueues the Vite module client and
+`resources/js/admin/main.tsx` from `http://localhost:5173`, so edits update via
+HMR instead of loading `public/build`. A normal Vite shutdown removes the marker;
+`pnpm build` also removes any stale marker before producing production assets.
 
 `scripts/build-zip.sh` automates the full packaging flow:
 

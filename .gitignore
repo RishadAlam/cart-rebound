@@ -5,6 +5,7 @@
 
 # Build output
 /public/build/
+/public/hot
 /dist/
 /build/
 

@@ -78,9 +78,15 @@ The complete, human-readable source is maintained in this public repository. Pro
 composer install && pnpm install
 composer qa        # phpcs (WP-Extra), PHPStan L8, PHP 7.4 compat, Rector, PHPUnit
 pnpm qa            # tsc strict, prettier, eslint, stylelint
+pnpm dev           # live Vite source assets + HMR on the plugin admin pages
 pnpm build         # compile the admin app
 bash scripts/build-zip.sh   # build assets/POT → build/cart-rebound.zip
 ```
+
+While `pnpm dev` is running, Vite writes `public/hot` and WordPress loads
+`@vite/client` plus `resources/js/admin/main.tsx` from `http://localhost:5173`.
+Stopping Vite removes the marker and the plugin automatically falls back to the
+hashed assets in `public/build`.
 
 The archive command also requires WP-CLI with `wp i18n make-pot` available. `pnpm production-zip` runs the full PHP and JavaScript quality gates and writes the submission archive to `build/cart-rebound.zip`.
 
