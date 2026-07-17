@@ -4,6 +4,7 @@
  * separate `react-jsx-runtime` script handle used by newer core releases.
  */
 import * as React from 'react';
+export type { JSX } from 'react';
 
 type Props = Record<string, unknown> | null;
 

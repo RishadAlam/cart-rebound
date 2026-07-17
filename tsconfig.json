@@ -9,6 +9,7 @@
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
 		"resolveJsonModule": true,
+		"types": ["vite/client", "react", "react-dom", "node"],
 		"isolatedModules": true,
 		"noEmit": true,
 		"jsx": "react-jsx",
@@ -24,7 +25,13 @@
 
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["resources/js/admin/*"]
+			"@/*": ["resources/js/admin/*"],
+			"react/jsx-runtime": [
+				"resources/js/admin/compat/react-jsx-runtime.ts"
+			],
+			"react/jsx-dev-runtime": [
+				"resources/js/admin/compat/react-jsx-runtime.ts"
+			]
 		}
 	},
 	"include": ["resources/js"],
