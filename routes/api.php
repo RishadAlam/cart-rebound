@@ -21,6 +21,6 @@ Route::get( 'ping', array( PingController::class, 'index' ) )->middleware( 'nonc
 /*
  * Front-end guest beacon: captures the email/name/phone a guest enters at
  * checkout. State-changing but intentionally nonce-only — guests hold no
- * capability, and the payload is a non-sensitive cart-identity snapshot.
+ * capability, and the endpoint can only update the visitor's current cart.
  */
 Route::post( 'capture', array( CaptureController::class, 'store' ) )->middleware( 'nonce' );

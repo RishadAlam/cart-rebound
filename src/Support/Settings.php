@@ -38,10 +38,11 @@ final class Settings {
 	 */
 	public function defaults(): array {
 		return array(
-			'guest_tracking'         => true,
+			'guest_tracking'         => false,
 			'abandonment_threshold'  => 30,
 			'scan_interval'          => 5,
 			'cleanup_days'           => 30,
+			'converted_cleanup_days' => 365,
 			'recovery_email_enabled' => false,
 			'email_delay_minutes'    => 60,
 			'email_subject'          => __( 'You left something in your cart', 'cart-rebound' ),
@@ -115,6 +116,7 @@ final class Settings {
 			'abandonment_threshold'  => max( 1, (int) ( $values['abandonment_threshold'] ?? 30 ) ),
 			'scan_interval'          => max( 1, (int) ( $values['scan_interval'] ?? 5 ) ),
 			'cleanup_days'           => max( 1, (int) ( $values['cleanup_days'] ?? 30 ) ),
+			'converted_cleanup_days' => max( 1, (int) ( $values['converted_cleanup_days'] ?? 365 ) ),
 			'recovery_email_enabled' => ! empty( $values['recovery_email_enabled'] ),
 			'email_delay_minutes'    => max( 1, (int) ( $values['email_delay_minutes'] ?? 60 ) ),
 			'email_subject'          => sanitize_text_field( (string) ( $values['email_subject'] ?? '' ) ),

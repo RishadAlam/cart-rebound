@@ -42,7 +42,6 @@ final class AssetServiceProvider extends ServiceProvider {
 	 */
 	public function boot(): void {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
-		add_filter( 'script_loader_tag', array( $this, 'add_module_type' ), 10, 2 );
 	}
 
 	/**
@@ -81,12 +80,13 @@ final class AssetServiceProvider extends ServiceProvider {
 			wp_enqueue_script(
 				self::HANDLE,
 				plugins_url( 'public/build/' . $entry['file'], $base_file ),
-				array(),
+				array( 'react', 'react-dom', 'wp-i18n' ),
 				$version,
 				true
 			);
 
 			wp_add_inline_script( self::HANDLE, $this->boot_data( $route ), 'before' );
+			wp_set_script_translations( self::HANDLE, 'cart-rebound' );
 		}
 
 		if ( isset( $entry['css'] ) && is_array( $entry['css'] ) ) {
@@ -103,23 +103,6 @@ final class AssetServiceProvider extends ServiceProvider {
 				);
 			}
 		}
-	}
-
-	/**
-	 * Mark the admin bundle as an ES module.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @param string $tag    The script tag HTML.
-	 * @param string $handle The script handle.
-	 * @return string
-	 */
-	public function add_module_type( string $tag, string $handle ): string {
-		if ( self::HANDLE === $handle && false === strpos( $tag, 'type="module"' ) ) {
-			$tag = str_replace( '<script ', '<script type="module" ', $tag );
-		}
-
-		return $tag;
 	}
 
 	/**
@@ -142,13 +125,36 @@ final class AssetServiceProvider extends ServiceProvider {
 			return null;
 		}
 
+		$entry = null;
+
 		foreach ( $manifest as $item ) {
 			if ( is_array( $item ) && isset( $item['isEntry'] ) && true === $item['isEntry'] ) {
-				return $item;
+				$entry = $item;
+				break;
 			}
 		}
 
-		return null;
+		if ( null === $entry ) {
+			return null;
+		}
+
+		$css = ( isset( $entry['css'] ) && is_array( $entry['css'] ) ) ? $entry['css'] : array();
+
+		// With cssCodeSplit disabled Vite emits the stylesheet as a standalone
+		// manifest asset instead of nesting it under the JavaScript entry.
+		foreach ( $manifest as $item ) {
+			$file = is_array( $item ) && isset( $item['file'] ) && is_string( $item['file'] )
+				? $item['file']
+				: '';
+
+			if ( '.css' === substr( $file, -4 ) ) {
+				$css[] = $file;
+			}
+		}
+
+		$entry['css'] = array_values( array_unique( $css ) );
+
+		return $entry;
 	}
 
 	/**

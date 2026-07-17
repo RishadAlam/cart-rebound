@@ -19,7 +19,7 @@ return new class() extends Migration {
 	/**
 	 * Create the logs table.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return void
 	 */
@@ -38,7 +38,8 @@ return new class() extends Migration {
 				PRIMARY KEY  (id),
 				KEY idx_created_at (created_at),
 				KEY idx_level (level),
-				KEY idx_event (event)
+				KEY idx_event (event),
+				KEY idx_cart_id (cart_id)
 			) {$charset_collate};"
 		);
 	}
@@ -46,7 +47,7 @@ return new class() extends Migration {
 	/**
 	 * Drop the logs table.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return void
 	 */

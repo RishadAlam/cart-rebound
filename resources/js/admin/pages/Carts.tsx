@@ -7,6 +7,7 @@
  * scroll container instead of being clipped by it.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
 import {
 	useBulkCarts,
@@ -51,28 +52,69 @@ const SORTABLE = {
 } as const;
 
 const messageOf = (error: unknown): string =>
-	error instanceof Error ? error.message : 'Something went wrong.';
+	error instanceof Error
+		? error.message
+		: __('Something went wrong.', 'cart-rebound');
+
+const statusLabel = (status: string): string => {
+	switch (status) {
+		case 'active':
+			return _x('Active', 'cart status', 'cart-rebound');
+		case 'abandoned':
+			return _x('Abandoned', 'cart status', 'cart-rebound');
+		case 'recovered':
+			return _x('Recovered', 'cart status', 'cart-rebound');
+		case 'completed':
+			return _x('Completed', 'cart status', 'cart-rebound');
+		case 'lost':
+			return _x('Lost', 'cart status', 'cart-rebound');
+		default:
+			return status;
+	}
+};
 
 const orderLabel = (order: Order): string => {
-	const who = order.email !== '' ? order.email : 'guest';
+	const who = order.email !== '' ? order.email : __('guest', 'cart-rebound');
 
-	return `#${order.number} · ${who} · ${order.total.toFixed(2)} ${order.currency}`;
+	return sprintf(
+		/* translators: 1: order number, 2: customer, 3: total, 4: currency code. */
+		__('#%1$s · %2$s · %3$s %4$s', 'cart-rebound'),
+		order.number,
+		who,
+		order.total.toFixed(2),
+		order.currency
+	);
 };
 
 const emailButtonTitle = (cart: Cart): string => {
 	if (cart.order_id > 0) {
-		return 'This cart already converted to an order';
+		return __('This cart already converted to an order', 'cart-rebound');
 	}
 
 	if (cart.email === '') {
-		return 'No email captured for this cart';
+		return __('No email captured for this cart', 'cart-rebound');
 	}
 
 	if (cart.items_count <= 0) {
-		return 'This cart has no items to recover';
+		return __('This cart has no items to recover', 'cart-rebound');
 	}
 
-	return 'Send the recovery email now';
+	return __('Send the recovery email now', 'cart-rebound');
+};
+
+const templateLabel = (template: EmailTemplate): string => {
+	const name =
+		template.name !== '' ? template.name : __('Untitled', 'cart-rebound');
+
+	if (!template.is_default) {
+		return name;
+	}
+
+	return sprintf(
+		/* translators: %s: template name. */
+		__('%s (default)', 'cart-rebound'),
+		name
+	);
 };
 
 const RecoverIcon = () => (
@@ -163,12 +205,16 @@ const StatusSelect = ({
 			compact
 			pill
 			tone={cart.status}
-			ariaLabel={`Status: ${cart.status}. Change it`}
+			ariaLabel={sprintf(
+				/* translators: %s: current cart status. */
+				__('Status: %s. Change it', 'cart-rebound'),
+				statusLabel(cart.status)
+			)}
 			value={cart.status}
 			disabled={pending}
 			options={CHANGE_STATUSES.map((option) => ({
 				value: option,
-				label: option,
+				label: statusLabel(option),
 			}))}
 			onChange={onChange}
 		/>
@@ -191,6 +237,10 @@ const SortHeader = ({
 }) => {
 	const active = sort.by === column;
 	const direction = sort.order === 'asc' ? 'ascending' : 'descending';
+	const directionLabel =
+		sort.order === 'asc'
+			? __('ascending', 'cart-rebound')
+			: __('descending', 'cart-rebound');
 	const glyph = sort.order === 'asc' ? '↑' : '↓';
 	const arrow = active ? glyph : '';
 
@@ -209,8 +259,20 @@ const SortHeader = ({
 				}}
 				aria-label={
 					active
-						? `Sort by ${label}, currently ${direction}`
-						: `Sort by ${label}`
+						? sprintf(
+								/* translators: 1: column label, 2: sort direction. */
+								__(
+									'Sort by %1$s, currently %2$s',
+									'cart-rebound'
+								),
+								label,
+								directionLabel
+							)
+						: sprintf(
+								/* translators: %s: column label. */
+								__('Sort by %s', 'cart-rebound'),
+								label
+							)
 				}
 			>
 				{label}
@@ -247,7 +309,11 @@ const CartRow = ({
 				onSuccess: () => {
 					notify({
 						type: 'success',
-						message: `Status set to ${next}.`,
+						message: sprintf(
+							/* translators: %s: cart status. */
+							__('Status set to %s.', 'cart-rebound'),
+							statusLabel(next)
+						),
 					});
 				},
 				onError: (error: unknown) => {
@@ -271,7 +337,10 @@ const CartRow = ({
 				<input
 					type="checkbox"
 					checked={selected}
-					aria-label={`Select cart ${cart.id}`}
+					aria-label={
+						/* translators: %d: cart ID. */
+						sprintf(__('Select cart %d', 'cart-rebound'), cart.id)
+					}
 					onChange={(event) => {
 						onToggle(cart.id, event.target.checked);
 					}}
@@ -304,8 +373,11 @@ const CartRow = ({
 							onClick={() => {
 								onRecover(cart);
 							}}
-							title="Mark recovered"
-							aria-label="Mark this cart recovered against an order"
+							title={__('Mark recovered', 'cart-rebound')}
+							aria-label={__(
+								'Mark this cart recovered against an order',
+								'cart-rebound'
+							)}
 						>
 							<RecoverIcon />
 						</button>
@@ -322,7 +394,7 @@ const CartRow = ({
 							cart.order_id > 0
 						}
 						title={emailButtonTitle(cart)}
-						aria-label="Send recovery email"
+						aria-label={__('Send recovery email', 'cart-rebound')}
 					>
 						<MailIcon />
 					</button>
@@ -331,8 +403,8 @@ const CartRow = ({
 						className="cr-iconbtn is-danger"
 						onClick={onDelete}
 						disabled={remove.isPending}
-						title="Delete cart"
-						aria-label="Delete this cart"
+						title={__('Delete cart', 'cart-rebound')}
+						aria-label={__('Delete this cart', 'cart-rebound')}
 					>
 						{remove.isPending ? <Spinner /> : <TrashIcon />}
 					</button>
@@ -393,7 +465,7 @@ const RecoverDialog = ({
 				onSuccess: () => {
 					notify({
 						type: 'success',
-						message: 'Cart marked recovered.',
+						message: __('Cart marked recovered.', 'cart-rebound'),
 					});
 					onClose();
 				},
@@ -422,23 +494,35 @@ const RecoverDialog = ({
 		>
 			<div className="cr-dialog__body">
 				<h2 id="cr-recover-title" className="cr-dialog__title">
-					Mark cart recovered
+					{__('Mark cart recovered', 'cart-rebound')}
 				</h2>
 				<p className="cr-dialog__desc">
-					Link {cart && cart.email !== '' ? cart.email : 'this cart'}{' '}
-					to the order it converted to so the recovered revenue is
-					attributed.
+					{sprintf(
+						/* translators: %s: customer email address or "this cart". */
+						__(
+							'Link %s to the order it converted to so the recovered revenue is attributed.',
+							'cart-rebound'
+						),
+						cart && cart.email !== ''
+							? cart.email
+							: __('this cart', 'cart-rebound')
+					)}
 				</p>
 
 				<div className="cr-field">
-					<span className="cr-field__label">Recent order</span>
+					<span className="cr-field__label">
+						{__('Recent order', 'cart-rebound')}
+					</span>
 					<Combobox
-						ariaLabel="Recent order"
-						placeholder="Select an order…"
+						ariaLabel={__('Recent order', 'cart-rebound')}
+						placeholder={__('Select an order…', 'cart-rebound')}
 						value={picked}
 						onChange={setPicked}
 						options={[
-							{ value: '', label: 'Select an order…' },
+							{
+								value: '',
+								label: __('Select an order…', 'cart-rebound'),
+							},
 							...orders.map((order) => ({
 								value: String(order.id),
 								label: orderLabel(order),
@@ -452,7 +536,7 @@ const RecoverDialog = ({
 						htmlFor="cr-recover-custom"
 						className="cr-field__label"
 					>
-						Or enter an order ID
+						{__('Or enter an order ID', 'cart-rebound')}
 					</label>
 					<input
 						id="cr-recover-custom"
@@ -460,7 +544,7 @@ const RecoverDialog = ({
 						type="number"
 						min={1}
 						value={custom}
-						placeholder="e.g. 1024"
+						placeholder={__('e.g. 1024', 'cart-rebound')}
 						onChange={(event) => {
 							setCustom(event.target.value);
 						}}
@@ -474,7 +558,7 @@ const RecoverDialog = ({
 						onClick={onClose}
 						disabled={mark.isPending}
 					>
-						Cancel
+						{__('Cancel', 'cart-rebound')}
 					</button>
 					<button
 						type="button"
@@ -483,7 +567,9 @@ const RecoverDialog = ({
 						disabled={!canSubmit}
 					>
 						{mark.isPending && <Spinner size={14} />}
-						{mark.isPending ? 'Linking…' : 'Mark recovered'}
+						{mark.isPending
+							? __('Linking…', 'cart-rebound')
+							: __('Mark recovered', 'cart-rebound')}
 					</button>
 				</div>
 			</div>
@@ -542,7 +628,7 @@ const SendDialog = ({
 				onSuccess: () => {
 					notify({
 						type: 'success',
-						message: 'Recovery email sent.',
+						message: __('Recovery email sent.', 'cart-rebound'),
 					});
 					onClose();
 				},
@@ -569,27 +655,32 @@ const SendDialog = ({
 		>
 			<div className="cr-dialog__body">
 				<h2 id="cr-send-title" className="cr-dialog__title">
-					Send recovery email
+					{__('Send recovery email', 'cart-rebound')}
 				</h2>
 				<p className="cr-dialog__desc">
-					Email{' '}
-					{cart && cart.email !== '' ? cart.email : 'this shopper'}{' '}
-					now, using the template you choose.
+					{sprintf(
+						/* translators: %s: customer email address or "this shopper". */
+						__(
+							'Email %s now, using the template you choose.',
+							'cart-rebound'
+						),
+						cart && cart.email !== ''
+							? cart.email
+							: __('this shopper', 'cart-rebound')
+					)}
 				</p>
 
 				<div className="cr-field">
-					<span className="cr-field__label">Template</span>
+					<span className="cr-field__label">
+						{__('Template', 'cart-rebound')}
+					</span>
 					<Combobox
-						ariaLabel="Template"
+						ariaLabel={__('Template', 'cart-rebound')}
 						value={templateId}
 						onChange={setTemplateId}
 						options={templates.map((template) => ({
 							value: template.id,
-							label: `${
-								template.name !== ''
-									? template.name
-									: 'Untitled'
-							}${template.is_default ? ' (default)' : ''}`,
+							label: templateLabel(template),
 						}))}
 					/>
 				</div>
@@ -601,7 +692,7 @@ const SendDialog = ({
 						onClick={onClose}
 						disabled={send.isPending}
 					>
-						Cancel
+						{__('Cancel', 'cart-rebound')}
 					</button>
 					<button
 						type="button"
@@ -610,7 +701,9 @@ const SendDialog = ({
 						disabled={send.isPending}
 					>
 						{send.isPending && <Spinner size={14} />}
-						{send.isPending ? 'Sending…' : 'Send email'}
+						{send.isPending
+							? __('Sending…', 'cart-rebound')
+							: __('Send email', 'cart-rebound')}
 					</button>
 				</div>
 			</div>
@@ -628,16 +721,22 @@ const skeletonWidth = (col: number): number | string => {
 
 const SkeletonRows = () => (
 	<>
-		{Array.from({ length: 6 }, (_, row) => (
+		{Array.from({ length: 6 }, (_unusedRowValue, row) => (
 			<tr key={row}>
-				{Array.from({ length: COLUMN_COUNT }, (__, col) => (
-					<td key={col}>
-						<div
-							className="cr-skeleton"
-							style={{ height: 14, width: skeletonWidth(col) }}
-						/>
-					</td>
-				))}
+				{Array.from(
+					{ length: COLUMN_COUNT },
+					(_unusedColumnValue, col) => (
+						<td key={col}>
+							<div
+								className="cr-skeleton"
+								style={{
+									height: 14,
+									width: skeletonWidth(col),
+								}}
+							/>
+						</td>
+					)
+				)}
 			</tr>
 		))}
 	</>
@@ -756,8 +855,26 @@ export const Carts = () => {
 						type: 'success',
 						message:
 							payload.action === 'delete'
-								? `Deleted ${affected} cart${affected === 1 ? '' : 's'}.`
-								: `Updated ${affected} cart${affected === 1 ? '' : 's'}.`,
+								? sprintf(
+										/* translators: %d: number of deleted carts. */
+										_n(
+											'Deleted %d cart.',
+											'Deleted %d carts.',
+											affected,
+											'cart-rebound'
+										),
+										affected
+									)
+								: sprintf(
+										/* translators: %d: number of updated carts. */
+										_n(
+											'Updated %d cart.',
+											'Updated %d carts.',
+											affected,
+											'cart-rebound'
+										),
+										affected
+									),
 					});
 				},
 				onError: (error: unknown) => {
@@ -772,7 +889,20 @@ export const Carts = () => {
 
 	const onBulkDelete = () => {
 		// eslint-disable-next-line no-alert
-		if (window.confirm(`Delete ${selected.size} selected cart(s)?`)) {
+		const confirmed = window.confirm(
+			sprintf(
+				/* translators: %d: number of selected carts. */
+				_n(
+					'Delete %d selected cart?',
+					'Delete %d selected carts?',
+					selected.size,
+					'cart-rebound'
+				),
+				selected.size
+			)
+		);
+
+		if (confirmed) {
 			runBulk({ action: 'delete' });
 		}
 	};
@@ -780,14 +910,19 @@ export const Carts = () => {
 	return (
 		<div>
 			<div className="cr-toolbar">
-				<span className="cr-toolbar__label">Status</span>
+				<span className="cr-toolbar__label">
+					{__('Status', 'cart-rebound')}
+				</span>
 				<Combobox
 					compact
-					ariaLabel="Filter carts by status"
+					ariaLabel={__('Filter carts by status', 'cart-rebound')}
 					value={status}
 					options={FILTER_STATUSES.map((option) => ({
 						value: option,
-						label: option === '' ? 'All statuses' : option,
+						label:
+							option === ''
+								? __('All statuses', 'cart-rebound')
+								: statusLabel(option),
 					}))}
 					onChange={(next) => {
 						setStatus(next);
@@ -798,12 +933,21 @@ export const Carts = () => {
 				{isFetching && !isLoading && (
 					<span className="cr-toolbar__working">
 						<Spinner size={14} />
-						Updating…
+						{__('Updating…', 'cart-rebound')}
 					</span>
 				)}
 				{data && (
 					<span className="cr-toolbar__label">
-						{data.total} cart{data.total === 1 ? '' : 's'}
+						{sprintf(
+							/* translators: %d: total number of carts. */
+							_n(
+								'%d cart',
+								'%d carts',
+								data.total,
+								'cart-rebound'
+							),
+							data.total
+						)}
 					</span>
 				)}
 			</div>
@@ -821,21 +965,31 @@ export const Carts = () => {
 			{selected.size > 0 && (
 				<div className="cr-bulkbar">
 					<span className="cr-bulkbar__count">
-						{selected.size} selected
+						{sprintf(
+							/* translators: %d: number of selected carts. */
+							__('%d selected', 'cart-rebound'),
+							selected.size
+						)}
 					</span>
 					{bulk.isPending && <Spinner size={14} />}
 					<span className="cr-bulkbar__spacer" />
 					<Combobox
 						compact
-						ariaLabel="Set status for selected carts"
-						placeholder="Set status…"
+						ariaLabel={__(
+							'Set status for selected carts',
+							'cart-rebound'
+						)}
+						placeholder={__('Set status…', 'cart-rebound')}
 						value={bulkStatus}
 						disabled={bulk.isPending}
 						options={[
-							{ value: '', label: 'Set status…' },
+							{
+								value: '',
+								label: __('Set status…', 'cart-rebound'),
+							},
 							...CHANGE_STATUSES.map((option) => ({
 								value: option,
-								label: option,
+								label: statusLabel(option),
 							})),
 						]}
 						onChange={(next) => {
@@ -852,7 +1006,7 @@ export const Carts = () => {
 						onClick={onBulkDelete}
 						disabled={bulk.isPending}
 					>
-						Delete
+						{__('Delete', 'cart-rebound')}
 					</button>
 					<button
 						type="button"
@@ -862,7 +1016,7 @@ export const Carts = () => {
 						}}
 						disabled={bulk.isPending}
 					>
-						Clear
+						{__('Clear', 'cart-rebound')}
 					</button>
 				</div>
 			)}
@@ -874,16 +1028,20 @@ export const Carts = () => {
 						role="alert"
 						style={{ margin: 16 }}
 					>
-						Could not load carts.
+						{__('Could not load carts.', 'cart-rebound')}
 					</div>
 				)}
 
 				{isEmpty && (
 					<div className="cr-empty">
-						<p className="cr-empty__title">No carts yet</p>
+						<p className="cr-empty__title">
+							{__('No carts yet', 'cart-rebound')}
+						</p>
 						<p>
-							Tracked carts appear here as shoppers add items and
-							reach checkout.
+							{__(
+								'Tracked carts appear here as shoppers add items and reach checkout.',
+								'cart-rebound'
+							)}
 						</p>
 					</div>
 				)}
@@ -898,7 +1056,10 @@ export const Carts = () => {
 											<input
 												type="checkbox"
 												checked={allChecked}
-												aria-label="Select all carts on this page"
+												aria-label={__(
+													'Select all carts on this page',
+													'cart-rebound'
+												)}
 												disabled={items.length === 0}
 												onChange={(event) => {
 													toggleAll(
@@ -908,44 +1069,47 @@ export const Carts = () => {
 											/>
 										</th>
 										<SortHeader
-											label="Email"
+											label={__('Email', 'cart-rebound')}
 											column={SORTABLE.email}
 											sort={sort}
 											onSort={onSort}
 										/>
 										<SortHeader
-											label="Items"
+											label={__('Items', 'cart-rebound')}
 											column={SORTABLE.items}
 											sort={sort}
 											onSort={onSort}
 										/>
 										<SortHeader
-											label="Total"
+											label={__('Total', 'cart-rebound')}
 											column={SORTABLE.total}
 											sort={sort}
 											onSort={onSort}
 											align="right"
 										/>
 										<SortHeader
-											label="Status"
+											label={__('Status', 'cart-rebound')}
 											column={SORTABLE.status}
 											sort={sort}
 											onSort={onSort}
 										/>
 										<SortHeader
-											label="Last activity"
+											label={__(
+												'Last activity',
+												'cart-rebound'
+											)}
 											column={SORTABLE.activity}
 											sort={sort}
 											onSort={onSort}
 										/>
 										<SortHeader
-											label="Order"
+											label={__('Order', 'cart-rebound')}
 											column={SORTABLE.order}
 											sort={sort}
 											onSort={onSort}
 											align="right"
 										/>
-										<th>Actions</th>
+										<th>{__('Actions', 'cart-rebound')}</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -979,10 +1143,15 @@ export const Carts = () => {
 									);
 								}}
 							>
-								Previous
+								{__('Previous', 'cart-rebound')}
 							</button>
 							<span>
-								Page {page} of {totalPages}
+								{sprintf(
+									/* translators: 1: current page, 2: total pages. */
+									__('Page %1$d of %2$d', 'cart-rebound'),
+									page,
+									totalPages
+								)}
 							</span>
 							<span className="cr-pagination__spacer" />
 							<button
@@ -995,7 +1164,7 @@ export const Carts = () => {
 									);
 								}}
 							>
-								Next
+								{__('Next', 'cart-rebound')}
 							</button>
 						</div>
 					</>

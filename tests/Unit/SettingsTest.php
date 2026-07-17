@@ -23,9 +23,10 @@ final class SettingsTest extends TestCase {
 
 		$all = ( new Settings() )->all();
 
-		$this->assertTrue( $all['guest_tracking'] );
+		$this->assertFalse( $all['guest_tracking'] );
 		$this->assertSame( 30, $all['abandonment_threshold'] );
 		$this->assertSame( 30, $all['cleanup_days'] );
+		$this->assertSame( 365, $all['converted_cleanup_days'] );
 		$this->assertFalse( $all['recovery_email_enabled'] );
 	}
 
@@ -35,7 +36,7 @@ final class SettingsTest extends TestCase {
 		$settings = new Settings();
 
 		$this->assertSame( 10, $settings->get( 'abandonment_threshold' ) );
-		$this->assertTrue( $settings->get( 'guest_tracking' ) );
+		$this->assertFalse( $settings->get( 'guest_tracking' ) );
 	}
 
 	public function test_get_unknown_key_uses_fallback(): void {
@@ -62,12 +63,14 @@ final class SettingsTest extends TestCase {
 		$result = ( new Settings() )->update(
 			array(
 				'abandonment_threshold'  => '9',
+				'converted_cleanup_days' => '-20',
 				'guest_tracking'         => '1',
 				'recovery_email_enabled' => '',
 			)
 		);
 
 		$this->assertSame( 9, $result['abandonment_threshold'] );
+		$this->assertSame( 1, $result['converted_cleanup_days'] );
 		$this->assertTrue( $result['guest_tracking'] );
 		$this->assertFalse( $result['recovery_email_enabled'] );
 		$this->assertSame( $result, $saved );

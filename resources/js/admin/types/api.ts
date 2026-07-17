@@ -56,6 +56,7 @@ export interface Settings {
 	abandonment_threshold: number;
 	scan_interval: number;
 	cleanup_days: number;
+	converted_cleanup_days: number;
 	recovery_email_enabled: boolean;
 	email_delay_minutes: number;
 	email_subject: string;

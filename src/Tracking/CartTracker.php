@@ -144,8 +144,9 @@ final class CartTracker {
 				return $id;
 			}
 
-			// Free the UNIQUE session_key slot, preserving the terminal row's history.
-			CartSession::update( $id, array( 'session_key' => $key . '#' . $id ) );
+			// Free the UNIQUE session_key slot while staying within varchar(64).
+			// The archived key is deterministic and cannot collide with the live key.
+			CartSession::update( $id, array( 'session_key' => hash( 'sha256', $key . '|archived|' . $id ) ) );
 		}
 
 		// Never open a brand-new row for an empty cart: WooCommerce fires

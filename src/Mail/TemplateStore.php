@@ -20,7 +20,7 @@ use CartRebound\Support\Settings;
  * email. On first read the store seeds a "Default" template from the legacy
  * flat email settings, so existing configuration carries over transparently.
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class TemplateStore {
 
@@ -34,7 +34,7 @@ final class TemplateStore {
 	/**
 	 * Settings store (source of the seeded default template).
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 * @var Settings
 	 */
 	private $settings;
@@ -42,7 +42,7 @@ final class TemplateStore {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param Settings $settings Settings store.
 	 */
@@ -53,7 +53,7 @@ final class TemplateStore {
 	/**
 	 * Get every template. Seeds and persists a default on first access.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -84,7 +84,7 @@ final class TemplateStore {
 	/**
 	 * Get a single template by id.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param string $id Template id.
 	 * @return array<string, mixed>|null
@@ -96,7 +96,7 @@ final class TemplateStore {
 	/**
 	 * Get the default template (drives automatic abandonment emails).
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -115,7 +115,7 @@ final class TemplateStore {
 	/**
 	 * Create a template.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $data Raw template data.
 	 * @return array<string, mixed> The stored template.
@@ -128,7 +128,7 @@ final class TemplateStore {
 
 		// all() always returns at least the seeded default, so a new template
 		// only becomes the default when explicitly asked to.
-		$default_id = ! empty( $data['is_default'] ) ? $template['id'] : $this->default_id( $templates );
+		$default_id = empty( $data['is_default'] ) ? $this->default_id( $templates ) : $template['id'];
 
 		$templates[] = $template;
 		$templates   = $this->apply_default( $templates, $default_id );
@@ -140,7 +140,7 @@ final class TemplateStore {
 	/**
 	 * Update a template by id.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param string               $id   Template id.
 	 * @param array<string, mixed> $data Raw template data.
@@ -163,7 +163,7 @@ final class TemplateStore {
 			return null;
 		}
 
-		$default_id = ! empty( $data['is_default'] ) ? $id : $this->default_id( $templates );
+		$default_id = empty( $data['is_default'] ) ? $this->default_id( $templates ) : $id;
 		$templates  = $this->apply_default( $templates, $default_id );
 		$this->save( $templates );
 
@@ -176,7 +176,7 @@ final class TemplateStore {
 	 * The default template cannot be deleted (set another as default first),
 	 * which also guarantees at least one template always survives.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param string $id Template id.
 	 * @return bool True when a template was deleted.
@@ -205,7 +205,7 @@ final class TemplateStore {
 	/**
 	 * Mark a template as the default, clearing the flag on the others.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param string $id Template id.
 	 * @return bool
@@ -225,7 +225,7 @@ final class TemplateStore {
 	/**
 	 * Build the seeded "Default" template from the legacy flat settings.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -245,7 +245,7 @@ final class TemplateStore {
 	/**
 	 * Seed a single default template and persist it.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -259,7 +259,7 @@ final class TemplateStore {
 	/**
 	 * Sanitise raw template data into the stored shape.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $data Raw data.
 	 * @return array<string, mixed>
@@ -280,7 +280,7 @@ final class TemplateStore {
 	/**
 	 * Normalise a stored row (fills any missing keys).
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $row Stored row.
 	 * @return array<string, mixed>
@@ -295,7 +295,7 @@ final class TemplateStore {
 	/**
 	 * Guarantee exactly one default in a list read from storage.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<int, array<string, mixed>> $templates Templates.
 	 * @return array<int, array<string, mixed>>
@@ -311,7 +311,7 @@ final class TemplateStore {
 	/**
 	 * Resolve which id should be the default (current default, else the first).
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<int, array<string, mixed>> $templates Templates.
 	 * @return string
@@ -329,7 +329,7 @@ final class TemplateStore {
 	/**
 	 * Set is_default true on exactly the matching id.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<int, array<string, mixed>> $templates  Templates.
 	 * @param string                           $default_id Id to flag default.
@@ -346,7 +346,7 @@ final class TemplateStore {
 	/**
 	 * Find a template by id within a list.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<int, array<string, mixed>> $templates Templates.
 	 * @param string                           $id        Template id.
@@ -365,7 +365,7 @@ final class TemplateStore {
 	/**
 	 * Persist a normalised list of templates.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<int, array<string, mixed>> $templates Templates.
 	 * @return void
@@ -377,7 +377,7 @@ final class TemplateStore {
 	/**
 	 * Generate a URL-safe unique id.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return string
 	 */

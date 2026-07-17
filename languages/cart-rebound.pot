@@ -1,0 +1,1298 @@
+# Copyright (C) 2026 Rishad Alam
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Cart Rebound 0.1.0\n"
+"Report-Msgid-Bugs-To: https://github.com/RishadAlam/cart-rebound/issues\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-07-17T16:14:37+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: cart-rebound\n"
+
+#. Plugin Name of the plugin
+#: cart-rebound.php
+#: src/Admin/Menu.php:77
+#: src/Admin/Menu.php:78
+#: src/Privacy/PrivacyPolicy.php:69
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Cart Rebound"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: cart-rebound.php
+msgid "https://github.com/RishadAlam/cart-rebound"
+msgstr ""
+
+#. Description of the plugin
+#: cart-rebound.php
+msgid "Recover abandoned WooCommerce carts with secure links, optional emails, opt-in guest tracking, and accurate revenue attribution."
+msgstr ""
+
+#. Author of the plugin
+#: cart-rebound.php
+msgid "Rishad Alam"
+msgstr ""
+
+#. Author URI of the plugin
+#: cart-rebound.php
+msgid "https://profiles.wordpress.org/rishadbitcode/"
+msgstr ""
+
+#: cart-rebound.php:35
+msgid "Cart Rebound: run \"composer install\" to generate the autoloader before activating the plugin."
+msgstr ""
+
+#: resources/views/emails/recovery.php:21
+msgid "Complete your order"
+msgstr ""
+
+#: src/Admin/Menu.php:100
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Dashboard"
+msgstr ""
+
+#: src/Admin/Menu.php:101
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Carts"
+msgstr ""
+
+#: src/Admin/Menu.php:102
+#: public/build/assets/admin-CGpAk4kE.js:31
+#: public/build/assets/admin-CGpAk4kE.js:64
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Templates"
+msgstr ""
+
+#: src/Admin/Menu.php:103
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Log"
+msgstr ""
+
+#: src/Admin/Menu.php:104
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Settings"
+msgstr ""
+
+#: src/Admin/Pages/DashboardPage.php:51
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: src/Core/Plugin.php:42
+#: src/Support/Requirements.php:46
+msgid "Cart Rebound requires WooCommerce to be installed and active."
+msgstr ""
+
+#: src/Core/Plugin.php:43
+msgid "Plugin dependency missing"
+msgstr ""
+
+#. translators: 1: shopper email, 2: formatted amount.
+#: src/Events/LogSubscriber.php:64
+#, php-format
+msgid "Cart abandoned by %1$s (%2$s)."
+msgstr ""
+
+#. translators: %s: recovery method, e.g. email_link or direct.
+#: src/Events/LogSubscriber.php:90
+#, php-format
+msgid " via %s"
+msgstr ""
+
+#. translators: 1: shopper email, 2: formatted amount, 3: order id, 4: " via <method>" or empty.
+#: src/Events/LogSubscriber.php:98
+#, php-format
+msgid "Cart recovered by %1$s (%2$s) — order #%3$d%4$s."
+msgstr ""
+
+#: src/Events/LogSubscriber.php:120
+msgid "the shopper"
+msgstr ""
+
+#. translators: 1: template name, 2: recipient email.
+#: src/Events/LogSubscriber.php:126
+#, php-format
+msgid "Recovery email “%1$s” sent to %2$s."
+msgstr ""
+
+#. translators: %s: recipient email.
+#: src/Events/LogSubscriber.php:132
+#, php-format
+msgid "Recovery email sent to %s."
+msgstr ""
+
+#: src/Events/LogSubscriber.php:150
+msgid "a guest"
+msgstr ""
+
+#: src/Http/Controllers/CartsController.php:106
+msgid "Cart not found."
+msgstr ""
+
+#: src/Http/Controllers/CartsController.php:158
+#: src/Http/Controllers/CartsController.php:190
+msgid "Unknown status."
+msgstr ""
+
+#: src/Http/Controllers/CartsController.php:179
+msgid "No carts selected."
+msgstr ""
+
+#: src/Http/Controllers/CartsController.php:204
+msgid "Unsupported bulk action."
+msgstr ""
+
+#: src/Http/Controllers/TemplatesController.php:95
+msgid "Template not found."
+msgstr ""
+
+#: src/Http/Kernel.php:80
+msgid "This route has no authorization middleware. Add ->middleware(...) or mark it ->public() explicitly."
+msgstr ""
+
+#: src/Http/Middleware/HandleCors.php:55
+msgid "Cross-origin requests from this origin are not allowed."
+msgstr ""
+
+#: src/Http/Middleware/RequireCapability.php:57
+#: src/Http/Requests/FormRequest.php:89
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: src/Http/Middleware/VerifyNonce.php:38
+msgid "Your session has expired. Please reload the page and try again."
+msgstr ""
+
+#. translators: %s: form field name.
+#: src/Http/Requests/FormRequest.php:109
+#, php-format
+msgid "The %s field is required."
+msgstr ""
+
+#: src/Http/Requests/FormRequest.php:128
+msgid "The submitted data is invalid."
+msgstr ""
+
+#. translators: %s: form field name.
+#: src/Http/Requests/FormRequest.php:182
+#, php-format
+msgid "The %s field must be a string."
+msgstr ""
+
+#. translators: %s: form field name.
+#: src/Http/Requests/FormRequest.php:187
+#, php-format
+msgid "The %s field must be an integer."
+msgstr ""
+
+#. translators: %s: form field name.
+#: src/Http/Requests/FormRequest.php:192
+#, php-format
+msgid "The %s field must be a valid email address."
+msgstr ""
+
+#. translators: %s: form field name.
+#: src/Http/Requests/FormRequest.php:197
+#, php-format
+msgid "The %s field must be a valid URL."
+msgstr ""
+
+#. translators: 1: form field name, 2: maximum length.
+#: src/Http/Requests/FormRequest.php:207
+#, php-format
+msgid "The %1$s field may not be longer than %2$d characters."
+msgstr ""
+
+#. translators: 1: form field name, 2: minimum length.
+#: src/Http/Requests/FormRequest.php:216
+#, php-format
+msgid "The %1$s field must be at least %2$d characters."
+msgstr ""
+
+#: src/Http/Router.php:379
+msgid "An unexpected error occurred while handling the request."
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:159
+msgid "The cart could not be found."
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:165
+msgid "This cart does not have a valid email address."
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:169
+msgid "This cart has no items to recover."
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:176
+msgid "This cart is already linked to an order."
+msgstr ""
+
+#. translators: %s: WordPress or SMTP mail error.
+#: src/Mail/RecoveryMailer.php:221
+#, php-format
+msgid "WordPress could not send the email: %s"
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:305
+msgid "WordPress could not send the email. Check the site SMTP or mail transport configuration and try again."
+msgstr ""
+
+#: src/Mail/TemplateStore.php:235
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Default"
+msgstr ""
+
+#: src/Privacy/PersonalDataEraser.php:106
+msgid "Some Cart Rebound data could not be erased because a database operation failed."
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:142
+#: src/Providers/PrivacyServiceProvider.php:70
+msgid "Cart Rebound cart sessions"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:145
+#: src/Privacy/PersonalDataExporter.php:186
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Cart ID"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:146
+msgid "Session identifier"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:147
+msgid "WordPress user ID"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:148
+msgid "Email address"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:149
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "First name"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:150
+msgid "Last name"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:151
+msgid "Phone number"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:152
+msgid "Cart contents"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:153
+msgid "Cart total"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:154
+msgid "Currency"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:155
+msgid "Item count"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:156
+msgid "Coupons"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:157
+#: public/build/assets/admin-CGpAk4kE.js:52
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Status"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:158
+msgid "Order ID"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:159
+msgid "Recovered amount"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:160
+#: src/Privacy/PersonalDataExporter.php:187
+msgid "Created at"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:161
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Last activity"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:162
+msgid "Abandoned at"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:163
+msgid "Recovered at"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:164
+msgid "Completed at"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:182
+#: src/Providers/PrivacyServiceProvider.php:75
+msgid "Cart Rebound activity logs"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:185
+msgid "Log ID"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:188
+#: public/build/assets/admin-CGpAk4kE.js:60
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Level"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:189
+#: public/build/assets/admin-CGpAk4kE.js:60
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Event"
+msgstr ""
+
+#: src/Privacy/PersonalDataExporter.php:190
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Message"
+msgstr ""
+
+#: src/Privacy/PrivacyPolicy.php:57
+msgid "Cart Rebound stores cart contents, totals, coupon codes, a session identifier, and cart lifecycle timestamps for signed-in shoppers. When guest tracking is enabled, it also stores this information for logged-out shoppers. Email address, name, and phone number are stored when a shopper provides them during checkout."
+msgstr ""
+
+#: src/Privacy/PrivacyPolicy.php:58
+msgid "A first-party cart_rebound_ref cookie containing an unguessable, plugin-specific browser identifier keeps the cart session linked across visits. It is HTTP-only, uses SameSite=Lax, and expires after approximately 30 days."
+msgstr ""
+
+#: src/Privacy/PrivacyPolicy.php:59
+msgid "When recovery emails are enabled, Cart Rebound sends a recovery message through this site’s configured WordPress email system and records related activity in the plugin log. Cart Rebound does not itself send cart data to an external tracking service, although the site’s email delivery provider may process message data."
+msgstr ""
+
+#. translators: 1: unrecovered cart retention days, 2: converted cart retention days.
+#: src/Privacy/PrivacyPolicy.php:62
+#, php-format
+msgid "Active and unrecovered cart records are retained for %1$d days, while recovered and completed cart records are retained for %2$d days. Associated activity logs are deleted with each cart record. Site administrators can change both retention periods in Cart Rebound settings."
+msgstr ""
+
+#: src/Privacy/PrivacyPolicy.php:66
+msgid "Cart Rebound data can be exported or erased using the personal-data tools built into WordPress."
+msgstr ""
+
+#: src/Providers/PrivacyServiceProvider.php:96
+msgid "Cart Rebound cart sessions and activity logs"
+msgstr ""
+
+#: src/Providers/SchedulerServiceProvider.php:123
+msgid "Every 5 minutes (Cart Rebound)"
+msgstr ""
+
+#: src/Support/Facades/Facade.php:67
+msgid "The facade application has not been set."
+msgstr ""
+
+#: src/Support/Settings.php:48
+msgid "You left something in your cart"
+msgstr ""
+
+#: src/Support/Settings.php:49
+msgid "Hi {first_name}, your cart is still waiting: {products} {recovery_url}"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Recover abandoned WooCommerce carts with tokenized links and automated emails — and track the revenue you win back."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Select…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Search…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Search options"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "No matches"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Could not mark recovered — the order ID may be invalid, or this cart is already linked to an order."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "Could not change the cart status."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "WordPress could not send the email. Check the site mail configuration and try again."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Something went wrong."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgctxt "cart status"
+msgid "Active"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgctxt "cart status"
+msgid "Abandoned"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgctxt "cart status"
+msgid "Recovered"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgctxt "cart status"
+msgid "Completed"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgctxt "cart status"
+msgid "Lost"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:31
+msgid "guest"
+msgstr ""
+
+#. translators: 1: order number, 2: customer, 3: total, 4: currency code.
+#: public/build/assets/admin-CGpAk4kE.js:33
+#, js-format
+msgid "#%1$s · %2$s · %3$s %4$s"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:33
+msgid "This cart already converted to an order"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:33
+msgid "No email captured for this cart"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:33
+msgid "This cart has no items to recover"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:33
+msgid "Send the recovery email now"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:33
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Untitled"
+msgstr ""
+
+#. translators: %s: template name.
+#: public/build/assets/admin-CGpAk4kE.js:35
+#, js-format
+msgid "%s (default)"
+msgstr ""
+
+#. translators: %s: current cart status.
+#: public/build/assets/admin-CGpAk4kE.js:37
+#, js-format
+msgid "Status: %s. Change it"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:37
+msgid "ascending"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:37
+msgid "descending"
+msgstr ""
+
+#. translators: 1: column label, 2: sort direction.
+#: public/build/assets/admin-CGpAk4kE.js:39
+#, js-format
+msgid "Sort by %1$s, currently %2$s"
+msgstr ""
+
+#. translators: %s: column label.
+#: public/build/assets/admin-CGpAk4kE.js:41
+#, js-format
+msgid "Sort by %s"
+msgstr ""
+
+#. translators: %d: cart ID.
+#: public/build/assets/admin-CGpAk4kE.js:42
+#, js-format
+msgid "Select cart %d"
+msgstr ""
+
+#. translators: %s: cart status.
+#: public/build/assets/admin-CGpAk4kE.js:44
+#, js-format
+msgid "Status set to %s."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:44
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "Mark recovered"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:44
+msgid "Mark this cart recovered against an order"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:44
+#: public/build/assets/admin-CGpAk4kE.js:46
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Send recovery email"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:44
+msgid "Delete cart"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:44
+msgid "Delete this cart"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:44
+msgid "Mark cart recovered"
+msgstr ""
+
+#. translators: %s: customer email address or "this cart".
+#: public/build/assets/admin-CGpAk4kE.js:46
+#, js-format
+msgid "Link %s to the order it converted to so the recovered revenue is attributed."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "this cart"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "Recent order"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "Select an order…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "Or enter an order ID"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "e.g. 1024"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+#: public/build/assets/admin-CGpAk4kE.js:48
+msgid "Cancel"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "Cart marked recovered."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:46
+msgid "Linking…"
+msgstr ""
+
+#. translators: %s: customer email address or "this shopper".
+#: public/build/assets/admin-CGpAk4kE.js:48
+#, js-format
+msgid "Email %s now, using the template you choose."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:48
+msgid "this shopper"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:48
+msgid "Template"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:48
+msgid "Recovery email sent."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:48
+msgid "Sending…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:48
+msgid "Send email"
+msgstr ""
+
+#. translators: %d: number of deleted carts.
+#: public/build/assets/admin-CGpAk4kE.js:50
+#, js-format
+msgid "Deleted %d cart."
+msgid_plural "Deleted %d carts."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of updated carts.
+#: public/build/assets/admin-CGpAk4kE.js:52
+#, js-format
+msgid "Updated %d cart."
+msgid_plural "Updated %d carts."
+msgstr[0] ""
+msgstr[1] ""
+
+#: public/build/assets/admin-CGpAk4kE.js:52
+msgid "Filter carts by status"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:52
+msgid "All statuses"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:52
+msgid "Updating…"
+msgstr ""
+
+#. translators: %d: total number of carts.
+#: public/build/assets/admin-CGpAk4kE.js:54
+#, js-format
+msgid "%d cart"
+msgid_plural "%d carts"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of selected carts.
+#: public/build/assets/admin-CGpAk4kE.js:56
+#, js-format
+msgid "%d selected"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:56
+msgid "Set status for selected carts"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:56
+msgid "Set status…"
+msgstr ""
+
+#. translators: %d: number of selected carts.
+#: public/build/assets/admin-CGpAk4kE.js:58
+#, js-format
+msgid "Delete %d selected cart?"
+msgid_plural "Delete %d selected carts?"
+msgstr[0] ""
+msgstr[1] ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Delete"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Clear"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Could not load carts."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "No carts yet"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Tracked carts appear here as shoppers add items and reach checkout."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Select all carts on this page"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Email"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Items"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Total"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Order"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+msgid "Actions"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:58
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Previous"
+msgstr ""
+
+#. translators: 1: current page, 2: total pages.
+#: public/build/assets/admin-CGpAk4kE.js:60
+#: public/build/assets/admin-CGpAk4kE.js:64
+#, js-format
+msgid "Page %1$d of %2$d"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Next"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Your session has expired. Please reload the page."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Could not load statistics."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Active carts"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Abandoned"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Recovered"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Completed"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Recovered revenue"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Recovery rate"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "All events"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Emails sent"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgctxt "log level"
+msgid "Info"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgctxt "log level"
+msgid "Success"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgctxt "log level"
+msgid "Warning"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgctxt "log level"
+msgid "Error"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Filter log by level"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "All levels"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Filter log by event"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Cart"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:60
+msgid "Filter log by cart ID"
+msgstr ""
+
+#. translators: %d: number of log entries.
+#: public/build/assets/admin-CGpAk4kE.js:62
+#, js-format
+msgid "%d entry"
+msgid_plural "%d entries"
+msgstr[0] ""
+msgstr[1] ""
+
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Clear the entire activity log?"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Clearing…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Clear log"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Could not load the log."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Nothing logged yet"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Abandonments, recoveries, and sent emails will show up here as they happen."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:62
+msgid "Time (UTC)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Tracking"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Cart tracking runs automatically while the plugin is active. Choose whether logged-out (guest) carts are tracked too."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Track guest carts"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Capture carts and the email guests type at checkout."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Abandonment & cleanup"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "When an idle cart is marked abandoned, how often carts are scanned, and how long stale data is kept."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Abandonment threshold (minutes)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Idle time before a cart is abandoned."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Scan interval (minutes)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "How often abandoned carts are detected."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Cleanup after (days)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Unrecovered carts are purged after this."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Converted cart retention (days)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Recovered and completed carts are purged after this."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Recovery email"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Optionally email shoppers a one-click recovery link a set time after they abandon a cart."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Schedules a single follow-up email per abandoned cart."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Send delay (minutes)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Wait time after abandonment before sending."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Email content — subject, rich-text body, sender, and coupon — is managed per template on the"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "tab. Automatic recovery emails use the template marked default."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Saving…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Save settings"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Settings saved."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Bold"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Italic"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Underline"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Strikethrough"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Heading"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Subheading"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Paragraph"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Quote"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Align left"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Align center"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Align right"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Email body"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Formatting"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Undo"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Redo"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Text colour"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Highlight colour"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Bulleted list"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Numbered list"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Decrease indent"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Increase indent"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Insert link"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Link URL (https://…)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Link"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Remove link"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Unlink"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Insert image"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Image URL (https://…)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Insert into email"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Image"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Divider"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Clear formatting"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Insert merge tag"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Insert tag…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:64
+msgid "Image size"
+msgstr ""
+
+#. translators: %s: an image width percentage, for example 50%.
+#: public/build/assets/admin-CGpAk4kE.js:65
+#, js-format
+msgid "Width %s"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Original size"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Auto"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Remove image"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Remove"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Products"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Recovery link"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Coupon code"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "The shopper's first name (blank if it wasn't captured)."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "A bulleted list of the items left in the cart."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "A one-click link that restores the cart and reopens checkout."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "The coupon code selected below (blank if none is chosen)."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Save"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Create template"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "New template"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "+ New"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Draft"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Edit template"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Default template set."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Set as default"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Rendering…"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Preview"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Template name"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Coupon"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "No coupon"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Subject"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Body"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Merge tags — replaced with real values when the email is sent:"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "A “Complete your order” button is added automatically below the body."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "From name"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "From email"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Name and subject are required."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Template created."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:65
+msgid "Template saved."
+msgstr ""
+
+#. translators: %s: template name.
+#: public/build/assets/admin-CGpAk4kE.js:67
+#, js-format
+msgid "Delete the \"%s\" template?"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Template deleted."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Set another template as default before deleting this one"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Discard"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Email preview"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "(no subject)"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Rendered with sample data (name “Jordan”, two demo items)."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Close"
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Something went wrong. Please reload the page."
+msgstr ""
+
+#: public/build/assets/admin-CGpAk4kE.js:67
+msgid "Cart Rebound could not initialise: configuration data is missing. Please reload the page."
+msgstr ""

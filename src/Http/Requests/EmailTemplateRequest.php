@@ -18,14 +18,14 @@ defined( 'ABSPATH' ) || exit;
  * optional fields are read raw and sanitised by the TemplateStore (the body
  * must keep its markup, which a string rule would strip).
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class EmailTemplateRequest extends FormRequest {
 
 	/**
 	 * Validation rules.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return array<string, string>
 	 */

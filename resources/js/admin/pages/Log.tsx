@@ -2,6 +2,7 @@
  * Log page — a filterable, paginated view of the plugin's activity log.
  */
 import { useState } from 'react';
+import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
 import { useClearLog, useLogs } from '../hooks/useApi';
 import type { LogEntry } from '../types/api';
@@ -9,13 +10,31 @@ import type { LogEntry } from '../types/api';
 const LEVELS = ['', 'info', 'success', 'warning', 'error'];
 const KNOWN_LEVELS = new Set(LEVELS.filter((value) => value !== ''));
 const EVENTS = [
-	{ value: '', label: 'All events' },
-	{ value: 'email_sent', label: 'Emails sent' },
-	{ value: 'abandoned', label: 'Abandoned' },
-	{ value: 'recovered', label: 'Recovered' },
+	{ value: '', label: __('All events', 'cart-rebound') },
+	{ value: 'email_sent', label: __('Emails sent', 'cart-rebound') },
+	{ value: 'abandoned', label: __('Abandoned', 'cart-rebound') },
+	{ value: 'recovered', label: __('Recovered', 'cart-rebound') },
 ];
 const PER_PAGE = 30;
 const COLUMN_COUNT = 5;
+
+const levelLabel = (level: string): string => {
+	switch (level) {
+		case 'info':
+			return _x('Info', 'log level', 'cart-rebound');
+		case 'success':
+			return _x('Success', 'log level', 'cart-rebound');
+		case 'warning':
+			return _x('Warning', 'log level', 'cart-rebound');
+		case 'error':
+			return _x('Error', 'log level', 'cart-rebound');
+		default:
+			return level;
+	}
+};
+
+const eventLabel = (event: string): string =>
+	EVENTS.find((option) => option.value === event)?.label ?? event;
 
 const LevelBadge = ({ level }: { level: string }) => (
 	<span
@@ -23,7 +42,7 @@ const LevelBadge = ({ level }: { level: string }) => (
 			KNOWN_LEVELS.has(level) ? `cr-logbadge is-${level}` : 'cr-logbadge'
 		}
 	>
-		{level}
+		{levelLabel(level)}
 	</span>
 );
 
@@ -36,7 +55,7 @@ const LogRow = ({ entry }: { entry: LogEntry }) => (
 			<LevelBadge level={entry.level} />
 		</td>
 		<td className="cr-nowrap">
-			<code className="cr-code">{entry.event}</code>
+			<code className="cr-code">{eventLabel(entry.event)}</code>
 		</td>
 		<td>{entry.message}</td>
 		<td>{entry.cart_id > 0 ? `#${entry.cart_id}` : <Dash />}</td>
@@ -45,19 +64,22 @@ const LogRow = ({ entry }: { entry: LogEntry }) => (
 
 const SkeletonRows = () => (
 	<>
-		{Array.from({ length: 8 }, (_, row) => (
+		{Array.from({ length: 8 }, (_unusedRowValue, row) => (
 			<tr key={row}>
-				{Array.from({ length: COLUMN_COUNT }, (__, col) => (
-					<td key={col}>
-						<div
-							className="cr-skeleton"
-							style={{
-								height: 14,
-								width: col === 3 ? '70%' : '50%',
-							}}
-						/>
-					</td>
-				))}
+				{Array.from(
+					{ length: COLUMN_COUNT },
+					(_unusedColumnValue, col) => (
+						<td key={col}>
+							<div
+								className="cr-skeleton"
+								style={{
+									height: 14,
+									width: col === 3 ? '70%' : '50%',
+								}}
+							/>
+						</td>
+					)
+				)}
 			</tr>
 		))}
 	</>
@@ -86,7 +108,11 @@ export const Log = () => {
 
 	const onClear = () => {
 		// eslint-disable-next-line no-alert
-		if (window.confirm('Clear the entire activity log?')) {
+		const confirmed = window.confirm(
+			__('Clear the entire activity log?', 'cart-rebound')
+		);
+
+		if (confirmed) {
 			clear.mutate(undefined, {
 				onSuccess: () => {
 					setPage(1);
@@ -98,24 +124,31 @@ export const Log = () => {
 	return (
 		<div>
 			<div className="cr-toolbar">
-				<span className="cr-toolbar__label">Level</span>
+				<span className="cr-toolbar__label">
+					{__('Level', 'cart-rebound')}
+				</span>
 				<Combobox
 					compact
-					ariaLabel="Filter log by level"
+					ariaLabel={__('Filter log by level', 'cart-rebound')}
 					value={level}
 					options={LEVELS.map((option) => ({
 						value: option,
-						label: option === '' ? 'All levels' : option,
+						label:
+							option === ''
+								? __('All levels', 'cart-rebound')
+								: levelLabel(option),
 					}))}
 					onChange={(next) => {
 						setLevel(next);
 						setPage(1);
 					}}
 				/>
-				<span className="cr-toolbar__label">Event</span>
+				<span className="cr-toolbar__label">
+					{__('Event', 'cart-rebound')}
+				</span>
 				<Combobox
 					compact
-					ariaLabel="Filter log by event"
+					ariaLabel={__('Filter log by event', 'cart-rebound')}
 					value={event}
 					options={EVENTS}
 					onChange={(next) => {
@@ -123,15 +156,17 @@ export const Log = () => {
 						setPage(1);
 					}}
 				/>
-				<span className="cr-toolbar__label">Cart</span>
+				<span className="cr-toolbar__label">
+					{__('Cart', 'cart-rebound')}
+				</span>
 				<input
 					className="cr-input is-compact"
 					style={{ width: 96 }}
 					type="number"
 					min={1}
 					value={cart}
-					placeholder="Cart ID"
-					aria-label="Filter log by cart ID"
+					placeholder={__('Cart ID', 'cart-rebound')}
+					aria-label={__('Filter log by cart ID', 'cart-rebound')}
 					onChange={(changeEvent) => {
 						setCart(changeEvent.target.value);
 						setPage(1);
@@ -140,7 +175,16 @@ export const Log = () => {
 				<span className="cr-toolbar__spacer" />
 				{data && (
 					<span className="cr-toolbar__label">
-						{data.total} entr{data.total === 1 ? 'y' : 'ies'}
+						{sprintf(
+							/* translators: %d: number of log entries. */
+							_n(
+								'%d entry',
+								'%d entries',
+								data.total,
+								'cart-rebound'
+							),
+							data.total
+						)}
 					</span>
 				)}
 				<button
@@ -149,7 +193,9 @@ export const Log = () => {
 					onClick={onClear}
 					disabled={clear.isPending || (!!data && data.total === 0)}
 				>
-					{clear.isPending ? 'Clearing…' : 'Clear log'}
+					{clear.isPending
+						? __('Clearing…', 'cart-rebound')
+						: __('Clear log', 'cart-rebound')}
 				</button>
 			</div>
 
@@ -160,16 +206,20 @@ export const Log = () => {
 						role="alert"
 						style={{ margin: 16 }}
 					>
-						Could not load the log.
+						{__('Could not load the log.', 'cart-rebound')}
 					</div>
 				)}
 
 				{isEmpty && (
 					<div className="cr-empty">
-						<p className="cr-empty__title">Nothing logged yet</p>
+						<p className="cr-empty__title">
+							{__('Nothing logged yet', 'cart-rebound')}
+						</p>
 						<p>
-							Abandonments, recoveries, and sent emails will show
-							up here as they happen.
+							{__(
+								'Abandonments, recoveries, and sent emails will show up here as they happen.',
+								'cart-rebound'
+							)}
 						</p>
 					</div>
 				)}
@@ -180,11 +230,13 @@ export const Log = () => {
 							<table className="cr-table">
 								<thead>
 									<tr>
-										<th>Time (UTC)</th>
-										<th>Level</th>
-										<th>Event</th>
-										<th>Message</th>
-										<th>Cart</th>
+										<th>
+											{__('Time (UTC)', 'cart-rebound')}
+										</th>
+										<th>{__('Level', 'cart-rebound')}</th>
+										<th>{__('Event', 'cart-rebound')}</th>
+										<th>{__('Message', 'cart-rebound')}</th>
+										<th>{__('Cart', 'cart-rebound')}</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -213,10 +265,15 @@ export const Log = () => {
 									);
 								}}
 							>
-								Previous
+								{__('Previous', 'cart-rebound')}
 							</button>
 							<span>
-								Page {page} of {totalPages}
+								{sprintf(
+									/* translators: 1: current page, 2: total pages. */
+									__('Page %1$d of %2$d', 'cart-rebound'),
+									page,
+									totalPages
+								)}
 							</span>
 							<span className="cr-pagination__spacer" />
 							<button
@@ -229,7 +286,7 @@ export const Log = () => {
 									);
 								}}
 							>
-								Next
+								{__('Next', 'cart-rebound')}
 							</button>
 						</div>
 					</>

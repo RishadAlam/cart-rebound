@@ -20,14 +20,14 @@ use CartRebound\Models\LogEntry;
  * Hooking the public actions (rather than writing from the emitters) keeps the
  * dispatcher/mailer free of logging concerns.
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class LogSubscriber {
 
 	/**
 	 * Log repository.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 * @var LogRepository
 	 */
 	private $logs;
@@ -35,7 +35,7 @@ final class LogSubscriber {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param LogRepository $logs Log repository.
 	 */
@@ -46,7 +46,7 @@ final class LogSubscriber {
 	/**
 	 * Record a cart abandonment.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param mixed $payload The cart_rebound_abandoned payload.
 	 * @return void
@@ -72,7 +72,7 @@ final class LogSubscriber {
 	/**
 	 * Record a cart recovery.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param mixed $payload The cart_rebound_recovered payload.
 	 * @return void
@@ -108,7 +108,7 @@ final class LogSubscriber {
 	/**
 	 * Record a recovery email being sent.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param int   $cart_id  The cart id.
 	 * @param mixed $row      The cart row (for the recipient).
@@ -139,7 +139,7 @@ final class LogSubscriber {
 	/**
 	 * Resolve a display name for the shopper from a payload.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $payload Event payload.
 	 * @return string
@@ -153,7 +153,7 @@ final class LogSubscriber {
 	/**
 	 * Format a money field from a payload with its currency.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $payload Event payload.
 	 * @param string               $key     Amount key.

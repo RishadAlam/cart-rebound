@@ -6,6 +6,7 @@
  * the one automatic abandonment emails use.
  */
 import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { __, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
 import { RichTextEditor, type MergeTag } from '../components/RichTextEditor';
 import type { TemplatePreview } from '../api/endpoints';
@@ -34,35 +35,47 @@ const BLANK: EmailTemplate = {
 };
 
 const TAGS: MergeTag[] = [
-	{ label: 'First name', value: '{first_name}' },
-	{ label: 'Products', value: '{products}' },
-	{ label: 'Recovery link', value: '{recovery_url}' },
-	{ label: 'Coupon code', value: '{coupon_code}' },
+	{ label: __('First name', 'cart-rebound'), value: '{first_name}' },
+	{ label: __('Products', 'cart-rebound'), value: '{products}' },
+	{ label: __('Recovery link', 'cart-rebound'), value: '{recovery_url}' },
+	{ label: __('Coupon code', 'cart-rebound'), value: '{coupon_code}' },
 ];
 
 const TOKEN_DOCS = [
 	{
 		token: '{first_name}',
-		description: "The shopper's first name (blank if it wasn't captured).",
+		description: __(
+			"The shopper's first name (blank if it wasn't captured).",
+			'cart-rebound'
+		),
 	},
 	{
 		token: '{products}',
-		description: 'A bulleted list of the items left in the cart.',
+		description: __(
+			'A bulleted list of the items left in the cart.',
+			'cart-rebound'
+		),
 	},
 	{
 		token: '{recovery_url}',
-		description:
+		description: __(
 			'A one-click link that restores the cart and reopens checkout.',
+			'cart-rebound'
+		),
 	},
 	{
 		token: '{coupon_code}',
-		description:
+		description: __(
 			'The coupon code selected below (blank if none is chosen).',
+			'cart-rebound'
+		),
 	},
 ];
 
 const messageOf = (error: unknown): string =>
-	error instanceof Error ? error.message : 'Something went wrong.';
+	error instanceof Error
+		? error.message
+		: __('Something went wrong.', 'cart-rebound');
 
 const EyeIcon = () => (
 	<svg
@@ -189,22 +202,22 @@ export const Templates = () => {
 		};
 
 	const startNew = () => {
-		load({ ...BLANK, name: 'New template' }, 'new');
+		load({ ...BLANK, name: __('New template', 'cart-rebound') }, 'new');
 	};
 
 	const onSave = () => {
 		if (form.name.trim() === '' || form.subject.trim() === '') {
 			setFeedback({
 				type: 'error',
-				message: 'Name and subject are required.',
+				message: __('Name and subject are required.', 'cart-rebound'),
 			});
 
 			return;
 		}
 
-		const done = (saved: EmailTemplate, verb: string) => {
+		const done = (saved: EmailTemplate, message: string) => {
 			load(saved, saved.id);
-			setFeedback({ type: 'success', message: `Template ${verb}.` });
+			setFeedback({ type: 'success', message });
 		};
 
 		const onError = (error: unknown) => {
@@ -224,7 +237,7 @@ export const Templates = () => {
 				},
 				{
 					onSuccess: (saved) => {
-						done(saved, 'created');
+						done(saved, __('Template created.', 'cart-rebound'));
 					},
 					onError,
 				}
@@ -235,7 +248,7 @@ export const Templates = () => {
 
 		update.mutate(form, {
 			onSuccess: (saved) => {
-				done(saved, 'saved');
+				done(saved, __('Template saved.', 'cart-rebound'));
 			},
 			onError,
 		});
@@ -253,7 +266,7 @@ export const Templates = () => {
 				setField('is_default', true);
 				setFeedback({
 					type: 'success',
-					message: 'Default template set.',
+					message: __('Default template set.', 'cart-rebound'),
 				});
 			},
 			onError: (error: unknown) => {
@@ -270,14 +283,25 @@ export const Templates = () => {
 		}
 
 		// eslint-disable-next-line no-alert
-		if (!window.confirm(`Delete the "${form.name}" template?`)) {
+		const confirmed = window.confirm(
+			sprintf(
+				/* translators: %s: template name. */
+				__('Delete the "%s" template?', 'cart-rebound'),
+				form.name
+			)
+		);
+
+		if (!confirmed) {
 			return;
 		}
 
 		remove.mutate(form.id, {
 			onSuccess: () => {
 				setSelectedId(null);
-				setFeedback({ type: 'success', message: 'Template deleted.' });
+				setFeedback({
+					type: 'success',
+					message: __('Template deleted.', 'cart-rebound'),
+				});
 			},
 			onError: (error: unknown) => {
 				setFeedback({ type: 'error', message: messageOf(error) });
@@ -302,12 +326,12 @@ export const Templates = () => {
 
 	const list = templates ?? [];
 
-	let saveLabel = 'Save';
+	let saveLabel: string = __('Save', 'cart-rebound');
 
 	if (busy) {
-		saveLabel = 'Saving…';
+		saveLabel = __('Saving…', 'cart-rebound');
 	} else if (isNew) {
-		saveLabel = 'Create template';
+		saveLabel = __('Create template', 'cart-rebound');
 	}
 
 	return (
@@ -325,13 +349,13 @@ export const Templates = () => {
 			<div className="cr-templates">
 				<aside className="cr-templates__list cr-card">
 					<div className="cr-templates__listhead">
-						<span>Templates</span>
+						<span>{__('Templates', 'cart-rebound')}</span>
 						<button
 							type="button"
 							className="cr-btn is-ghost is-sm"
 							onClick={startNew}
 						>
-							+ New
+							{__('+ New', 'cart-rebound')}
 						</button>
 					</div>
 					{list.map((template) => (
@@ -348,19 +372,25 @@ export const Templates = () => {
 							<span className="cr-templates__name">
 								{template.name !== ''
 									? template.name
-									: 'Untitled'}
+									: __('Untitled', 'cart-rebound')}
 							</span>
 							{template.is_default && (
-								<span className="cr-tag">Default</span>
+								<span className="cr-tag">
+									{__('Default', 'cart-rebound')}
+								</span>
 							)}
 						</button>
 					))}
 					{isNew && (
 						<div className="cr-templates__item is-active">
 							<span className="cr-templates__name">
-								{form.name !== '' ? form.name : 'New template'}
+								{form.name !== ''
+									? form.name
+									: __('New template', 'cart-rebound')}
 							</span>
-							<span className="cr-tag is-muted">Draft</span>
+							<span className="cr-tag is-muted">
+								{__('Draft', 'cart-rebound')}
+							</span>
 						</div>
 					)}
 				</aside>
@@ -369,11 +399,15 @@ export const Templates = () => {
 					<div className="cr-section">
 						<div className="cr-templates__edithead">
 							<h2 className="cr-section__title">
-								{isNew ? 'New template' : 'Edit template'}
+								{isNew
+									? __('New template', 'cart-rebound')
+									: __('Edit template', 'cart-rebound')}
 							</h2>
 							<div className="cr-templates__editactions">
 								{form.is_default ? (
-									<span className="cr-tag">Default</span>
+									<span className="cr-tag">
+										{__('Default', 'cart-rebound')}
+									</span>
 								) : (
 									<button
 										type="button"
@@ -381,7 +415,7 @@ export const Templates = () => {
 										onClick={onSetDefault}
 										disabled={setDefault.isPending}
 									>
-										Set as default
+										{__('Set as default', 'cart-rebound')}
 									</button>
 								)}
 								<button
@@ -392,8 +426,8 @@ export const Templates = () => {
 								>
 									<EyeIcon />
 									{preview.isPending
-										? 'Rendering…'
-										: 'Preview'}
+										? __('Rendering…', 'cart-rebound')
+										: __('Preview', 'cart-rebound')}
 								</button>
 							</div>
 						</div>
@@ -404,7 +438,7 @@ export const Templates = () => {
 									htmlFor="cr-tpl-name"
 									className="cr-field__label"
 								>
-									Template name
+									{__('Template name', 'cart-rebound')}
 								</label>
 								<input
 									id="cr-tpl-name"
@@ -415,16 +449,27 @@ export const Templates = () => {
 								/>
 							</div>
 							<div className="cr-field">
-								<span className="cr-field__label">Coupon</span>
+								<span className="cr-field__label">
+									{__('Coupon', 'cart-rebound')}
+								</span>
 								<Combobox
-									ariaLabel="Coupon"
-									placeholder="No coupon"
+									ariaLabel={__('Coupon', 'cart-rebound')}
+									placeholder={__(
+										'No coupon',
+										'cart-rebound'
+									)}
 									value={form.coupon}
 									onChange={(next) => {
 										setField('coupon', next);
 									}}
 									options={[
-										{ value: '', label: 'No coupon' },
+										{
+											value: '',
+											label: __(
+												'No coupon',
+												'cart-rebound'
+											),
+										},
 										...(coupons ?? []).map((coupon) => ({
 											value: coupon.code,
 											label:
@@ -454,7 +499,7 @@ export const Templates = () => {
 								htmlFor="cr-tpl-subject"
 								className="cr-field__label"
 							>
-								Subject
+								{__('Subject', 'cart-rebound')}
 							</label>
 							<input
 								id="cr-tpl-subject"
@@ -466,7 +511,9 @@ export const Templates = () => {
 						</div>
 
 						<div className="cr-field">
-							<span className="cr-field__label">Body</span>
+							<span className="cr-field__label">
+								{__('Body', 'cart-rebound')}
+							</span>
 							<RichTextEditor
 								key={editorKey}
 								value={form.body}
@@ -477,8 +524,10 @@ export const Templates = () => {
 							/>
 							<div className="cr-tokens">
 								<p className="cr-tokens__title">
-									Merge tags — replaced with real values when
-									the email is sent:
+									{__(
+										'Merge tags — replaced with real values when the email is sent:',
+										'cart-rebound'
+									)}
 								</p>
 								<dl className="cr-tokens__list">
 									{TOKEN_DOCS.map((doc) => (
@@ -493,8 +542,10 @@ export const Templates = () => {
 									))}
 								</dl>
 								<p className="cr-field__hint">
-									A “Complete your order” button is added
-									automatically below the body.
+									{__(
+										'A “Complete your order” button is added automatically below the body.',
+										'cart-rebound'
+									)}
 								</p>
 							</div>
 						</div>
@@ -505,7 +556,7 @@ export const Templates = () => {
 									htmlFor="cr-tpl-fromname"
 									className="cr-field__label"
 								>
-									From name
+									{__('From name', 'cart-rebound')}
 								</label>
 								<input
 									id="cr-tpl-fromname"
@@ -520,7 +571,7 @@ export const Templates = () => {
 									htmlFor="cr-tpl-fromemail"
 									className="cr-field__label"
 								>
-									From email
+									{__('From email', 'cart-rebound')}
 								</label>
 								<input
 									id="cr-tpl-fromemail"
@@ -552,11 +603,16 @@ export const Templates = () => {
 							}
 							title={
 								!isNew && form.is_default
-									? 'Set another template as default before deleting this one'
+									? __(
+											'Set another template as default before deleting this one',
+											'cart-rebound'
+										)
 									: undefined
 							}
 						>
-							{isNew ? 'Discard' : 'Delete'}
+							{isNew
+								? __('Discard', 'cart-rebound')
+								: __('Delete', 'cart-rebound')}
 						</button>
 					</div>
 				</section>
@@ -579,23 +635,27 @@ export const Templates = () => {
 			>
 				<div className="cr-dialog__body">
 					<h2 id="cr-preview-title" className="cr-dialog__title">
-						Email preview
+						{__('Email preview', 'cart-rebound')}
 					</h2>
 					<p className="cr-preview__subject">
-						<span className="cr-preview__label">Subject</span>
+						<span className="cr-preview__label">
+							{__('Subject', 'cart-rebound')}
+						</span>
 						{previewData?.subject !== ''
 							? previewData?.subject
-							: '(no subject)'}
+							: __('(no subject)', 'cart-rebound')}
 					</p>
 					<iframe
 						className="cr-preview__frame"
-						title="Email preview"
+						title={__('Email preview', 'cart-rebound')}
 						sandbox=""
 						srcDoc={previewData?.html ?? ''}
 					/>
 					<p className="cr-field__hint">
-						Rendered with sample data (name “Jordan”, two demo
-						items).
+						{__(
+							'Rendered with sample data (name “Jordan”, two demo items).',
+							'cart-rebound'
+						)}
 					</p>
 					<div className="cr-dialog__actions">
 						<button
@@ -605,7 +665,7 @@ export const Templates = () => {
 								setPreviewData(null);
 							}}
 						>
-							Close
+							{__('Close', 'cart-rebound')}
 						</button>
 					</div>
 				</div>

@@ -10,6 +10,7 @@ import {
 	type FormEvent,
 	type ReactNode,
 } from 'react';
+import { __ } from '@wordpress/i18n';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
@@ -17,6 +18,7 @@ type NumberKey =
 	| 'abandonment_threshold'
 	| 'scan_interval'
 	| 'cleanup_days'
+	| 'converted_cleanup_days'
 	| 'email_delay_minutes';
 
 type ToggleKey = 'guest_tracking' | 'recovery_email_enabled';
@@ -114,18 +116,25 @@ export const Settings = () => {
 	return (
 		<form onSubmit={onSubmit} className="cr-card" style={{ maxWidth: 720 }}>
 			<div className="cr-section">
-				<h2 className="cr-section__title">Tracking</h2>
+				<h2 className="cr-section__title">
+					{__('Tracking', 'cart-rebound')}
+				</h2>
 				<p className="cr-section__desc">
-					Cart tracking runs automatically while the plugin is active.
-					Choose whether logged-out (guest) carts are tracked too.
+					{__(
+						'Cart tracking runs automatically while the plugin is active. Choose whether logged-out (guest) carts are tracked too.',
+						'cart-rebound'
+					)}
 				</p>
 				<div className="cr-field--row">
 					<div>
 						<label htmlFor="cr-guest" className="cr-field__label">
-							Track guest carts
+							{__('Track guest carts', 'cart-rebound')}
 						</label>
 						<p className="cr-field__hint">
-							Capture carts and the email guests type at checkout.
+							{__(
+								'Capture carts and the email guests type at checkout.',
+								'cart-rebound'
+							)}
 						</p>
 					</div>
 					{toggle('guest_tracking', 'cr-guest')}
@@ -133,16 +142,26 @@ export const Settings = () => {
 			</div>
 
 			<div className="cr-section">
-				<h2 className="cr-section__title">Abandonment &amp; cleanup</h2>
+				<h2 className="cr-section__title">
+					{__('Abandonment & cleanup', 'cart-rebound')}
+				</h2>
 				<p className="cr-section__desc">
-					When an idle cart is marked abandoned, how often carts are
-					scanned, and how long stale data is kept.
+					{__(
+						'When an idle cart is marked abandoned, how often carts are scanned, and how long stale data is kept.',
+						'cart-rebound'
+					)}
 				</p>
 				<div className="cr-field__grid">
 					<Field
 						id="cr-threshold"
-						label="Abandonment threshold (minutes)"
-						hint="Idle time before a cart is abandoned."
+						label={__(
+							'Abandonment threshold (minutes)',
+							'cart-rebound'
+						)}
+						hint={__(
+							'Idle time before a cart is abandoned.',
+							'cart-rebound'
+						)}
 					>
 						<input
 							id="cr-threshold"
@@ -155,8 +174,11 @@ export const Settings = () => {
 					</Field>
 					<Field
 						id="cr-scan"
-						label="Scan interval (minutes)"
-						hint="How often abandoned carts are detected."
+						label={__('Scan interval (minutes)', 'cart-rebound')}
+						hint={__(
+							'How often abandoned carts are detected.',
+							'cart-rebound'
+						)}
 					>
 						<input
 							id="cr-scan"
@@ -169,8 +191,11 @@ export const Settings = () => {
 					</Field>
 					<Field
 						id="cr-cleanup"
-						label="Cleanup after (days)"
-						hint="Unrecovered carts are purged after this."
+						label={__('Cleanup after (days)', 'cart-rebound')}
+						hint={__(
+							'Unrecovered carts are purged after this.',
+							'cart-rebound'
+						)}
 					>
 						<input
 							id="cr-cleanup"
@@ -181,14 +206,38 @@ export const Settings = () => {
 							onChange={onNumber('cleanup_days')}
 						/>
 					</Field>
+					<Field
+						id="cr-converted-cleanup"
+						label={__(
+							'Converted cart retention (days)',
+							'cart-rebound'
+						)}
+						hint={__(
+							'Recovered and completed carts are purged after this.',
+							'cart-rebound'
+						)}
+					>
+						<input
+							id="cr-converted-cleanup"
+							className="cr-input"
+							type="number"
+							min={1}
+							value={form.converted_cleanup_days}
+							onChange={onNumber('converted_cleanup_days')}
+						/>
+					</Field>
 				</div>
 			</div>
 
 			<div className="cr-section">
-				<h2 className="cr-section__title">Recovery email</h2>
+				<h2 className="cr-section__title">
+					{__('Recovery email', 'cart-rebound')}
+				</h2>
 				<p className="cr-section__desc">
-					Optionally email shoppers a one-click recovery link a set
-					time after they abandon a cart.
+					{__(
+						'Optionally email shoppers a one-click recovery link a set time after they abandon a cart.',
+						'cart-rebound'
+					)}
 				</p>
 				<div className="cr-field--row">
 					<div>
@@ -196,11 +245,13 @@ export const Settings = () => {
 							htmlFor="cr-email-enabled"
 							className="cr-field__label"
 						>
-							Send recovery email
+							{__('Send recovery email', 'cart-rebound')}
 						</label>
 						<p className="cr-field__hint">
-							Schedules a single follow-up email per abandoned
-							cart.
+							{__(
+								'Schedules a single follow-up email per abandoned cart.',
+								'cart-rebound'
+							)}
 						</p>
 					</div>
 					{toggle('recovery_email_enabled', 'cr-email-enabled')}
@@ -209,8 +260,11 @@ export const Settings = () => {
 				<div className="cr-field__grid">
 					<Field
 						id="cr-delay"
-						label="Send delay (minutes)"
-						hint="Wait time after abandonment before sending."
+						label={__('Send delay (minutes)', 'cart-rebound')}
+						hint={__(
+							'Wait time after abandonment before sending.',
+							'cart-rebound'
+						)}
 					>
 						<input
 							id="cr-delay"
@@ -224,10 +278,15 @@ export const Settings = () => {
 				</div>
 
 				<p className="cr-section__desc" style={{ marginTop: 4 }}>
-					Email content — subject, rich-text body, sender, and coupon
-					— is managed per template on the{' '}
-					<a href="#/templates">Templates</a> tab. Automatic recovery
-					emails use the template marked default.
+					{__(
+						'Email content — subject, rich-text body, sender, and coupon — is managed per template on the',
+						'cart-rebound'
+					)}{' '}
+					<a href="#/templates">{__('Templates', 'cart-rebound')}</a>{' '}
+					{__(
+						'tab. Automatic recovery emails use the template marked default.',
+						'cart-rebound'
+					)}
 				</p>
 			</div>
 
@@ -237,10 +296,14 @@ export const Settings = () => {
 					className="cr-btn is-primary"
 					disabled={update.isPending}
 				>
-					{update.isPending ? 'Saving…' : 'Save settings'}
+					{update.isPending
+						? __('Saving…', 'cart-rebound')
+						: __('Save settings', 'cart-rebound')}
 				</button>
 				{update.isSuccess && (
-					<span className="cr-saved">Settings saved.</span>
+					<span className="cr-saved">
+						{__('Settings saved.', 'cart-rebound')}
+					</span>
 				)}
 			</div>
 		</form>

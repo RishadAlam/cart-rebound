@@ -1,10 +1,11 @@
 {
 	"name": "cart-rebound",
 	"version": "0.1.0",
-	"description": "Laravel-style WordPress plugin/theme framework boilerplate with a React + TypeScript frontend.",
+	"description": "Tracks abandoned WooCommerce carts and helps recover them with email reminders and secure recovery links.",
 	"license": "GPL-2.0-or-later",
 	"private": true,
 	"type": "module",
+	"packageManager": "pnpm@11.5.0",
 	"engines": {
 		"node": ">=20"
 	},
@@ -28,6 +29,7 @@
 	},
 	"dependencies": {
 		"@tanstack/react-query": "^5.59.0",
+		"@wordpress/i18n": "^6.24.0",
 		"axios": "^1.7.7",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
@@ -56,6 +58,7 @@
 		"prettier": "^3.3.3",
 		"stylelint": "^16.9.0",
 		"tailwindcss": "^3.4.13",
+		"terser": "^5.49.0",
 		"typescript": "^5.6.3",
 		"vite": "^6.4.2"
 	}

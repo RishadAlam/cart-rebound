@@ -22,13 +22,29 @@ if ( is_readable( $cart_rebound_autoloader ) ) {
 	// mirrors Plugin::uninstall() using direct $wpdb calls.
 	global $wpdb;
 
+	$cart_rebound_scheduled_hooks = array(
+		'cart_rebound_scan_abandoned',
+		'cart_rebound_cleanup_sessions',
+		'cart_rebound_send_recovery_email',
+	);
+
+	foreach ( $cart_rebound_scheduled_hooks as $cart_rebound_scheduled_hook ) {
+		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			// Namespaced hooks are unique to this plugin. Omitting args/group clears
+			// recurring jobs and one-off email jobs carrying a cart-id argument.
+			as_unschedule_all_actions( $cart_rebound_scheduled_hook );
+		}
+
+		wp_unschedule_hook( $cart_rebound_scheduled_hook );
+	}
+
 	$cart_rebound_tables = array(
 		$wpdb->prefix . 'cart_rebound_sessions',
 		$wpdb->prefix . 'cart_rebound_logs',
 	);
 
 	foreach ( $cart_rebound_tables as $cart_rebound_table ) {
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $cart_rebound_table ) );
 	}
 

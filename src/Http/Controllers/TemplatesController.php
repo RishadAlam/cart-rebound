@@ -21,14 +21,14 @@ use WP_REST_Response;
 /**
  * Admin CRUD for the recovery-email templates.
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class TemplatesController extends Controller {
 
 	/**
 	 * Template store.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 * @var TemplateStore
 	 */
 	private $templates;
@@ -36,7 +36,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * Recovery mailer (used to render previews).
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 * @var RecoveryMailer
 	 */
 	private $mailer;
@@ -44,7 +44,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param Application    $app       Application instance.
 	 * @param TemplateStore  $templates Template store.
@@ -59,7 +59,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * List all templates.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return WP_REST_Response
 	 */
@@ -70,7 +70,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * Create a template.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param EmailTemplateRequest $request The validated request.
 	 * @return WP_REST_Response
@@ -82,7 +82,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * Update a template.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param EmailTemplateRequest $request The validated request.
 	 * @return WP_REST_Response
@@ -101,7 +101,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * Delete a template.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param WP_REST_Request $request The request.
 	 * @return WP_REST_Response
@@ -118,7 +118,7 @@ final class TemplatesController extends Controller {
 	 * Accepts the current (possibly unsaved) editor fields so an admin can
 	 * preview edits before saving.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param WP_REST_Request $request The request.
 	 * @return WP_REST_Response
@@ -138,7 +138,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * Mark a template as the default used for automatic sends.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param WP_REST_Request $request The request.
 	 * @return WP_REST_Response
@@ -152,7 +152,7 @@ final class TemplatesController extends Controller {
 	/**
 	 * Build a template payload from the request (body/HTML fields read raw).
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param EmailTemplateRequest $request The validated request.
 	 * @return array<string, mixed>

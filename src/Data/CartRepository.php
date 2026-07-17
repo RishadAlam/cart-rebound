@@ -48,14 +48,24 @@ final class CartRepository {
 	private $events;
 
 	/**
+	 * Privacy-aware cart deletion service.
+	 *
+	 * @since 0.1.0
+	 * @var CartDataCleaner
+	 */
+	private $cleaner;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param EventDispatcher $events Event dispatcher.
+	 * @param EventDispatcher $events  Event dispatcher.
+	 * @param CartDataCleaner $cleaner Privacy-aware cart deletion service.
 	 */
-	public function __construct( EventDispatcher $events ) {
-		$this->events = $events;
+	public function __construct( EventDispatcher $events, CartDataCleaner $cleaner ) {
+		$this->events  = $events;
+		$this->cleaner = $cleaner;
 	}
 
 	/**
@@ -253,6 +263,13 @@ final class CartRepository {
 				}
 				$data['abandonment_notified'] = 1;
 				break;
+			case CartSession::STATUS_LOST:
+				// Janitor uses abandoned_at as the unrecovered-retention clock.
+				// A manually lost active cart may not have one yet.
+				if ( '' === (string) ( $row['abandoned_at'] ?? '' ) ) {
+					$data['abandoned_at'] = $now;
+				}
+				break;
 			case CartSession::STATUS_RECOVERED:
 				if ( '' === (string) ( $row['recovered_at'] ?? '' ) ) {
 					$data['recovered_at'] = $now;
@@ -277,7 +294,9 @@ final class CartRepository {
 	 * @return bool
 	 */
 	public function delete_cart( int $id ): bool {
-		return CartSession::delete( $id );
+		$result = $this->cleaner->delete( array( $id ) );
+
+		return $result['complete'] && $result['sessions_deleted'] > 0;
 	}
 
 	/**
@@ -289,15 +308,9 @@ final class CartRepository {
 	 * @return int Number of rows deleted.
 	 */
 	public function delete_carts( array $ids ): int {
-		$deleted = 0;
+		$result = $this->cleaner->delete( $ids );
 
-		foreach ( $ids as $id ) {
-			if ( CartSession::delete( (int) $id ) ) {
-				++$deleted;
-			}
-		}
-
-		return $deleted;
+		return $result['sessions_deleted'];
 	}
 
 	/**

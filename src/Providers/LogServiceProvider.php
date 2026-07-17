@@ -20,7 +20,7 @@ use CartRebound\Events\LogSubscriber;
  * pending migrations after a version bump (so new tables — like the log table —
  * appear on update without a manual re-activation).
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class LogServiceProvider extends ServiceProvider {
 
@@ -34,7 +34,7 @@ final class LogServiceProvider extends ServiceProvider {
 	/**
 	 * Wire log hooks.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return void
 	 */
@@ -51,7 +51,7 @@ final class LogServiceProvider extends ServiceProvider {
 	/**
 	 * Run pending migrations when the installed version changed.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return void
 	 */

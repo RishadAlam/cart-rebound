@@ -29,8 +29,8 @@ use WP_User;
 
 /**
  * Binds every plugin service as a singleton and wires the cross-cutting
- * WooCommerce concerns (HPOS compatibility, the active-plugin guard notice, and
- * merging a guest cart into the user identity on login).
+ * WooCommerce concerns (HPOS compatibility and merging a guest cart into the
+ * user identity on login).
  *
  * @since 0.1.0
  */
@@ -73,7 +73,6 @@ final class CartReboundServiceProvider extends ServiceProvider {
 	 */
 	public function boot(): void {
 		add_action( 'before_woocommerce_init', array( $this, 'declare_hpos_compatibility' ) );
-		add_action( 'admin_notices', array( $this, 'maybe_render_woocommerce_notice' ) );
 		add_action( 'wp_login', array( $this, 'merge_guest_cart_on_login' ), 10, 2 );
 	}
 
@@ -88,23 +87,6 @@ final class CartReboundServiceProvider extends ServiceProvider {
 		if ( class_exists( FeaturesUtil::class ) && defined( 'CART_REBOUND_FILE' ) ) {
 			FeaturesUtil::declare_compatibility( 'custom_order_tables', CART_REBOUND_FILE, true );
 		}
-	}
-
-	/**
-	 * Show an admin notice when WooCommerce is not active.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @return void
-	 */
-	public function maybe_render_woocommerce_notice(): void {
-		if ( class_exists( 'WooCommerce' ) || ! current_user_can( 'activate_plugins' ) ) {
-			return;
-		}
-
-		echo '<div class="notice notice-error"><p>';
-		echo esc_html__( 'Cart Rebound requires WooCommerce to be installed and active.', 'cart-rebound' );
-		echo '</p></div>';
 	}
 
 	/**

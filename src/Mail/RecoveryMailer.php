@@ -52,7 +52,7 @@ final class RecoveryMailer {
 	/**
 	 * Email template store.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 * @var TemplateStore
 	 */
 	private $templates;
@@ -60,7 +60,7 @@ final class RecoveryMailer {
 	/**
 	 * Human-readable reason the most recent on-demand send failed.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 * @var string
 	 */
 	private $last_error = '';
@@ -126,7 +126,7 @@ final class RecoveryMailer {
 			/**
 			 * Fires after a recovery email is sent (drives the activity log).
 			 *
-			 * @since 0.2.0
+			 * @since 0.1.0
 			 *
 			 * @param int                  $cart_id  The cart id.
 			 * @param array<string, mixed> $row      The cart row.
@@ -193,7 +193,7 @@ final class RecoveryMailer {
 	/**
 	 * Get the reason the most recent on-demand send failed.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return string
 	 */
@@ -207,7 +207,7 @@ final class RecoveryMailer {
 	 * This callback is attached only for the duration of this mailer's own send,
 	 * so unrelated site email failures can never leak into the admin response.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param WP_Error $error WordPress mail error.
 	 * @return void
@@ -230,7 +230,7 @@ final class RecoveryMailer {
 	 * Uses the real subject/body token substitution and the real email shell,
 	 * so the preview matches what a shopper would receive.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $template The (unsaved) template to preview.
 	 * @return array{subject: string, html: string}
@@ -247,7 +247,7 @@ final class RecoveryMailer {
 	/**
 	 * A representative cart row for previews.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -273,7 +273,7 @@ final class RecoveryMailer {
 	/**
 	 * Build the token-substituted subject line.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $template The email template.
 	 * @param array<string, mixed> $row      The cart row.
@@ -323,7 +323,7 @@ final class RecoveryMailer {
 	/**
 	 * Store an on-demand send failure and return false to the caller.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param string $message Failure message.
 	 * @return bool

@@ -3,6 +3,7 @@
  * blank admin screen.
  */
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { __ } from '@wordpress/i18n';
 
 interface Props {
 	children: ReactNode;
@@ -31,7 +32,10 @@ export class ErrorBoundary extends Component<Props, State> {
 					className="cart-rebound-error p-6 text-red-600"
 					role="alert"
 				>
-					Something went wrong. Please reload the page.
+					{__(
+						'Something went wrong. Please reload the page.',
+						'cart-rebound'
+					)}
 				</div>
 			);
 		}

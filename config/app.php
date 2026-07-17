@@ -18,6 +18,7 @@ use CartRebound\Providers\AssetServiceProvider;
 use CartRebound\Providers\CaptureServiceProvider;
 use CartRebound\Providers\CartReboundServiceProvider;
 use CartRebound\Providers\LogServiceProvider;
+use CartRebound\Providers\PrivacyServiceProvider;
 use CartRebound\Providers\RecoveryServiceProvider;
 use CartRebound\Providers\RouteServiceProvider;
 use CartRebound\Providers\SchedulerServiceProvider;
@@ -26,6 +27,7 @@ return array(
 	'name'      => 'Cart Rebound',
 	'providers' => array(
 		AppServiceProvider::class,
+		PrivacyServiceProvider::class,
 		RouteServiceProvider::class,
 		AdminServiceProvider::class,
 		AssetServiceProvider::class,

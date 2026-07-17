@@ -20,7 +20,7 @@ jobs:
               with:
                   php-version: '8.2'
                   coverage: none
-                  tools: composer:v2
+                  tools: composer:v2, wp-cli
 
             - name: Set up pnpm
               uses: pnpm/action-setup@v4
@@ -40,4 +40,4 @@ jobs:
             - name: Run Plugin Check on the built plugin
               uses: wordpress/plugin-check-action@v1
               with:
-                  build-dir: ./dist/cart-rebound
+                  build-dir: ./build/cart-rebound

@@ -19,14 +19,14 @@ use WP_REST_Response;
 /**
  * Admin read/clear endpoints for the activity log.
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class LogController extends Controller {
 
 	/**
 	 * Log repository.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 * @var LogRepository
 	 */
 	private $logs;
@@ -34,7 +34,7 @@ final class LogController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param Application   $app  Application instance.
 	 * @param LogRepository $logs Log repository.
@@ -47,7 +47,7 @@ final class LogController extends Controller {
 	/**
 	 * List log entries with optional level filter + paging.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param WP_REST_Request $request The request.
 	 * @return WP_REST_Response
@@ -69,7 +69,7 @@ final class LogController extends Controller {
 	/**
 	 * Clear the whole log.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return WP_REST_Response
 	 */

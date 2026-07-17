@@ -1,6 +1,7 @@
 /**
  * Typed REST endpoint callers.
  */
+import { __ } from '@wordpress/i18n';
 import { apiClient } from './client';
 import type {
 	BulkAction,
@@ -70,7 +71,10 @@ export const markCartRecovered = async (input: {
 
 	if (!data.updated) {
 		throw new Error(
-			'Could not mark recovered — the order ID may be invalid, or this cart is already linked to an order.'
+			__(
+				'Could not mark recovered — the order ID may be invalid, or this cart is already linked to an order.',
+				'cart-rebound'
+			)
 		);
 	}
 };
@@ -85,7 +89,9 @@ export const updateCartStatus = async (input: {
 	);
 
 	if (!data.updated) {
-		throw new Error('Could not change the cart status.');
+		throw new Error(
+			__('Could not change the cart status.', 'cart-rebound')
+		);
 	}
 };
 
@@ -101,7 +107,10 @@ export const sendCartEmail = async (input: {
 	if (!data.sent) {
 		throw new Error(
 			data.message ??
-				'WordPress could not send the email. Check the site mail configuration and try again.'
+				__(
+					'WordPress could not send the email. Check the site mail configuration and try again.',
+					'cart-rebound'
+				)
 		);
 	}
 };

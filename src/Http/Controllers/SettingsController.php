@@ -69,6 +69,7 @@ final class SettingsController extends Controller {
 			'abandonment_threshold',
 			'scan_interval',
 			'cleanup_days',
+			'converted_cleanup_days',
 			'recovery_email_enabled',
 			'email_delay_minutes',
 			'email_subject',

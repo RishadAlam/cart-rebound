@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Cart Rebound
  * Plugin URI:        https://github.com/RishadAlam/cart-rebound
- * Description:       Track WooCommerce carts, detect abandonment, recover sales with tokenized links and automated emails, and attribute recovered revenue — with a clean event/REST API for automations.
+ * Description:       Recover abandoned WooCommerce carts with secure links, optional emails, opt-in guest tracking, and accurate revenue attribution.
  * Version:           0.1.0
  * Requires at least: 6.2
  * Tested up to:      7.0
@@ -57,6 +57,12 @@ register_deactivation_hook( CART_REBOUND_FILE, array( CartRebound\Core\Plugin::c
 add_action(
 	'plugins_loaded',
 	static function () use ( $cart_rebound_app ): void {
+		if ( ! CartRebound\Support\Requirements::has_woocommerce() ) {
+			add_action( 'admin_notices', array( CartRebound\Support\Requirements::class, 'render_admin_notice' ) );
+		}
+
+		// Privacy/export/erase integrations remain available even if WooCommerce
+		// is deactivated after Cart Rebound was already installed.
 		$cart_rebound_app->bootstrap();
 	}
 );

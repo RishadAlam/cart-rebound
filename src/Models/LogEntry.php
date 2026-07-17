@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * One row in `{$wpdb->prefix}cart_rebound_logs` — a single activity-log event.
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class LogEntry extends Model {
 

@@ -15,19 +15,20 @@ End-to-end documentation for **Cart Rebound**, the WooCommerce abandoned-cart re
 - [Developer Guide: REST API](#developer-guide-rest-api)
 - [Scheduling & Cron](#scheduling--cron)
 - [Troubleshooting & FAQ](#troubleshooting--faq)
+- [Privacy & Personal Data](#privacy--personal-data)
 - [Uninstall & Data](#uninstall--data)
 
 ## Overview
 
-Cart Rebound is a WooCommerce abandoned-cart recovery plugin. It records every in-progress WooCommerce cart — both logged-in and guest — flips a cart to _abandoned_ after a configurable idle window, lets shoppers restore their cart through a tokenized recovery link, and attributes recovered revenue back to the real order. It exposes a clean event and REST surface so automation tools can react to abandonment and recovery without coupling to the plugin's internals.
+Cart Rebound is a WooCommerce abandoned-cart recovery plugin. It records logged-in carts and, when a site owner opts in, guest carts. It flips a cart to _abandoned_ after a configurable idle window, lets shoppers restore their cart through a tokenized recovery link, and attributes recovered revenue back to the real order. It exposes a clean event and REST surface so automation tools can react to abandonment and recovery without coupling to the plugin's internals.
 
 ### Features
 
-- **Reliable cart capture** for logged-in and guest carts, including the email a guest types at checkout before submitting — supported on both classic checkout (AJAX + server-side hooks) and the block / Store API checkout.
+- **Reliable cart capture** for logged-in carts and opt-in guest carts, including the email a guest types at checkout before submitting — supported on both classic checkout (AJAX + server-side hooks) and the block / Store API checkout.
 - **Configurable abandonment detection** driven by Action Scheduler, with a wp-cron fallback. The idle threshold lives in the scan query, so changing it takes effect on the next scan without rescheduling.
 - **Tokenized recovery links** that rebuild the cart (items, variations, and coupons) and send the shopper to checkout — no raw session key is exposed in the URL.
 - **Accurate revenue attribution**: orders are linked to carts by explicit order meta rather than fuzzy total matching, so coupons, shipping, and tax never break the link. Carts resolve to _recovered_ or _completed_, each with its own timestamp, plus a dedicated recovered-amount field.
-- **Optional built-in recovery email** scheduled a configurable delay after abandonment, supporting the `{first_name}`, `{products}`, and `{recovery_url}` tokens.
+- **Optional built-in recovery email**, disabled by default and scheduled a configurable delay after abandonment, supporting the `{first_name}`, `{products}`, `{recovery_url}`, and `{coupon_code}` tokens.
 - **Event & REST API for integrations**: fires `do_action( 'cart_rebound_abandoned', $payload )` and `do_action( 'cart_rebound_recovered', $payload )`, and provides a read API for carts, stats, and recovered revenue.
 - **Admin dashboard** showing active / abandoned / recovered counts, recovered revenue, recovery rate, and a filterable list of cart sessions with row actions.
 
@@ -83,20 +84,20 @@ Clone or download the source, then produce the same distributable zip the releas
 ```bash
 # from the plugin root (cart-rebound/)
 composer install      # PHP dependencies + generates vendor/autoload.php
-pnpm install          # JS/TS toolchain (React, Vite, etc.)
-pnpm build            # vite build → compiles resources/js into resources/dist assets
+pnpm install --frozen-lockfile # JS/TS toolchain (React, Vite, etc.)
+pnpm build            # vite build → compiles resources/js into public/build assets
 bash scripts/build-zip.sh
 ```
 
 `scripts/build-zip.sh` automates the full packaging flow:
 
-1. `npx vite build` — builds the front-end assets.
+1. `pnpm exec vite build` — builds the front-end assets.
 2. `composer install --no-dev --optimize-autoloader` — installs production-only PHP dependencies and an optimized autoloader.
-3. Stages runtime files via `rsync`, **excluding** all dev/source/config artifacts (`.git`, `.github`, `node_modules`, `tests`, `docs`, `scripts`, `dist`, `coverage`, `resources/js`, lockfiles, `package.json`, lint/format/build configs, etc.).
+3. Stages an explicit runtime allowlist via `rsync`, including PHP, compiled assets, runtime views/configuration, translations, licenses, and the production Composer autoloader. Development tooling and uncompiled source cannot leak into the archive.
 4. `composer install` — restores the dev dependencies for continued local work.
 5. Zips the staged folder.
 
-The result is written to **`dist/cart-rebound.zip`**. Upload that file through **Plugins → Add New → Upload Plugin** exactly as in Path A.
+The result is written to **`build/cart-rebound.zip`**. Upload that file through **Plugins → Add New → Upload Plugin** exactly as in Path A.
 
 > If you skip the build and activate the raw source without running `composer install`, the plugin will not boot. `cart-rebound.php` checks for `vendor/autoload.php` and, when it is missing, registers an admin notice instead of loading: _"Cart Rebound: run 'composer install' to generate the autoloader before activating the plugin."_ It then returns early, so no functionality is registered until the autoloader exists.
 
@@ -123,26 +124,26 @@ All plugin behavior is configured under **Cart Rebound → Settings** in the Wor
 
 ### Every setting
 
-| Key                      | UI label                            | Type                      | Default                                                                                   | Controls                                                                                                                                                                            |
-| ------------------------ | ----------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `guest_tracking`         | **Track guest carts**               | boolean (toggle)          | `true`                                                                                    | Whether carts from non-logged-in (guest) visitors are tracked in addition to logged-in users. Tracking itself is always on while the plugin is active — there is no master toggle.  |
-| `abandonment_threshold`  | **Abandonment threshold (minutes)** | integer                   | `30`                                                                                      | Minutes of inactivity after which a cart is considered abandoned. Clamped to a minimum of `1` (`max(1, (int) …)`).                                                                  |
-| `scan_interval`          | _(not shown in the Settings UI)_    | integer                   | `5`                                                                                       | Interval, in minutes, used by the background scan that detects abandoned carts. Present in defaults and sanitisation only; clamped to a minimum of `1`. Not editable from the form. |
-| `cleanup_days`           | **Cleanup after (days)**            | integer                   | `30`                                                                                      | Age, in days, after which old cart records are cleaned up. Clamped to a minimum of `1`.                                                                                             |
-| `recovery_email_enabled` | **Send recovery email**             | boolean (checkbox)        | `false`                                                                                   | Whether a recovery email is sent for abandoned carts. Off by default.                                                                                                               |
-| `email_delay_minutes`    | **Email delay (minutes)**           | integer                   | `60`                                                                                      | How long to wait after abandonment before sending the recovery email. Clamped to a minimum of `1`.                                                                                  |
-| `email_subject`          | **Email subject**                   | string (text)             | `"You left something in your cart"` (translatable)                                        | Subject line of the recovery email. Run through `sanitize_text_field()`.                                                                                                            |
-| `email_body`             | **Email body**                      | string (textarea, 4 rows) | `"Hi {first_name}, your cart is still waiting: {products} {recovery_url}"` (translatable) | Body of the recovery email. Supports the tokens below. Run through `sanitize_textarea_field()`.                                                                                     |
-| `email_from_name`        | **From name**                       | string (text)             | `""` (empty)                                                                              | Sender display name for the recovery email. Run through `sanitize_text_field()`.                                                                                                    |
-| `email_from_email`       | **From email**                      | string (email)            | `""` (empty)                                                                              | Sender email address. Run through `sanitize_email()`.                                                                                                                               |
+| Key                      | UI label                             | Default | Controls                                                                                |
+| ------------------------ | ------------------------------------ | ------- | --------------------------------------------------------------------------------------- |
+| `guest_tracking`         | **Track guest carts**                | `false` | Whether carts from logged-out visitors are tracked. Logged-in cart tracking remains on. |
+| `abandonment_threshold`  | **Abandonment threshold (minutes)**  | `30`    | Minutes of inactivity before an eligible cart is considered abandoned.                  |
+| `scan_interval`          | **Scan interval (minutes)**          | `5`     | How often the background abandonment scan runs.                                         |
+| `cleanup_days`           | **Unrecovered cleanup after (days)** | `30`    | Retention for stale active and unconverted abandoned/lost carts.                        |
+| `converted_cleanup_days` | **Converted cleanup after (days)**   | `365`   | Retention for recovered and completed cart records.                                     |
+| `recovery_email_enabled` | **Send recovery email**              | `false` | Whether one automatic recovery email is scheduled for an eligible abandoned cart.       |
+| `email_delay_minutes`    | **Send delay (minutes)**             | `60`    | Delay between abandonment and an enabled automatic recovery email.                      |
 
-### Email body tokens
+The `email_subject`, `email_body`, `email_from_name`, `email_from_email`, and `email_coupon` values are retained as backward-compatible seed values for the first default template. Manage current email content, sender details, and coupons under **Cart Rebound → Templates**.
 
-The **Email body** field accepts three placeholder tokens (the UI shows this hint directly under the textarea):
+### Email template merge tags
+
+Template subjects and bodies support these placeholders:
 
 - `{first_name}` — the customer's first name
 - `{products}` — the products left in the cart
 - `{recovery_url}` — the link that restores the abandoned cart
+- `{coupon_code}` — the WooCommerce coupon selected for the template, or an empty value
 
 Example default body:
 
@@ -152,9 +153,9 @@ Hi {first_name}, your cart is still waiting: {products} {recovery_url}
 
 ### Validation and sanitisation notes
 
-- **Checkboxes** (`enabled`, `guest_tracking`, `recovery_email_enabled`) are coerced to strict booleans server-side via `! empty( … )`.
-- **Number fields** (`abandonment_threshold`, `scan_interval`, `cleanup_days`, `email_delay_minutes`) are cast to `int` and forced to a minimum of `1` server-side. The form also enforces `min={1}` client-side and falls back to `1` if the input is left non-numeric.
-- **Text fields** are sanitized per type: `email_subject` and `email_from_name` via `sanitize_text_field()`; `email_body` via `sanitize_textarea_field()`; `email_from_email` via `sanitize_email()`.
+- **Checkboxes** (`guest_tracking`, `recovery_email_enabled`) are coerced to strict booleans server-side via `! empty( … )`.
+- **Number fields** (`abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, `email_delay_minutes`) are cast to `int` and forced to a minimum of `1` server-side. The form also enforces `min={1}` client-side and falls back to `1` if the input is left non-numeric.
+- **Legacy seed text fields** use `sanitize_text_field()`, `sanitize_textarea_field()`, or `sanitize_email()` according to their type. Template content is separately sanitized when saved from the Templates tab.
 - Saved values are merged over the defaults on read (`Settings::all()` does `array_merge( defaults(), stored )`), so any missing key falls back to its default.
 
 ---
@@ -178,13 +179,13 @@ Tracking runs whenever `CartTracker::tracking_allowed()` passes: WooCommerce mus
 
 ### The stable session key and the `cart_rebound_ref` cookie
 
-WooCommerce rotates its session customer id on login/expiry, which would otherwise fragment one shopper into multiple rows. `src/Tracking/SessionManager.php` solves this with a stable key:
+WooCommerce rotates its session customer id on login/expiry, which would otherwise fragment one shopper into multiple rows. `src/Tracking/SessionManager.php` solves this with a stable, unguessable identifier created specifically for Cart Rebound:
 
-1. `resolve_session_key()` first reads the first-party cookie `cart_rebound_ref` (constant `SessionManager::COOKIE`). If present, that value is the key.
-2. Otherwise it falls back to the current WooCommerce session customer id (`WC()->session->get_customer_id()`), and mirrors that id into the cookie via `persist_cookie()`.
-3. If there is no WooCommerce session yet, it returns an empty string and nothing is tracked.
+1. `resolve_session_key()` first reads the first-party cookie `cart_rebound_ref` (constant `SessionManager::COOKIE`) and accepts only the plugin's strict 64-character alphanumeric format.
+2. Otherwise it reads Cart Rebound's private slot in the WooCommerce session. If the slot is empty, it creates a cryptographically random 64-character identifier with `wp_generate_password()` and stores it there.
+3. The identifier is mirrored into the first-party cookie. If there is no WooCommerce session yet, the method returns an empty string and nothing is tracked.
 
-The cookie is set for ~30 days (`30 * DAY_IN_SECONDS`), with `path` = `COOKIEPATH` (or `/`), `secure` on SSL, `httponly` true, and `samesite=Lax`. Because the key is pinned to the cookie, the same DB row keeps being updated even after WooCommerce rotates its customer id. The row is also protected by a UNIQUE index on `session_key`.
+The cookie is set for ~30 days (`30 * DAY_IN_SECONDS`), with `path` = `COOKIEPATH` (or `/`), `secure` on SSL, `httponly` true, and `samesite=Lax`. The identifier is independent of predictable WordPress user IDs and WooCommerce customer IDs. Because it is pinned to the cookie and WooCommerce session, the same DB row keeps being updated even after WooCommerce rotates its customer id. The row is also protected by a UNIQUE index on `session_key`.
 
 ### Logged-in user vs guest identity
 
@@ -196,7 +197,7 @@ The cookie is set for ~30 days (`30 * DAY_IN_SECONDS`), with `path` = `COOKIEPAT
 
 Guests typically have no identity until checkout, so three independent paths capture it (any one is enough — they all funnel into `CartTracker::capture_identity()`, which sanitises fields, requires a valid email to store it, and refuses to write to a terminal row):
 
-1. Front-end beacon (`assets/js/checkout-capture.js`). Enqueued by `enqueue_checkout_asset()` only on the checkout page (not the order-received page), and only when both `enabled` and `guest_tracking` are on. It reads `billing_email`, `billing_first_name`, `billing_last_name`, `billing_phone`, debounces 600 ms on any `billing_*` field change, fires immediately on `billing_email` blur, and POSTs JSON to the REST route `cart-rebound/v1/capture` with an `X-WP-Nonce` (`wp_rest`) header. It sends nothing unless an email is present. The route is handled by `CaptureController::store()` (nonce-gated; the payload is a non-sensitive identity snapshot).
+1. Front-end beacon (`assets/js/checkout-capture.js`). Enqueued only on the checkout page (not the order-received page) when `guest_tracking` is on. It reads `billing_email`, `billing_first_name`, `billing_last_name`, and `billing_phone`; debounces 600 ms on `billing_*` changes; fires immediately on email blur; and POSTs JSON to `cart-rebound/v1/capture` with an `X-WP-Nonce` (`wp_rest`) header. It sends nothing unless an email is present. The nonce-gated route is handled by `CaptureController::store()`.
 2. `woocommerce_checkout_update_order_review` → `capture_from_review()`. The serialised review payload is parsed with `parse_str()` and mapped from `billing_*` fields. This fires during normal AJAX checkout refreshes.
 3. `woocommerce_after_checkout_validation` → `capture_from_validation()`. A no-JS safety net that runs at order submission so identity is captured even if the beacon never fired.
 
@@ -281,16 +282,7 @@ If WooCommerce or its cart object isn't available, `restore_cart()` returns `fal
 
 ### The optional recovery email
 
-Sending an email is off by default. The relevant settings live in the single `cart_rebound_settings` option (`src/Support/Settings.php`); defaults shown below:
-
-| Setting key              | Default                                                                  | Purpose                                                      |
-| ------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| `recovery_email_enabled` | `false`                                                                  | Master switch for the recovery email                         |
-| `email_delay_minutes`    | `60`                                                                     | Minutes after abandonment before the email is sent (min `1`) |
-| `email_subject`          | `You left something in your cart`                                        | Email subject (sanitized as text)                            |
-| `email_body`             | `Hi {first_name}, your cart is still waiting: {products} {recovery_url}` | Body template with tokens (sanitized as textarea)            |
-| `email_from_name`        | `''`                                                                     | Optional From display name                                   |
-| `email_from_email`       | `''`                                                                     | Optional From address (must validate as an email to be used) |
+Sending an email is off by default. The `recovery_email_enabled` switch and `email_delay_minutes` delay live in `cart_rebound_settings`. Email subjects, rich-text bodies, sender details, and optional coupons are managed under **Cart Rebound → Templates**. Exactly one template is marked as the default for automatic sends; an administrator can choose any template for an on-demand send.
 
 **Scheduling.** When `AbandonmentDetector` (`src/Cron/AbandonmentDetector.php`) flips an idle cart to `abandoned`, and `recovery_email_enabled` is on and the row has a non-empty email, it schedules **one** send: `Scheduler::schedule_single( time() + email_delay_minutes*60, RecoveryMailer::HOOK, [ $cart_id ] )`. `RecoveryMailer::HOOK` is the action name `cart_rebound_send_recovery_email`. The `Scheduler` (`src/Cron/Scheduler.php`) prefers WooCommerce's bundled **Action Scheduler** (`as_schedule_single_action()`, group `cart-rebound`) and falls back to native `wp_schedule_single_event()` only when Action Scheduler isn't available. The handler is wired in `SchedulerServiceProvider::boot()` to `RecoveryMailer::send()`.
 
@@ -305,17 +297,18 @@ Sending an email is off by default. The relevant settings live in the single `ca
 
 On a successful `wp_mail()` send it sets the row's `email_sent` to `1`, which is what makes the dedup permanent.
 
-**Body tokens.** `build_body()` replaces three tokens in the configured `email_body`:
+**Template tokens.** `build_body()` replaces four supported merge tags in the selected template:
 
 | Token            | Replaced with                                                                     |
 | ---------------- | --------------------------------------------------------------------------------- |
 | `{first_name}`   | the shopper's stored first name (escaped)                                         |
 | `{products}`     | an HTML `<ul>` list of `name × quantity` per cart line (empty string if no items) |
 | `{recovery_url}` | the tokenized recovery URL from `RecoveryLink::url()` (escaped)                   |
+| `{coupon_code}`  | the selected WooCommerce coupon code, or an empty value                           |
 
 The token-replaced content is rendered inside the HTML template at `resources/views/emails/recovery.php`, which wraps it in a 600px container and appends a styled "Complete your order" button pointing at the same recovery URL. If that template file is missing/unreadable, the body falls back to `wpautop( $content )`.
 
-**From header & content type.** A `From:` header is added only when `email_from_email` is set and valid; it uses `email_from_name` as the label (or the address itself if no name). The mailer temporarily adds a `wp_mail_content_type` filter forcing `text/html` and removes it immediately after sending, so the HTML content type never leaks into other site email.
+**From header & content type.** A `From:` header is added only when the selected template has a valid `from_email`; it uses `from_name` as the label (or the address itself if no name). The mailer temporarily adds a `wp_mail_content_type` filter forcing `text/html` and removes it immediately after sending, so the HTML content type never leaks into other site email.
 
 ---
 
@@ -792,17 +785,18 @@ Returns the full settings array merged over defaults (`SettingsController::index
 
 ```json
 {
-	"enabled": true,
-	"guest_tracking": true,
+	"guest_tracking": false,
 	"abandonment_threshold": 30,
 	"scan_interval": 5,
 	"cleanup_days": 30,
+	"converted_cleanup_days": 365,
 	"recovery_email_enabled": false,
 	"email_delay_minutes": 60,
 	"email_subject": "You left something in your cart",
 	"email_body": "Hi {first_name}, your cart is still waiting: {products} {recovery_url}",
 	"email_from_name": "",
-	"email_from_email": ""
+	"email_from_email": "",
+	"email_coupon": ""
 }
 ```
 
@@ -812,9 +806,9 @@ Returns the full settings array merged over defaults (`SettingsController::index
 
 Persists settings and re-syncs the scheduler (`SettingsController::update` → `Settings::update()`). Only these keys are read from the request; any other params are ignored. A `null` (omitted) param leaves the stored value unchanged, while `''` is an explicit clear that the `Settings` sanitiser coerces per field type:
 
-`enabled`, `guest_tracking`, `abandonment_threshold`, `scan_interval`, `cleanup_days`, `recovery_email_enabled`, `email_delay_minutes`, `email_subject`, `email_body`, `email_from_name`, `email_from_email`.
+`guest_tracking`, `abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, `recovery_email_enabled`, `email_delay_minutes`, `email_subject`, `email_body`, `email_from_name`, `email_from_email`, `email_coupon`.
 
-Sanitisation rules: booleans via `! empty()`; `abandonment_threshold`, `scan_interval`, `cleanup_days`, `email_delay_minutes` are cast to int and floored at `1`; `email_subject`/`email_from_name` via `sanitize_text_field`; `email_body` via `sanitize_textarea_field`; `email_from_email` via `sanitize_email`.
+Sanitisation rules: booleans via `! empty()`; `abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, and `email_delay_minutes` are cast to int and floored at `1`; text and email fields use the corresponding WordPress sanitization functions.
 
 After saving, the controller fires the `cart_rebound_settings_updated` action with the full sanitised settings so the scheduler can reconcile its cron schedule:
 
@@ -874,21 +868,18 @@ When settings are saved, the `cart_rebound_settings_updated` action triggers `Sc
 
 Note that the **abandonment threshold** (`abandonment_threshold`, default 30 minutes) is _not_ part of the cron cadence — it lives in the scan's SQL `WHERE` clause (`last_activity < cutoff`). Changing the threshold takes effect on the next scan automatically, with no rescheduling required.
 
-On deactivation, the `cart_rebound_deactivated` action calls `clear_schedule()`, which removes both the scan and cleanup jobs.
+On deactivation, the lifecycle handler removes the scan and cleanup jobs plus all pending one-off recovery-email actions.
 
 ### What the cleanup deletes (and keeps)
 
-`Janitor::run()` (the `cart_rebound_cleanup_sessions` handler) computes a cutoff of `cleanup_days` (default 30, floored at 1) days ago and deletes two categories of rows:
+`Janitor::run()` (the `cart_rebound_cleanup_sessions` handler) applies two retention windows, each floored at one day:
 
-1. **Unconverted abandoned/lost carts** — rows whose `status` is `abandoned` or `lost`, with `order_id = 0` (never tied to an order), and `abandoned_at` older than the cutoff.
-2. **Stale active carts** — rows with `status = active`, `order_id = 0`, and `last_activity` older than the cutoff. Carts that never captured an email are never flipped to `abandoned`, so this rule keeps dead `active` sessions from accumulating and bounds the table size.
+1. **Unrecovered retention (`cleanup_days`, default 30)** — unconverted abandoned/lost rows older than the cutoff and stale active rows with no linked order.
+2. **Converted retention (`converted_cleanup_days`, default 365)** — recovered rows by `recovered_at` and completed rows by `completed_at`.
 
-It returns the total number of rows deleted (sum of both deletes).
+Deletes run in bounded batches of 100. Each cart deletion also removes activity logs carrying that cart ID, and the job returns the total number of cart-session rows removed.
 
-Cleanup deliberately **keeps**:
-
-- **Recovered and completed carts** — they are excluded from the delete query entirely, so recovered-revenue reporting stays intact.
-- **Any abandoned/lost cart that has an `order_id` (≠ 0)** — i.e. carts that eventually converted are preserved even though their status is abandoned/lost.
+Abandoned/lost records with a linked order are not part of the unrecovered purge. Administrators can delete individual cart records from the dashboard or process a WordPress personal-data erasure request when earlier removal is required.
 
 ### Inspecting and triggering jobs
 
@@ -906,9 +897,8 @@ The answers below are derived from the plugin's actual capture, detection, and m
 
 Tracking only runs when `CartTracker::tracking_allowed()` returns true (`src/Tracking/CartTracker.php`). Check, in order:
 
-- **WooCommerce must be active.** The guard calls `function_exists( 'WC' )`; if WooCommerce isn't loaded, `track()` returns immediately and no row is written.
-- **WooCommerce must be active.** Tracking runs automatically while both the plugin and WooCommerce are active — there is no master on/off switch. (Guest carts additionally require the _Track guest carts_ setting to be on.)
-- **Guests need guest tracking enabled.** Logged-in users (`get_current_user_id() > 0`) are always tracked. For visitors who are not logged in, `guest_tracking` (default `true`) must be on — otherwise `tracking_allowed()` returns false for them.
+- **WooCommerce must be active.** The plugin dependency guard prevents Cart Rebound from booting without it. Logged-in tracking runs automatically while both plugins are active; there is no master tracking switch.
+- **Guests need guest tracking enabled.** Logged-in users (`get_current_user_id() > 0`) are always tracked. For visitors who are not logged in, `guest_tracking` (default `false`) must be turned on — otherwise `tracking_allowed()` returns false for them.
 - **A stable session key is required.** If `SessionManager::resolve_session_key()` returns an empty string (no WooCommerce session/cookie yet), `track()` and `capture_identity()` both bail.
 - **The cart row is refreshed on cart events.** Tracking is wired to `woocommerce_add_to_cart`, `woocommerce_cart_updated`, `woocommerce_cart_item_removed`, and `woocommerce_cart_emptied` (`src/Providers/CaptureServiceProvider.php`). If a theme/page builder manipulates the cart without firing these standard hooks, snapshots may not refresh.
 
@@ -920,7 +910,7 @@ Guest identity is back-filled onto the existing cart row, so the cart must alrea
 
 - **Classic (shortcode) checkout** captures via two server-side hooks: `woocommerce_checkout_update_order_review` (as the shopper edits the form) and `woocommerce_after_checkout_validation` (a no-JS safety net at submit). Both read WooCommerce `billing_*` fields.
 - **Block / Store API checkout** captures via `woocommerce_store_api_checkout_update_order_from_request`, reading `get_billing_email()` and friends off the in-progress order.
-- **The front-end beacon** (`assets/js/checkout-capture.js`) is only enqueued when _all_ of these are true: you're on the checkout page (`is_checkout()` and not the order-received page), `enabled` is on, **and** `guest_tracking` is on. It POSTs to the REST route `cart-rebound/v1/capture` with a `wp_rest` nonce (`wp_create_nonce( 'wp_rest' )`). If the nonce is stale (e.g. a cached checkout page served to a logged-out visitor), the request is rejected and no email is stored.
+- **The front-end beacon** (`assets/js/checkout-capture.js`) is only enqueued when you're on the checkout page (not the order-received page) and **guest tracking is enabled**. It POSTs to the REST route `cart-rebound/v1/capture` with a `wp_rest` nonce (`wp_create_nonce( 'wp_rest' )`). If the nonce is stale (for example, on a cached checkout page), the request is rejected and no email is stored.
 - **Validation rules.** `capture_identity()` only keeps an email that passes `is_email()`; an invalid/blank email is dropped silently. The REST payload is validated by `CaptureEmailRequest` (`email|max:100`, name fields `max:100`, `phone max:40`).
 - **Terminal carts are skipped.** If the cart row is already `recovered`, `completed`, or `lost`, identity back-fill is ignored.
 
@@ -930,7 +920,6 @@ If guest tracking is off, none of the guest paths persist anything, even though 
 
 The detector (`src/Cron/AbandonmentDetector.php`) flips `active` carts to `abandoned`. A cart is only selected when **every** condition holds:
 
-- `enabled` is on (the whole `run()` bails otherwise).
 - `status = active`, and `abandonment_notified = 0`.
 - **`email` is not empty** — a cart with no captured email is _never_ marked abandoned. This is the most common surprise: anonymous carts where the shopper never typed an email simply expire/are purged rather than becoming recovery candidates.
 - `items_count > 0` — empty carts don't qualify.
@@ -950,7 +939,7 @@ Recovery email is an opt-in single send. Walk these checks:
 - **Scheduling requires an email on the row.** The follow-up is only queued if the abandoned row has a non-empty `email`. The send is scheduled `email_delay_minutes` after abandonment (default `60`, floored at 1).
 - **The cart must still be abandoned and unsent at send time.** `RecoveryMailer::send()` skips the message if the row's `status` is no longer `abandoned` (e.g. the shopper returned and the cart went back to `active`, or it converted), if `email_sent` is already `1`, or if `items_count <= 0` (cart was emptied). `email_sent` is only set to `1` after `wp_mail()` returns success, so a failed send can be retried.
 - **A blank/invalid recipient is skipped.** The recipient must pass `is_email()`.
-- **The From header is conditional.** A `From:` header is only added when `email_from_email` is set _and_ valid (`is_email()`). An invalid From address doesn't fail the send — the header is simply omitted and WordPress's default From address is used. If mail isn't arriving at all, that's usually a site-wide deliverability/SMTP issue, not Cart Rebound: the plugin uses core `wp_mail()` and forces `text/html` only for its own message (restoring the content type immediately after).
+- **The From header is conditional.** A `From:` header is only added when the selected template has a valid sender email. An invalid From address doesn't fail the send — the header is omitted and WordPress's default From address is used. If mail isn't arriving at all, that is usually a site-wide deliverability/SMTP issue: the plugin uses core `wp_mail()` and restores its temporary HTML content-type filter immediately after each message.
 
 ### Recovered revenue looks wrong / too low
 
@@ -971,21 +960,45 @@ Yes to both.
 
 ---
 
+## Privacy & Personal Data
+
+Cart Rebound stores tracked-cart and activity data locally in the site's WordPress database. It does not send telemetry or cart data to the plugin author or to a Cart Rebound service.
+
+Depending on checkout progress, a cart record can include a stable session identifier, WordPress user ID, email address, first and last name, phone number, cart contents, quantities, variations, prices, coupons, totals, currency, status, linked order and recovered amount, and lifecycle timestamps. The activity log stores its timestamp, level, event, message, and related cart ID.
+
+Guest tracking is disabled by default. When a site owner enables it, the first-party `cart_rebound_ref` cookie associates the visitor with a cart row. It is HTTP-only, uses SameSite=Lax, is marked secure on HTTPS sites, and expires after approximately 30 days.
+
+Automatic recovery emails are also disabled by default. When enabled, messages use `wp_mail()` and therefore the site's configured mail transport or email provider. Site owners are responsible for an appropriate legal basis, required consent, and their own privacy-policy disclosure.
+
+The daily cleanup uses two configurable retention windows:
+
+- `cleanup_days` (30 days by default) removes stale active and unconverted abandoned/lost carts.
+- `converted_cleanup_days` (365 days by default) removes recovered and completed carts.
+
+Associated activity logs are removed when a cart is purged or manually deleted. The standalone activity log is additionally capped at its 5,000 most recent rows.
+
+Under **Tools → Export Personal Data**, Cart Rebound exports matching cart sessions and linked activity-log records in batches of 20. For a registered shopper, matching covers both the current sanitized email address and WordPress user ID so carts remain discoverable after an account email change. Security-sensitive recovery tokens and stored checkout URLs are not included in the export. Under **Tools → Erase Personal Data**, the same identity matching removes cart records and their associated log entries, also in batches of 20.
+
+---
+
 ## Uninstall & Data
 
-Cart Rebound stores its data in two places: a single custom database table for tracked carts, and a handful of WordPress `options`. What gets created, kept, or removed depends on which lifecycle event fires. Knowing the difference matters because **deactivating the plugin and even uninstalling it does not wipe everything** — some options are deliberately left behind.
+Cart Rebound stores runtime data in two custom tables and several WordPress options. Deactivation preserves that data, while a normal WordPress uninstall removes it.
 
 ### What lives where
 
 | Data                                   | Type           | Holds                                                                                   |
 | -------------------------------------- | -------------- | --------------------------------------------------------------------------------------- |
 | `{$wpdb->prefix}cart_rebound_sessions` | DB table       | One row per tracked cart (snapshot, status, recovery token, order/recovery attribution) |
+| `{$wpdb->prefix}cart_rebound_logs`     | DB table       | Activity events associated with tracked carts                                           |
 | `cart_rebound_migrations`              | Option (array) | Basenames of migrations already applied, so re-activating only runs new ones            |
 | `cart_rebound_settings`                | Option (array) | All plugin settings (see the Settings section)                                          |
+| `cart_rebound_email_templates`         | Option (array) | Recovery email templates and their default designation                                  |
+| `cart_rebound_db_version`              | Option (int)   | Activity-log schema version                                                             |
 | `cart_rebound_lifetime_abandoned`      | Option (int)   | Purge-immune lifetime count of abandoned carts                                          |
 | `cart_rebound_lifetime_recovered`      | Option (int)   | Purge-immune lifetime count of recovered carts                                          |
 
-The table name is built in `src/Database/Migration.php` (`$wpdb->prefix . 'cart_rebound_'`) plus the suffix `sessions` from the migration in `src/Database/Migrations/2026_06_30_000000_create_cart_rebound_sessions_table.php`. On a default install that resolves to `wp_cart_rebound_sessions`.
+The table names are built in `src/Database/Migration.php` (`$wpdb->prefix . 'cart_rebound_'`) plus the `sessions` or `logs` suffix supplied by each migration. With the default prefix they resolve to `wp_cart_rebound_sessions` and `wp_cart_rebound_logs`.
 
 The two `lifetime_*` counters are defined in `src/Events/EventDispatcher.php` and incremented as carts are abandoned/recovered. They are intentionally "purge-immune": the daily Janitor deletes old session rows, but these running totals survive so the recovery-rate stat in the dashboard (computed in `src/Data/CartRepository.php`) stays accurate over time.
 
@@ -993,56 +1006,24 @@ The two `lifetime_*` counters are defined in `src/Events/EventDispatcher.php` an
 
 `CartRebound\Core\Plugin::activate()` resolves the `Migrator` and calls `run()`:
 
-- `Migrator::run()` (`src/Database/Migrator.php`) discovers each migration file in `src/Database/Migrations/`, skips any already listed in the `cart_rebound_migrations` option, and calls `up()` on the rest. The sessions migration runs `CREATE TABLE` through `dbDelta()`, creating `{prefix}cart_rebound_sessions` with its indexes.
+- `Migrator::run()` (`src/Database/Migrator.php`) discovers each migration file in `src/Database/Migrations/`, skips any already listed in the `cart_rebound_migrations` option, and calls `up()` on the rest. The migrations create the indexed sessions and activity-log tables through `dbDelta()`.
 - Each newly applied migration's basename is appended to `cart_rebound_migrations` (persisted after every step, so a mid-batch failure can't orphan succeeded migrations).
 - It then fires `do_action( 'cart_rebound_activated', $app )`. The `SchedulerServiceProvider` listens on this hook and calls `sync_schedule()` to register the recurring abandonment-scan and daily Janitor jobs.
 
-Activation is idempotent — reactivating an existing install does not recreate or wipe the table; it only runs migrations not yet recorded.
+Activation is idempotent — reactivating an existing install does not wipe either table; it only runs migrations not yet recorded.
 
 ### On deactivation
 
-`Plugin::deactivate()` does **not** touch any data. It only fires `do_action( 'cart_rebound_deactivated', $app )`. The `SchedulerServiceProvider::clear_schedule()` handler responds by clearing both scheduled jobs (`AbandonmentDetector::HOOK` and `Janitor::HOOK`) via `Scheduler::clear()`, which calls `as_unschedule_all_actions()` (Action Scheduler) or loops `wp_unschedule_event()` as a fallback.
+`Plugin::deactivate()` does **not** touch stored data. It clears the recurring abandonment scan, daily cleanup, and all pending one-off recovery-email actions before firing `cart_rebound_deactivated`.
 
-After deactivation: the `cart_rebound_sessions` table and all options remain intact. Reactivating resumes exactly where you left off.
+After deactivation, both custom tables and all plugin options remain intact. Reactivating resumes with the stored configuration and records.
 
 ### On uninstall
 
-Deleting the plugin from the WordPress admin runs `uninstall.php`, which boots the application and calls `Plugin::uninstall()`. That resolves the `Migrator` and calls `rollback()`:
+Deleting the plugin through the WordPress Plugins screen runs `uninstall.php`, which calls `Plugin::uninstall()`. It:
 
-- `Migrator::rollback()` iterates the migrations newest-first and calls `down()` on each one recorded in `cart_rebound_migrations`. The sessions migration's `down()` runs `DROP TABLE IF EXISTS {prefix}cart_rebound_sessions`.
-- After dropping the table(s), `rollback()` deletes the `cart_rebound_migrations` option.
+1. Clears the abandonment scan, cleanup job, and pending recovery-email actions.
+2. Rolls back all recorded migrations, dropping both custom tables and deleting `cart_rebound_migrations`.
+3. Deletes `cart_rebound_settings`, `cart_rebound_email_templates`, `cart_rebound_db_version`, and the two lifetime-counter options.
 
-**Important — what uninstall does NOT remove.** Nothing in the plugin hooks `cart_rebound_uninstalled` to clean up the remaining options. So after a normal uninstall these three options are left in `wp_options`:
-
-- `cart_rebound_settings`
-- `cart_rebound_lifetime_abandoned`
-- `cart_rebound_lifetime_recovered`
-
-This means your configuration and lifetime stats persist even after the plugin is gone, and will be picked back up if you reinstall.
-
-### Fully removing all Cart Rebound data
-
-The uninstall routine drops the table for you, but to also clear the leftover options, remove them manually after uninstalling. With WP-CLI:
-
-```bash
-wp option delete cart_rebound_settings
-wp option delete cart_rebound_lifetime_abandoned
-wp option delete cart_rebound_lifetime_recovered
-# Normally already gone after uninstall, but safe to run:
-wp option delete cart_rebound_migrations
-```
-
-If the table was somehow left behind (e.g. the plugin files were deleted manually without running the uninstall routine), drop it and remove the options directly via SQL — substitute your real table prefix for `wp_`:
-
-```sql
-DROP TABLE IF EXISTS wp_cart_rebound_sessions;
-DELETE FROM wp_options
-WHERE option_name IN (
-  'cart_rebound_settings',
-  'cart_rebound_lifetime_abandoned',
-  'cart_rebound_lifetime_recovered',
-  'cart_rebound_migrations'
-);
-```
-
-After those steps, no Cart Rebound table or option remains in the database.
+After a normal WordPress uninstall, Cart Rebound leaves no plugin tables, settings, templates, counters, or scheduled actions behind. Removing the plugin files directly from the filesystem bypasses WordPress's uninstall hook and therefore cannot perform this cleanup.

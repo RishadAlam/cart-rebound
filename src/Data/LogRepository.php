@@ -19,7 +19,7 @@ use CartRebound\Models\LogEntry;
  * The table is self-capping: writes occasionally prune the oldest rows beyond
  * {@see MAX_ROWS} so the log cannot grow without bound.
  *
- * @since 0.2.0
+ * @since 0.1.0
  */
 final class LogRepository {
 
@@ -40,7 +40,7 @@ final class LogRepository {
 	/**
 	 * Record an event.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param string $level   One of {@see LogEntry::LEVELS}.
 	 * @param string $event   Short event key (e.g. `abandoned`, `recovered`).
@@ -67,7 +67,7 @@ final class LogRepository {
 	/**
 	 * Get a filtered, paginated page of log entries (newest first).
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $args {
 	 *     Optional. Query arguments.
@@ -103,7 +103,7 @@ final class LogRepository {
 	/**
 	 * Delete every log entry.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return int Rows deleted.
 	 */
@@ -114,7 +114,7 @@ final class LogRepository {
 	/**
 	 * Trim the log to the most recent {@see MAX_ROWS} rows.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @return int Rows deleted.
 	 */
@@ -137,7 +137,7 @@ final class LogRepository {
 	/**
 	 * Build a query constrained by the level, event, and cart filters.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $args Query arguments (level, event, cart_id).
 	 * @return \CartRebound\Models\QueryBuilder
@@ -169,7 +169,7 @@ final class LogRepository {
 	/**
 	 * Normalise a raw row into the API shape.
 	 *
-	 * @since 0.2.0
+	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $row Raw row.
 	 * @return array<string, mixed>

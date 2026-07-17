@@ -2,6 +2,7 @@
  * Dashboard page — abandonment/recovery statistics.
  */
 import { isAxiosError } from 'axios';
+import { __ } from '@wordpress/i18n';
 import { useStats } from '../hooks/useApi';
 import type { Stats } from '../types/api';
 
@@ -27,16 +28,31 @@ interface Card {
 }
 
 const cardsFrom = (stats: Stats): Card[] => [
-	{ label: 'Active carts', value: stats.counts.active ?? 0 },
-	{ label: 'Abandoned', value: stats.counts.abandoned ?? 0 },
-	{ label: 'Recovered', value: stats.counts.recovered ?? 0 },
-	{ label: 'Completed', value: stats.counts.completed ?? 0 },
 	{
-		label: 'Recovered revenue',
+		label: __('Active carts', 'cart-rebound'),
+		value: stats.counts.active ?? 0,
+	},
+	{
+		label: __('Abandoned', 'cart-rebound'),
+		value: stats.counts.abandoned ?? 0,
+	},
+	{
+		label: __('Recovered', 'cart-rebound'),
+		value: stats.counts.recovered ?? 0,
+	},
+	{
+		label: __('Completed', 'cart-rebound'),
+		value: stats.counts.completed ?? 0,
+	},
+	{
+		label: __('Recovered revenue', 'cart-rebound'),
 		value: formatMoney(stats.recovered_revenue, stats.currency),
 		accent: true,
 	},
-	{ label: 'Recovery rate', value: `${stats.recovery_rate}%` },
+	{
+		label: __('Recovery rate', 'cart-rebound'),
+		value: `${stats.recovery_rate}%`,
+	},
 ];
 
 const StatCard = ({
@@ -85,8 +101,11 @@ export const Dashboard = () => {
 		return (
 			<div className="cr-notice is-error" role="alert">
 				{sessionExpired
-					? 'Your session has expired. Please reload the page.'
-					: 'Could not load statistics.'}
+					? __(
+							'Your session has expired. Please reload the page.',
+							'cart-rebound'
+						)
+					: __('Could not load statistics.', 'cart-rebound')}
 			</div>
 		);
 	}

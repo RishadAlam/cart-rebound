@@ -2,6 +2,7 @@
  * App shell: heading + tab navigation + routed content.
  */
 import { NavLink, Outlet } from 'react-router-dom';
+import { __ } from '@wordpress/i18n';
 
 interface Tab {
 	to: string;
@@ -10,11 +11,15 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-	{ to: '/', label: 'Dashboard', end: true },
-	{ to: '/carts', label: 'Carts', end: false },
-	{ to: '/templates', label: 'Templates', end: false },
-	{ to: '/logs', label: 'Log', end: false },
-	{ to: '/settings', label: 'Settings', end: false },
+	{ to: '/', label: __('Dashboard', 'cart-rebound'), end: true },
+	{ to: '/carts', label: __('Carts', 'cart-rebound'), end: false },
+	{
+		to: '/templates',
+		label: __('Templates', 'cart-rebound'),
+		end: false,
+	},
+	{ to: '/logs', label: __('Log', 'cart-rebound'), end: false },
+	{ to: '/settings', label: __('Settings', 'cart-rebound'), end: false },
 ];
 
 const tabClass = ({ isActive }: { isActive: boolean }): string =>
@@ -23,10 +28,14 @@ const tabClass = ({ isActive }: { isActive: boolean }): string =>
 export const Layout = () => (
 	<div className="cr-app">
 		<header className="cr-header">
-			<h1 className="cr-header__title">Cart Rebound</h1>
+			<h1 className="cr-header__title">
+				{__('Cart Rebound', 'cart-rebound')}
+			</h1>
 			<p className="cr-header__subtitle">
-				Recover abandoned WooCommerce carts with tokenized links and
-				automated emails — and track the revenue you win back.
+				{__(
+					'Recover abandoned WooCommerce carts with tokenized links and automated emails — and track the revenue you win back.',
+					'cart-rebound'
+				)}
 			</p>
 		</header>
 

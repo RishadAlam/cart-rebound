@@ -16,6 +16,7 @@ import {
 	useState,
 	type KeyboardEvent,
 } from 'react';
+import { __ } from '@wordpress/i18n';
 
 export interface ComboOption {
 	value: string;
@@ -37,7 +38,7 @@ export const Combobox = ({
 	options,
 	value,
 	onChange,
-	placeholder = 'Select…',
+	placeholder = __('Select…', 'cart-rebound'),
 	ariaLabel,
 	disabled = false,
 	compact = false,
@@ -269,8 +270,8 @@ export const Combobox = ({
 							className="cr-combo__search"
 							type="text"
 							value={query}
-							placeholder="Search…"
-							aria-label="Search options"
+							placeholder={__('Search…', 'cart-rebound')}
+							aria-label={__('Search options', 'cart-rebound')}
 							onChange={(event) => {
 								setQuery(event.target.value);
 								setActiveIndex(0);
@@ -281,7 +282,9 @@ export const Combobox = ({
 
 					<div className="cr-combo__list">
 						{filtered.length === 0 ? (
-							<div className="cr-combo__empty">No matches</div>
+							<div className="cr-combo__empty">
+								{__('No matches', 'cart-rebound')}
+							</div>
 						) : (
 							filtered.map((option, index) => (
 								<button

@@ -9,7 +9,8 @@ cd "${ROOT}"
 
 wp i18n make-pot . languages/cart-rebound.pot \
 	--domain=cart-rebound \
-	--exclude=node_modules,vendor,tests,public,dist,resources/js \
-	--headers='{"Report-Msgid-Bugs-To":"https://example.com"}'
+	--include=cart-rebound.php,uninstall.php,src,routes,config,resources/views,public/build \
+	--exclude=build,vendor,node_modules,tests \
+	--headers='{"Report-Msgid-Bugs-To":"https://github.com/RishadAlam/cart-rebound/issues"}'
 
 echo "✅ Generated languages/cart-rebound.pot"

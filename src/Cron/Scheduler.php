@@ -65,13 +65,15 @@ final class Scheduler {
 	 * @return void
 	 */
 	public function schedule_single( int $timestamp, string $hook, array $args = array() ): void {
+		$args = array_values( $args );
+
 		if ( $this->uses_action_scheduler() ) {
 			as_schedule_single_action( $timestamp, $hook, $args, self::GROUP );
 
 			return;
 		}
 
-		wp_schedule_single_event( $timestamp, $hook, array_values( $args ) );
+		wp_schedule_single_event( $timestamp, $hook, $args );
 	}
 
 	/**
@@ -104,17 +106,34 @@ final class Scheduler {
 	 */
 	public function clear( string $hook ): void {
 		if ( $this->uses_action_scheduler() ) {
-			as_unschedule_all_actions( $hook, array(), self::GROUP );
-
-			return;
+			// The hook names are plugin-specific, so clearing by hook safely removes
+			// every argument variant. Passing a group with empty args would only
+			// match actions whose args are also empty in Action Scheduler.
+			as_unschedule_all_actions( $hook );
 		}
 
-		$timestamp = wp_next_scheduled( $hook );
+		// Also clear the fallback store in case the scheduling backend changed.
+		wp_unschedule_hook( $hook );
+	}
 
-		while ( is_int( $timestamp ) ) {
-			wp_unschedule_event( $timestamp, $hook );
-			$timestamp = wp_next_scheduled( $hook );
+	/**
+	 * Remove scheduled runs of a hook whose positional arguments match exactly.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string            $hook Action hook name.
+	 * @param array<int, mixed> $args Positional arguments that identify the job.
+	 * @return void
+	 */
+	public function clear_with_args( string $hook, array $args ): void {
+		$args = array_values( $args );
+
+		if ( $this->uses_action_scheduler() ) {
+			as_unschedule_all_actions( $hook, $args, self::GROUP );
 		}
+
+		// Also clear the fallback store in case the scheduling backend changed.
+		wp_clear_scheduled_hook( $hook, $args );
 	}
 
 	/**

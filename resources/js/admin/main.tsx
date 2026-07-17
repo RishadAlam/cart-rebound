@@ -5,6 +5,7 @@
  */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { __ } from '@wordpress/i18n';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -27,8 +28,10 @@ if (container) {
 		root.render(
 			<div className="cr-app">
 				<div className="cr-notice is-error" role="alert">
-					Cart Rebound could not initialise: configuration data is
-					missing. Please reload the page.
+					{__(
+						'Cart Rebound could not initialise: configuration data is missing. Please reload the page.',
+						'cart-rebound'
+					)}
 				</div>
 			</div>
 		);

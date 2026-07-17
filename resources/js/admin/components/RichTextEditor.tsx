@@ -20,6 +20,7 @@ import {
 	type MouseEvent,
 	type ReactNode,
 } from 'react';
+import { __, sprintf } from '@wordpress/i18n';
 import { Combobox } from './Combobox';
 
 export interface MergeTag {
@@ -87,28 +88,45 @@ const IconAlign = ({ dir }: { dir: 'Left' | 'Center' | 'Right' }) => (
 );
 
 const INLINE = [
-	{ command: 'bold', label: 'Bold', content: <strong>B</strong> },
-	{ command: 'italic', label: 'Italic', content: <em>I</em> },
+	{
+		command: 'bold',
+		label: __('Bold', 'cart-rebound'),
+		content: <strong>B</strong>,
+	},
+	{
+		command: 'italic',
+		label: __('Italic', 'cart-rebound'),
+		content: <em>I</em>,
+	},
 	{
 		command: 'underline',
-		label: 'Underline',
+		label: __('Underline', 'cart-rebound'),
 		content: <span style={{ textDecoration: 'underline' }}>U</span>,
 	},
 	{
 		command: 'strikeThrough',
-		label: 'Strikethrough',
+		label: __('Strikethrough', 'cart-rebound'),
 		content: <span style={{ textDecoration: 'line-through' }}>S</span>,
 	},
 ] as const;
 
 const BLOCKS = [
-	{ block: '<h2>', label: 'Heading', text: 'H1' },
-	{ block: '<h3>', label: 'Subheading', text: 'H2' },
-	{ block: '<p>', label: 'Paragraph', text: '¶' },
-	{ block: '<blockquote>', label: 'Quote', text: '❝' },
+	{ block: '<h2>', label: __('Heading', 'cart-rebound'), text: 'H1' },
+	{ block: '<h3>', label: __('Subheading', 'cart-rebound'), text: 'H2' },
+	{ block: '<p>', label: __('Paragraph', 'cart-rebound'), text: '¶' },
+	{ block: '<blockquote>', label: __('Quote', 'cart-rebound'), text: '❝' },
 ] as const;
 
 const ALIGN = ['Left', 'Center', 'Right'] as const;
+const ALIGN_LABELS = {
+	Left: __('Align left', 'cart-rebound'),
+	Center: __('Align center', 'cart-rebound'),
+	Right: __('Align right', 'cart-rebound'),
+} as const;
+
+const widthLabel = (width: string): string =>
+	/* translators: %s: an image width percentage, for example 50%. */
+	sprintf(__('Width %s', 'cart-rebound'), width);
 
 // Commands whose on/off state is reflected in the toolbar.
 const STATEFUL = [
@@ -127,7 +145,7 @@ export const RichTextEditor = ({
 	value,
 	onChange,
 	tags = [],
-	ariaLabel = 'Email body',
+	ariaLabel = __('Email body', 'cart-rebound'),
 }: {
 	value: string;
 	onChange: (html: string) => void;
@@ -244,7 +262,7 @@ export const RichTextEditor = ({
 
 	const addLink = () => {
 		// eslint-disable-next-line no-alert
-		const url = window.prompt('Link URL (https://…)');
+		const url = window.prompt(__('Link URL (https://…)', 'cart-rebound'));
 
 		if (url) {
 			run('createLink', url);
@@ -276,7 +294,9 @@ export const RichTextEditor = ({
 
 		if (!media) {
 			// eslint-disable-next-line no-alert
-			const url = window.prompt('Image URL (https://…)');
+			const url = window.prompt(
+				__('Image URL (https://…)', 'cart-rebound')
+			);
 
 			if (url) {
 				insertImage(url, '');
@@ -288,8 +308,8 @@ export const RichTextEditor = ({
 		saveSelection();
 
 		const frame = media({
-			title: 'Insert image',
-			button: { text: 'Insert into email' },
+			title: __('Insert image', 'cart-rebound'),
+			button: { text: __('Insert into email', 'cart-rebound') },
 			multiple: false,
 			library: { type: 'image' },
 		});
@@ -416,10 +436,24 @@ export const RichTextEditor = ({
 
 	return (
 		<div className="cr-rte">
-			<div className="cr-rte__bar" role="toolbar" aria-label="Formatting">
+			<div
+				className="cr-rte__bar"
+				role="toolbar"
+				aria-label={__('Formatting', 'cart-rebound')}
+			>
 				<div className="cr-rte__group">
-					{button('undo', 'Undo', () => run('undo'), <IconUndo />)}
-					{button('redo', 'Redo', () => run('redo'), <IconRedo />)}
+					{button(
+						'undo',
+						__('Undo', 'cart-rebound'),
+						() => run('undo'),
+						<IconUndo />
+					)}
+					{button(
+						'redo',
+						__('Redo', 'cart-rebound'),
+						() => run('redo'),
+						<IconRedo />
+					)}
 				</div>
 
 				<div className="cr-rte__group">
@@ -438,8 +472,8 @@ export const RichTextEditor = ({
 					<input
 						type="color"
 						className="cr-rte__color"
-						title="Text colour"
-						aria-label="Text colour"
+						title={__('Text colour', 'cart-rebound')}
+						aria-label={__('Text colour', 'cart-rebound')}
 						defaultValue="#111827"
 						onChange={(changeEvent) => {
 							runRestored(
@@ -452,8 +486,8 @@ export const RichTextEditor = ({
 					<input
 						type="color"
 						className="cr-rte__color"
-						title="Highlight colour"
-						aria-label="Highlight colour"
+						title={__('Highlight colour', 'cart-rebound')}
+						aria-label={__('Highlight colour', 'cart-rebound')}
 						defaultValue="#fde68a"
 						onChange={(changeEvent) => {
 							runRestored(
@@ -480,7 +514,7 @@ export const RichTextEditor = ({
 					{ALIGN.map((dir) =>
 						button(
 							`align${dir}`,
-							`Align ${dir.toLowerCase()}`,
+							ALIGN_LABELS[dir],
 							() => run(`justify${dir}`),
 							<IconAlign dir={dir} />,
 							`justify${dir}`
@@ -491,44 +525,54 @@ export const RichTextEditor = ({
 				<div className="cr-rte__group">
 					{button(
 						'ul',
-						'Bulleted list',
+						__('Bulleted list', 'cart-rebound'),
 						() => run('insertUnorderedList'),
 						'• —',
 						'insertUnorderedList'
 					)}
 					{button(
 						'ol',
-						'Numbered list',
+						__('Numbered list', 'cart-rebound'),
 						() => run('insertOrderedList'),
 						'1.',
 						'insertOrderedList'
 					)}
 					{button(
 						'outdent',
-						'Decrease indent',
+						__('Decrease indent', 'cart-rebound'),
 						() => run('outdent'),
 						'«'
 					)}
 					{button(
 						'indent',
-						'Increase indent',
+						__('Increase indent', 'cart-rebound'),
 						() => run('indent'),
 						'»'
 					)}
 				</div>
 
 				<div className="cr-rte__group">
-					{button('link', 'Insert link', addLink, 'Link')}
+					{button(
+						'link',
+						__('Insert link', 'cart-rebound'),
+						addLink,
+						__('Link', 'cart-rebound')
+					)}
 					{button(
 						'unlink',
-						'Remove link',
+						__('Remove link', 'cart-rebound'),
 						() => run('unlink'),
-						'Unlink'
+						__('Unlink', 'cart-rebound')
 					)}
-					{button('image', 'Insert image', addImage, 'Image')}
+					{button(
+						'image',
+						__('Insert image', 'cart-rebound'),
+						addImage,
+						__('Image', 'cart-rebound')
+					)}
 					{button(
 						'hr',
-						'Divider',
+						__('Divider', 'cart-rebound'),
 						() => run('insertHorizontalRule'),
 						'―'
 					)}
@@ -537,9 +581,9 @@ export const RichTextEditor = ({
 				<div className="cr-rte__group">
 					{button(
 						'clear',
-						'Clear formatting',
+						__('Clear formatting', 'cart-rebound'),
 						() => run('removeFormat'),
-						'Clear'
+						__('Clear', 'cart-rebound')
 					)}
 				</div>
 
@@ -548,8 +592,8 @@ export const RichTextEditor = ({
 						<span className="cr-rte__spacer" />
 						<Combobox
 							compact
-							ariaLabel="Insert merge tag"
-							placeholder="Insert tag…"
+							ariaLabel={__('Insert merge tag', 'cart-rebound')}
+							placeholder={__('Insert tag…', 'cart-rebound')}
 							value=""
 							options={tags}
 							onChange={(next) => {
@@ -566,47 +610,54 @@ export const RichTextEditor = ({
 				<div
 					className="cr-rte__imagebar"
 					role="toolbar"
-					aria-label="Image"
+					aria-label={__('Image', 'cart-rebound')}
 				>
-					<span className="cr-rte__imagebar-label">Image size</span>
+					<span className="cr-rte__imagebar-label">
+						{__('Image size', 'cart-rebound')}
+					</span>
 					<div className="cr-rte__group">
 						{['25%', '50%', '75%', '100%'].map((width) =>
 							button(
 								`w${width}`,
-								`Width ${width}`,
+								widthLabel(width),
 								() => sizeImage(width),
 								width
 							)
 						)}
 						{button(
 							'wauto',
-							'Original size',
+							__('Original size', 'cart-rebound'),
 							() => sizeImage(''),
-							'Auto'
+							__('Auto', 'cart-rebound')
 						)}
 					</div>
 					<div className="cr-rte__group">
 						{button(
 							'imgleft',
-							'Align left',
+							ALIGN_LABELS.Left,
 							() => alignImage('left'),
 							<IconAlign dir="Left" />
 						)}
 						{button(
 							'imgcenter',
-							'Align center',
+							ALIGN_LABELS.Center,
 							() => alignImage('center'),
 							<IconAlign dir="Center" />
 						)}
 						{button(
 							'imgright',
-							'Align right',
+							ALIGN_LABELS.Right,
 							() => alignImage('right'),
 							<IconAlign dir="Right" />
 						)}
 					</div>
 					<span className="cr-rte__spacer" />
-					{button('imgremove', 'Remove image', removeImage, 'Remove')}
+					{button(
+						'imgremove',
+						__('Remove image', 'cart-rebound'),
+						removeImage,
+						__('Remove', 'cart-rebound')
+					)}
 				</div>
 			)}
 

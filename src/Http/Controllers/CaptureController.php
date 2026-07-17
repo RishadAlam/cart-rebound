@@ -19,7 +19,8 @@ use WP_REST_Response;
 /**
  * Receives the email/name/phone a guest enters at checkout and back-fills the
  * tracked cart row. Nonce-gated only — guests have no capability, and the
- * payload is a non-sensitive cart-identity snapshot (mirrors the Store API path).
+ * endpoint can only update the visitor's current cart (mirrors the Store API
+ * path).
  *
  * @since 0.1.0
  */
