@@ -11,11 +11,27 @@ const createElement = (
 	type: React.ElementType,
 	props: Props,
 	key?: React.Key
-): React.ReactElement =>
-	React.createElement(
-		type,
-		key === undefined ? props : { ...(props ?? {}), key }
-	);
+): React.ReactElement => {
+	const normalizedProps =
+		key === undefined ? props : { ...(props ?? {}), key };
+
+	if (!normalizedProps || !('children' in normalizedProps)) {
+		return React.createElement(type, normalizedProps);
+	}
+
+	const { children: rawChildren, ...rest } = normalizedProps;
+	const children = rawChildren as React.ReactNode;
+
+	if (Array.isArray(children)) {
+		return React.createElement(
+			type,
+			rest,
+			...(children as React.ReactNode[])
+		);
+	}
+
+	return React.createElement(type, rest, children);
+};
 
 export const Fragment = React.Fragment;
 export const jsx = createElement;
