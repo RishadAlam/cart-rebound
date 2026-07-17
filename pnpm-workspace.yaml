@@ -1,0 +1,8 @@
+autoInstallPeers: true
+
+allowBuilds:
+    core-js: true
+    esbuild: true
+
+overrides:
+    'minimatch@>=9.0.0 <9.0.7': '>=9.0.7'
