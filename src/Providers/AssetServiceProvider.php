@@ -163,13 +163,16 @@ final class AssetServiceProvider extends ServiceProvider {
 	private function react_refresh_preamble( string $dev_server ): string {
 		$react_refresh_url = esc_js( $dev_server . '/@react-refresh' );
 
-		return <<<JS
-import RefreshRuntime from '{$react_refresh_url}';
-RefreshRuntime.injectIntoGlobalHook(window);
-window.\$RefreshReg\$ = () => {};
-window.\$RefreshSig\$ = () => (type) => type;
-window.__vite_plugin_react_preamble_installed__ = true;
-JS;
+		return implode(
+			"\n",
+			array(
+				"import RefreshRuntime from '{$react_refresh_url}';",
+				'RefreshRuntime.injectIntoGlobalHook(window);',
+				'window.$RefreshReg$ = () => {};',
+				'window.$RefreshSig$ = () => (type) => type;',
+				'window.__vite_plugin_react_preamble_installed__ = true;',
+			)
+		);
 	}
 
 	/**
