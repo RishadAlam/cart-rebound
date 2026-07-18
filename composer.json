@@ -44,7 +44,10 @@
 	"autoload-dev": {
 		"psr-4": {
 			"CartRebound\\Tests\\": "tests/"
-		}
+		},
+		"files": [
+			"development/assets.php"
+		]
 	},
 	"config": {
 		"sort-packages": true,

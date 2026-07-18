@@ -83,10 +83,13 @@ pnpm build         # compile the admin app
 bash scripts/build-zip.sh   # build assets/POT → build/cart-rebound.zip
 ```
 
-While `pnpm dev` is running, Vite writes `public/hot` and WordPress loads
-`@vite/client` plus `resources/js/admin/main.tsx` from `http://localhost:5173`.
-Stopping Vite removes the marker and the plugin automatically falls back to the
-hashed assets in `public/build`.
+Local HMR is deliberately opt-in. Set `WP_DEBUG` to `true`, set
+`WP_ENVIRONMENT_TYPE` to `local` or `development`, and define
+`CART_REBOUND_ENABLE_HMR` as `true` in `wp-config.php`. While `pnpm dev` is
+running, Vite writes `public/hot` and WordPress loads `@vite/client` plus
+`resources/js/admin/main.tsx` strictly from `http://localhost:5173`. Stopping
+Vite removes the marker and the plugin automatically falls back to the hashed
+assets in `public/build`. Production environments ignore the marker.
 
 The archive command also requires WP-CLI with `wp i18n make-pot` available. `pnpm production-zip` runs the full PHP and JavaScript quality gates and writes the submission archive to `build/cart-rebound.zip`.
 

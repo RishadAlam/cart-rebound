@@ -90,11 +90,15 @@ pnpm build            # vite build → compiles resources/js into public/build a
 bash scripts/build-zip.sh
 ```
 
-When `pnpm dev` is listening, Vite creates `public/hot`. On Cart Rebound admin
-pages, PHP reads that marker and enqueues the Vite module client and
-`resources/js/admin/main.tsx` from `http://localhost:5173`, so edits update via
-HMR instead of loading `public/build`. A normal Vite shutdown removes the marker;
-`pnpm build` also removes any stale marker before producing production assets.
+Local HMR is deliberately opt-in. In `wp-config.php`, set `WP_DEBUG` to `true`,
+set `WP_ENVIRONMENT_TYPE` to `local` or `development`, and define
+`CART_REBOUND_ENABLE_HMR` as `true`. When `pnpm dev` is listening, Vite creates
+`public/hot`. On Cart Rebound admin pages, PHP reads that marker and enqueues the
+Vite module client and `resources/js/admin/main.tsx` strictly from
+`http://localhost:5173`, so edits update via HMR instead of loading
+`public/build`. A normal Vite shutdown removes the marker; `pnpm build` also
+removes any stale marker before producing production assets. Production
+environments ignore the marker.
 
 `scripts/build-zip.sh` automates the full packaging flow:
 
@@ -677,11 +681,7 @@ Results are ordered by `last_activity DESC`. Success response:
 
 ```json
 {
-	"items": [
-		{
-			/* cart object, see below */
-		}
-	],
+	"items": [{/* cart object, see below */}],
 	"total": 42,
 	"page": 1,
 	"per_page": 20

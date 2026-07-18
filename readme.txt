@@ -20,6 +20,15 @@ The customer can use a secure recovery link that rebuilds the cart with its item
 
 Revenue attribution is exact: orders are linked to carts by explicit order meta, not fuzzy total matching, so coupons, shipping, and tax never break the link. You see the true recovered revenue and recovery rate on your dashboard.
 
+= Why Cart Rebound is different =
+
+Cart Rebound focuses on verifiable attribution, conservative defaults, and native WooCommerce operation without an external recovery service.
+
+* **Explicit attribution** — dedicated order metadata separates carts recovered after abandonment from ordinary completed carts.
+* **Modern checkout coverage** — guest capture and order linking support classic checkout and Store API checkout blocks.
+* **Conservative, local defaults** — guest tracking and automatic emails are disabled initially; data stays in WordPress with no telemetry or Cart Rebound account.
+* **Developer visibility** — Action Scheduler support, lifecycle events, an activity log, privacy tools, and a capability-protected REST API are included.
+
 **Key features:**
 
 * **Guest and logged-in cart capture** — supports both classic checkout and block / Store API checkout. Guest tracking is opt-in and can capture the email entered at checkout before the order is submitted.
