@@ -44,6 +44,7 @@ RUNTIME_PATHS=(
 	"readme.txt"
 	"LICENSE"
 	"THIRD-PARTY-LICENSES.txt"
+	"composer.json"
 	"assets"
 	"config"
 	"languages"
