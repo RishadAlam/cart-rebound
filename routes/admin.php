@@ -41,6 +41,7 @@ Route::delete( 'logs', array( LogController::class, 'clear' ) )->middleware( $ca
 Route::get( 'templates', array( TemplatesController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::post( 'templates', array( TemplatesController::class, 'store' ) )->middleware( $cart_rebound_admin );
 Route::post( 'templates/preview', array( TemplatesController::class, 'preview' ) )->middleware( $cart_rebound_admin );
+Route::post( 'templates/test', array( TemplatesController::class, 'test' ) )->middleware( $cart_rebound_admin );
 Route::post( 'templates/(?P<id>[0-9a-f-]+)', array( TemplatesController::class, 'update' ) )->middleware( $cart_rebound_admin );
 Route::delete( 'templates/(?P<id>[0-9a-f-]+)', array( TemplatesController::class, 'destroy' ) )->middleware( $cart_rebound_admin );
 Route::post( 'templates/(?P<id>[0-9a-f-]+)/default', array( TemplatesController::class, 'set_default' ) )->middleware( $cart_rebound_admin );

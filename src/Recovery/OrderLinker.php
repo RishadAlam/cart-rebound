@@ -15,6 +15,7 @@ use CartRebound\Cron\Scheduler;
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Mail\RecoveryMailer;
 use CartRebound\Models\CartSession;
+use CartRebound\Support\Settings;
 use CartRebound\Tracking\SessionManager;
 use WC_Order;
 
@@ -76,6 +77,22 @@ final class OrderLinker {
 	private $mailer;
 
 	/**
+	 * Settings store (supplies the "counts as paid" order statuses).
+	 *
+	 * @since 0.1.0
+	 * @var Settings
+	 */
+	private $settings;
+
+	/**
+	 * Per-request memo of the resolved paid-order-status list.
+	 *
+	 * @since 0.1.0
+	 * @var array<int, string>|null
+	 */
+	private $paid_statuses_cache = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
@@ -84,12 +101,14 @@ final class OrderLinker {
 	 * @param SessionManager  $sessions  Session key resolver.
 	 * @param Scheduler       $scheduler Job scheduler.
 	 * @param RecoveryMailer  $mailer    Recovery mailer.
+	 * @param Settings        $settings  Settings store.
 	 */
-	public function __construct( EventDispatcher $events, SessionManager $sessions, Scheduler $scheduler, RecoveryMailer $mailer ) {
+	public function __construct( EventDispatcher $events, SessionManager $sessions, Scheduler $scheduler, RecoveryMailer $mailer, Settings $settings ) {
 		$this->events    = $events;
 		$this->sessions  = $sessions;
 		$this->scheduler = $scheduler;
 		$this->mailer    = $mailer;
+		$this->settings  = $settings;
 	}
 
 	/**
@@ -134,7 +153,7 @@ final class OrderLinker {
 
 		// Only transition the cart once the order is actually paid — a pending or
 		// never-paid order must not prematurely complete/recover the cart.
-		if ( $order->has_status( array( 'processing', 'completed' ) ) ) {
+		if ( $order->has_status( $this->paid_statuses() ) ) {
 			$this->link( $order );
 		}
 	}
@@ -169,7 +188,7 @@ final class OrderLinker {
 			return;
 		}
 
-		if ( ! in_array( $to, array( 'processing', 'completed' ), true ) ) {
+		if ( ! in_array( $to, $this->paid_statuses(), true ) ) {
 			return;
 		}
 
@@ -178,6 +197,41 @@ final class OrderLinker {
 		if ( null !== $order ) {
 			$this->link( $order );
 		}
+	}
+
+	/**
+	 * WooCommerce order statuses that count as a paid conversion.
+	 *
+	 * Configurable via the `paid_order_statuses` setting (default
+	 * processing + completed) and the `cart_rebound_paid_order_statuses` filter.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return array<int, string>
+	 */
+	private function paid_statuses(): array {
+		if ( null !== $this->paid_statuses_cache ) {
+			return $this->paid_statuses_cache;
+		}
+
+		$statuses = $this->settings->get( 'paid_order_statuses', array( 'processing', 'completed' ) );
+
+		if ( ! is_array( $statuses ) || array() === $statuses ) {
+			$statuses = array( 'processing', 'completed' );
+		}
+
+		/**
+		 * Filter the order statuses that mark a tracked cart as paid/recovered.
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param array<int, string> $statuses Order-status slugs (without the wc- prefix).
+		 */
+		$statuses = (array) apply_filters( 'cart_rebound_paid_order_statuses', $statuses );
+
+		$this->paid_statuses_cache = array_values( array_map( 'strval', $statuses ) );
+
+		return $this->paid_statuses_cache;
 	}
 
 	/**

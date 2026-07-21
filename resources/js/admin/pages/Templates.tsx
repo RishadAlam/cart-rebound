@@ -15,6 +15,7 @@ import {
 	useCreateTemplate,
 	useDeleteTemplate,
 	usePreviewTemplate,
+	useTestTemplate,
 	useSetDefaultTemplate,
 	useTemplates,
 	useUpdateTemplate,
@@ -103,11 +104,13 @@ export const Templates = () => {
 	const remove = useDeleteTemplate();
 	const setDefault = useSetDefaultTemplate();
 	const preview = usePreviewTemplate();
+	const test = useTestTemplate();
 
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const [form, setForm] = useState<EmailTemplate>(BLANK);
 	const [editorKey, setEditorKey] = useState(0);
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
+	const [testEmail, setTestEmail] = useState('');
 	const [previewData, setPreviewData] = useState<TemplatePreview | null>(
 		null
 	);
@@ -203,6 +206,45 @@ export const Templates = () => {
 
 	const startNew = () => {
 		load({ ...BLANK, name: __('New template', 'cart-rebound') }, 'new');
+	};
+
+	const onTest = () => {
+		test.mutate(
+			{
+				email: testEmail,
+				subject: form.subject,
+				body: form.body,
+				coupon: form.coupon,
+				from_name: form.from_name,
+				from_email: form.from_email,
+			},
+			{
+				onSuccess: (data) => {
+					setFeedback(
+						data.sent
+							? {
+									type: 'success',
+									message: __(
+										'Test email sent.',
+										'cart-rebound'
+									),
+								}
+							: {
+									type: 'error',
+									message:
+										data.message ??
+										__(
+											'Could not send the test email.',
+											'cart-rebound'
+										),
+								}
+					);
+				},
+				onError: (error: unknown) => {
+					setFeedback({ type: 'error', message: messageOf(error) });
+				},
+			}
+		);
 	};
 
 	const onSave = () => {
@@ -592,6 +634,30 @@ export const Templates = () => {
 							disabled={busy}
 						>
 							{saveLabel}
+						</button>
+						<input
+							type="email"
+							className="cr-input"
+							style={{ maxWidth: 200 }}
+							placeholder={__('you@example.com', 'cart-rebound')}
+							value={testEmail}
+							onChange={(event) => {
+								setTestEmail(event.target.value);
+							}}
+							aria-label={__(
+								'Address to send a test email to',
+								'cart-rebound'
+							)}
+						/>
+						<button
+							type="button"
+							className="cr-btn is-ghost"
+							onClick={onTest}
+							disabled={test.isPending || testEmail === ''}
+						>
+							{test.isPending
+								? __('Sending…', 'cart-rebound')
+								: __('Send test', 'cart-rebound')}
 						</button>
 						<span className="cr-savebar__spacer" />
 						<button

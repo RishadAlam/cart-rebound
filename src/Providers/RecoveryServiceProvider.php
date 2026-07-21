@@ -14,6 +14,7 @@ defined( 'ABSPATH' ) || exit;
 use CartRebound\Core\ServiceProvider;
 use CartRebound\Recovery\OrderLinker;
 use CartRebound\Recovery\RecoveryHandler;
+use CartRebound\Recovery\UnsubscribeHandler;
 use WC_Order;
 
 /**
@@ -33,6 +34,7 @@ final class RecoveryServiceProvider extends ServiceProvider {
 	 */
 	public function boot(): void {
 		add_action( 'template_redirect', array( $this->app->make( RecoveryHandler::class ), 'handle' ) );
+		add_action( 'template_redirect', array( $this->app->make( UnsubscribeHandler::class ), 'handle' ) );
 
 		$linker = $this->app->make( OrderLinker::class );
 

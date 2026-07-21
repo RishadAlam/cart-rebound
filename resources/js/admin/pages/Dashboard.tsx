@@ -4,22 +4,8 @@
 import { isAxiosError } from 'axios';
 import { __ } from '@wordpress/i18n';
 import { useStats } from '../hooks/useApi';
+import { formatMoney } from '../lib/format';
 import type { Stats } from '../types/api';
-
-const formatMoney = (amount: number, currency: string): string => {
-	if (currency === '') {
-		return amount.toFixed(2);
-	}
-
-	try {
-		return new Intl.NumberFormat(undefined, {
-			style: 'currency',
-			currency,
-		}).format(amount);
-	} catch {
-		return `${amount.toFixed(2)} ${currency}`;
-	}
-};
 
 interface Card {
 	label: string;

@@ -50,6 +50,11 @@ final class SettingsTest extends TestCase {
 		Functions\when( 'sanitize_text_field' )->returnArg();
 		Functions\when( 'sanitize_textarea_field' )->returnArg();
 		Functions\when( 'sanitize_email' )->returnArg();
+		Functions\when( 'sanitize_key' )->alias(
+			static function ( $key ) {
+				return strtolower( (string) preg_replace( '/[^a-z0-9_\-]/i', '', (string) $key ) );
+			}
+		);
 
 		$saved = null;
 		Functions\when( 'update_option' )->alias(

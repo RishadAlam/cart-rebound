@@ -136,6 +136,34 @@ final class TemplatesController extends Controller {
 	}
 
 	/**
+	 * Send a test email of the current template fields to an address.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param WP_REST_Request $request The request.
+	 * @return WP_REST_Response
+	 */
+	public function test( WP_REST_Request $request ): WP_REST_Response {
+		$email    = sanitize_email( (string) $request->get_param( 'email' ) );
+		$template = array(
+			'subject'    => sanitize_text_field( (string) $request->get_param( 'subject' ) ),
+			'body'       => wp_kses_post( (string) $request->get_param( 'body' ) ),
+			'coupon'     => sanitize_text_field( (string) $request->get_param( 'coupon' ) ),
+			'from_name'  => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
+			'from_email' => sanitize_email( (string) $request->get_param( 'from_email' ) ),
+		);
+
+		$sent     = $this->mailer->send_test( $email, $template );
+		$response = array( 'sent' => $sent );
+
+		if ( ! $sent ) {
+			$response['message'] = $this->mailer->get_last_error();
+		}
+
+		return $this->respond( $response );
+	}
+
+	/**
 	 * Mark a template as the default used for automatic sends.
 	 *
 	 * @since 0.1.0

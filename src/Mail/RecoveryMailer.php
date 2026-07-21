@@ -12,6 +12,7 @@ namespace CartRebound\Mail;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Models\CartSession;
+use CartRebound\Models\Unsubscribe;
 use CartRebound\Recovery\RecoveryLink;
 use CartRebound\Support\Settings;
 use WC_Order;
@@ -115,6 +116,12 @@ final class RecoveryMailer {
 		}
 
 		if ( (int) ( $row['items_count'] ?? 0 ) <= 0 ) {
+			return;
+		}
+
+		// Suppression is a DB lookup, so it runs last — after the free row-field
+		// guards have already rejected the common no-op cases.
+		if ( Unsubscribe::is_suppressed( $email ) ) {
 			return;
 		}
 
@@ -244,6 +251,10 @@ final class RecoveryMailer {
 			return $this->fail( __( 'This cart is already linked to an order.', 'cart-rebound' ) );
 		}
 
+		if ( Unsubscribe::is_suppressed( $email ) ) {
+			return $this->fail( __( 'This address has unsubscribed from recovery emails.', 'cart-rebound' ) );
+		}
+
 		$chosen   = '' !== $template_id ? $this->templates->get( $template_id ) : null;
 		$template = is_array( $chosen ) ? $chosen : $this->templates->default();
 		$sent     = $this->dispatch( $email, $row, $template );
@@ -256,6 +267,30 @@ final class RecoveryMailer {
 		}
 
 		return $sent;
+	}
+
+	/**
+	 * Send a test render of a template to an address (admin "send test" action).
+	 *
+	 * Uses representative sample cart data so an admin can see exactly what a
+	 * shopper would receive, without touching a real cart.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string               $email    Recipient address.
+	 * @param array<string, mixed> $template The (possibly unsaved) template fields.
+	 * @return bool True when the test email was handed to wp_mail successfully.
+	 */
+	public function send_test( string $email, array $template ): bool {
+		$this->last_error = '';
+
+		$email = sanitize_email( $email );
+
+		if ( '' === $email || ! is_email( $email ) ) {
+			return $this->fail( __( 'Enter a valid email address to send the test to.', 'cart-rebound' ) );
+		}
+
+		return $this->dispatch( $email, $this->sample_row(), $template );
 	}
 
 	/**
@@ -412,14 +447,16 @@ final class RecoveryMailer {
 	 * @return string
 	 */
 	private function build_body( array $row, array $template ): string {
-		$recovery_url  = $this->links->url( (string) ( $row['recovery_token'] ?? '' ) );
-		$first_name    = (string) ( $row['first_name'] ?? '' );
-		$coupon_code   = (string) ( $template['coupon'] ?? '' );
-		$products_html = $this->products_html( $row );
+		$token           = (string) ( $row['recovery_token'] ?? '' );
+		$recovery_url    = $this->links->url( $token );
+		$unsubscribe_url = $this->links->unsubscribe_url( $token );
+		$first_name      = (string) ( $row['first_name'] ?? '' );
+		$coupon_code     = (string) ( $template['coupon'] ?? '' );
+		$products_html   = $this->products_html( $row );
 
 		$content = str_replace(
-			array( '{first_name}', '{products}', '{recovery_url}', '{coupon_code}' ),
-			array( esc_html( $first_name ), $products_html, esc_url( $recovery_url ), esc_html( $coupon_code ) ),
+			array( '{first_name}', '{products}', '{recovery_url}', '{coupon_code}', '{unsubscribe_url}' ),
+			array( esc_html( $first_name ), $products_html, esc_url( $recovery_url ), esc_html( $coupon_code ), esc_url( $unsubscribe_url ) ),
 			(string) ( $template['body'] ?? '' )
 		);
 

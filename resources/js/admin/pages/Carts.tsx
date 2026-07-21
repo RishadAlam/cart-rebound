@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
+import { formatMoney } from '../lib/format';
 import {
 	useBulkCarts,
 	useCarts,
@@ -380,6 +381,7 @@ const CartRow = ({
 	onToggle,
 	onRecover,
 	onSendEmail,
+	onView,
 	notify,
 }: {
 	cart: Cart;
@@ -387,6 +389,7 @@ const CartRow = ({
 	onToggle: (id: number, checked: boolean) => void;
 	onRecover: (cart: Cart) => void;
 	onSendEmail: (cart: Cart) => void;
+	onView: (cart: Cart) => void;
 	notify: (feedback: Feedback) => void;
 }) => {
 	const remove = useDeleteCart();
@@ -436,7 +439,18 @@ const CartRow = ({
 					}}
 				/>
 			</td>
-			<td className="cr-muted cr-nowrap">#{cart.id}</td>
+			<td className="cr-nowrap">
+				<button
+					type="button"
+					className="cr-linkbtn"
+					onClick={() => {
+						onView(cart);
+					}}
+					title={__('View cart details', 'cart-rebound')}
+				>
+					#{cart.id}
+				</button>
+			</td>
 			<td className="cr-cell-email">
 				{cart.email !== '' ? cart.email : <Dash />}
 			</td>
@@ -502,6 +516,170 @@ const CartRow = ({
 				</div>
 			</td>
 		</tr>
+	);
+};
+
+const CartDetail = ({
+	cart,
+	onClose,
+}: {
+	cart: Cart | null;
+	onClose: () => void;
+}) => {
+	const ref = useRef<HTMLDialogElement>(null);
+
+	useEffect(() => {
+		const el = ref.current;
+
+		if (!el) {
+			return;
+		}
+
+		if (cart && !el.open) {
+			el.showModal();
+		} else if (!cart && el.open) {
+			el.close();
+		}
+	}, [cart]);
+
+	if (!cart) {
+		return null;
+	}
+
+	const money = (value: number) => formatMoney(value, cart.currency);
+	const name = `${cart.first_name} ${cart.last_name}`.trim();
+
+	const timeline: Array<[string, string]> = [
+		[__('Created', 'cart-rebound'), cart.created_at],
+	];
+
+	if (cart.abandoned_at !== '') {
+		timeline.push([
+			_x('Abandoned', 'cart status', 'cart-rebound'),
+			cart.abandoned_at,
+		]);
+	}
+	if (cart.recovered_at !== '') {
+		timeline.push([
+			_x('Recovered', 'cart status', 'cart-rebound'),
+			cart.recovered_at,
+		]);
+	}
+	if (cart.completed_at !== '') {
+		timeline.push([
+			_x('Completed', 'cart status', 'cart-rebound'),
+			cart.completed_at,
+		]);
+	}
+	timeline.push([__('Last activity', 'cart-rebound'), cart.last_activity]);
+
+	return (
+		<dialog ref={ref} className="cr-dialog is-wide" onClose={onClose}>
+			<div className="cr-detail__head">
+				<h2 className="cr-dialog__title">
+					{sprintf(
+						/* translators: %d: cart id. */
+						__('Cart #%d', 'cart-rebound'),
+						cart.id
+					)}
+				</h2>
+				<span className={`cr-badge is-${cart.status}`}>
+					{statusLabel(cart.status)}
+				</span>
+			</div>
+
+			<dl className="cr-detail__meta">
+				<div>
+					<dt>{__('Customer', 'cart-rebound')}</dt>
+					<dd>{name !== '' ? name : <Dash />}</dd>
+				</div>
+				<div>
+					<dt>{__('Email', 'cart-rebound')}</dt>
+					<dd>{cart.email !== '' ? cart.email : <Dash />}</dd>
+				</div>
+				<div>
+					<dt>{__('Phone', 'cart-rebound')}</dt>
+					<dd>{cart.phone !== '' ? cart.phone : <Dash />}</dd>
+				</div>
+				<div>
+					<dt>{__('Order', 'cart-rebound')}</dt>
+					<dd>
+						{cart.order_id > 0 ? `#${cart.order_id}` : <Dash />}
+					</dd>
+				</div>
+			</dl>
+
+			<table className="cr-detail__items">
+				<thead>
+					<tr>
+						<th>{__('Product', 'cart-rebound')}</th>
+						<th style={{ textAlign: 'center' }}>
+							{__('Qty', 'cart-rebound')}
+						</th>
+						<th style={{ textAlign: 'right' }}>
+							{__('Total', 'cart-rebound')}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					{cart.products.length === 0 ? (
+						<tr>
+							<td colSpan={3} className="cr-muted">
+								{__('No items recorded.', 'cart-rebound')}
+							</td>
+						</tr>
+					) : (
+						cart.products.map((product, index) => (
+							<tr key={`${product.product_id}-${index}`}>
+								<td>{product.name}</td>
+								<td style={{ textAlign: 'center' }}>
+									{product.qty}
+								</td>
+								<td style={{ textAlign: 'right' }}>
+									{money(product.total)}
+								</td>
+							</tr>
+						))
+					)}
+				</tbody>
+				<tfoot>
+					<tr>
+						<th>{__('Cart total', 'cart-rebound')}</th>
+						<td style={{ textAlign: 'center' }}>
+							{cart.items_count}
+						</td>
+						<td style={{ textAlign: 'right' }}>
+							{money(cart.cart_total)}
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+
+			{cart.coupons.length > 0 && (
+				<p className="cr-detail__coupons">
+					{__('Coupons:', 'cart-rebound')} {cart.coupons.join(', ')}
+				</p>
+			)}
+
+			<ul className="cr-detail__timeline">
+				{timeline.map(([label, value]) => (
+					<li key={label}>
+						<span className="cr-detail__tl-label">{label}</span>
+						<span className="cr-detail__tl-value">{value}</span>
+					</li>
+				))}
+			</ul>
+
+			<div className="cr-dialog__actions">
+				<button
+					type="button"
+					className="cr-btn is-ghost"
+					onClick={onClose}
+				>
+					{__('Close', 'cart-rebound')}
+				</button>
+			</div>
+		</dialog>
 	);
 };
 
@@ -845,6 +1023,7 @@ export const Carts = () => {
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
 	const [recoverCart, setRecoverCart] = useState<Cart | null>(null);
 	const [sendCart, setSendCart] = useState<Cart | null>(null);
+	const [detailCart, setDetailCart] = useState<Cart | null>(null);
 
 	const { data, isLoading, isFetching, isError } = useCarts({
 		status,
@@ -1223,6 +1402,7 @@ export const Carts = () => {
 												onToggle={toggleOne}
 												onRecover={setRecoverCart}
 												onSendEmail={setSendCart}
+												onView={setDetailCart}
 												notify={setFeedback}
 											/>
 										))
@@ -1286,6 +1466,13 @@ export const Carts = () => {
 					setSendCart(null);
 				}}
 				notify={setFeedback}
+			/>
+
+			<CartDetail
+				cart={detailCart}
+				onClose={() => {
+					setDetailCart(null);
+				}}
 			/>
 		</div>
 	);

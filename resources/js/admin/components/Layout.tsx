@@ -3,6 +3,7 @@
  */
 import { NavLink, Outlet } from 'react-router-dom';
 import { __ } from '@wordpress/i18n';
+import { OnboardingWizard } from './OnboardingWizard';
 
 interface Tab {
 	to: string;
@@ -27,6 +28,8 @@ const tabClass = ({ isActive }: { isActive: boolean }): string =>
 
 export const Layout = () => (
 	<div className="cr-app">
+		<OnboardingWizard />
+
 		<header className="cr-header">
 			<h1 className="cr-header__title">
 				{__('Cart Rebound', 'cart-rebound')}

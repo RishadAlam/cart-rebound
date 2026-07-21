@@ -3,7 +3,7 @@
  * Plugin Name:       Cart Rebound
  * Plugin URI:        https://github.com/RishadAlam/cart-rebound
  * Description:       Recover abandoned WooCommerce carts with secure links, optional emails, opt-in guest tracking, and accurate revenue attribution.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Requires at least: 6.2
  * Tested up to:      7.0
  * Requires PHP:      7.4
@@ -20,7 +20,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CART_REBOUND_VERSION', '0.1.0' );
+define( 'CART_REBOUND_VERSION', '0.2.0' );
 define( 'CART_REBOUND_FILE', __FILE__ );
 define( 'CART_REBOUND_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CART_REBOUND_URL', plugin_dir_url( __FILE__ ) );

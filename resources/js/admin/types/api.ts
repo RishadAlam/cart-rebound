@@ -59,12 +59,14 @@ export interface Settings {
 	converted_cleanup_days: number;
 	recovery_email_enabled: boolean;
 	admin_recovery_email: boolean;
+	paid_order_statuses: string[];
 	email_delay_minutes: number;
 	email_subject: string;
 	email_body: string;
 	email_from_name: string;
 	email_from_email: string;
 	email_coupon: string;
+	onboarding_complete: boolean;
 }
 
 export interface Order {

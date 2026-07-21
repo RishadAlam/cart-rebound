@@ -36,6 +36,7 @@ final class RecoveryMailerTest extends TestCase {
 				return false !== filter_var( $email, FILTER_VALIDATE_EMAIL );
 			}
 		);
+		Functions\when( 'sanitize_email' )->returnArg();
 	}
 
 	protected function tear_down(): void {
@@ -91,6 +92,23 @@ final class RecoveryMailerTest extends TestCase {
 		$this->assertSame( 'This cart is already linked to an order.', $mailer->get_last_error() );
 	}
 
+	public function test_send_now_refuses_an_unsubscribed_address(): void {
+		$this->wpdb->unsubscribed = true;
+		$this->wpdb->results      = array(
+			array(
+				'id'          => 7,
+				'email'       => 'shopper@example.com',
+				'items_count' => 1,
+				'order_id'    => 0,
+			),
+		);
+
+		$mailer = $this->mailer();
+
+		$this->assertFalse( $mailer->send_now( 7 ) );
+		$this->assertSame( 'This address has unsubscribed from recovery emails.', $mailer->get_last_error() );
+	}
+
 	public function test_mail_error_preserves_the_transport_message(): void {
 		$mailer = $this->mailer();
 
@@ -121,6 +139,7 @@ final class RecoveryMailerTest extends TestCase {
 		Functions\when( 'wpautop' )->returnArg();
 		Functions\when( 'wc_get_cart_url' )->justReturn( 'https://shop.test/cart' );
 		Functions\when( 'add_query_arg' )->justReturn( 'https://shop.test/cart?recover' );
+		Functions\when( 'home_url' )->justReturn( 'https://shop.test/' );
 		Functions\when( 'wp_mail' )->justReturn( false );
 
 		$mailer = $this->mailer();
@@ -148,14 +167,34 @@ class RecoveryMailerWpdb {
 	/** @var array<int, array<string, mixed>> */
 	public $results = array();
 
-	public function prepare( $query, $args = array() ) {
-		unset( $args );
+	/** @var bool */
+	public $unsubscribed = false;
 
-		return $query;
+	public function prepare( $query, $args = array() ) {
+		$flat = is_array( $args ) ? $args : array( $args );
+
+		// Interpolate %i/%s/%d in order so the target table name is visible to
+		// get_results() (which routes the suppression lookup to an empty result).
+		return (string) preg_replace_callback(
+			'/%[isd]/',
+			static function () use ( &$flat ) {
+				return (string) array_shift( $flat );
+			},
+			(string) $query
+		);
 	}
 
 	public function get_results( $query, $output ) {
-		unset( $query, $output );
+		unset( $output );
+
+		// Route the suppression lookup (against the unsubscribes table specifically,
+		// not any query whose values merely contain the word) to a controllable
+		// result so fixtures decide whether an address is unsubscribed.
+		if ( is_string( $query ) && false !== strpos( $query, 'cart_rebound_unsubscribes' ) ) {
+			return $this->unsubscribed
+				? array( array( 'id' => 1, 'email' => 'shopper@example.com' ) )
+				: array();
+		}
 
 		return $this->results;
 	}

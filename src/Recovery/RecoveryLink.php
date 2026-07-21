@@ -36,6 +36,13 @@ final class RecoveryLink {
 	public const QUERY_TOKEN = 'cart_rebound_token';
 
 	/**
+	 * Query var that flags an unsubscribe request.
+	 *
+	 * @var string
+	 */
+	public const QUERY_UNSUBSCRIBE = 'cart_rebound_unsubscribe';
+
+	/**
 	 * Build the recovery URL for a token.
 	 *
 	 * @since 0.1.0
@@ -52,6 +59,24 @@ final class RecoveryLink {
 				self::QUERY_TOKEN => rawurlencode( $token ),
 			),
 			$base
+		);
+	}
+
+	/**
+	 * Build the one-click unsubscribe URL for a token.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string $token The row's recovery token.
+	 * @return string
+	 */
+	public function unsubscribe_url( string $token ): string {
+		return add_query_arg(
+			array(
+				self::QUERY_UNSUBSCRIBE => '1',
+				self::QUERY_TOKEN       => rawurlencode( $token ),
+			),
+			home_url( '/' )
 		);
 	}
 }

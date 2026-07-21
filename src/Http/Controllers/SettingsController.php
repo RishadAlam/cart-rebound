@@ -72,12 +72,14 @@ final class SettingsController extends Controller {
 			'converted_cleanup_days',
 			'recovery_email_enabled',
 			'admin_recovery_email',
+			'paid_order_statuses',
 			'email_delay_minutes',
 			'email_subject',
 			'email_body',
 			'email_from_name',
 			'email_from_email',
 			'email_coupon',
+			'onboarding_complete',
 		);
 
 		$input = array();

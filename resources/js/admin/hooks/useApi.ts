@@ -18,6 +18,7 @@ import {
 	fetchTemplates,
 	markCartRecovered,
 	previewTemplate,
+	testTemplate,
 	sendCartEmail,
 	setDefaultTemplate,
 	updateCartStatus,
@@ -195,6 +196,8 @@ export const useSetDefaultTemplate = () => {
 
 export const usePreviewTemplate = () =>
 	useMutation({ mutationFn: previewTemplate });
+
+export const useTestTemplate = () => useMutation({ mutationFn: testTemplate });
 
 export const useLogs = (query: LogsQuery) =>
 	useQuery<LogList>({

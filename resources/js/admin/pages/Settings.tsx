@@ -24,6 +24,16 @@ type NumberKey =
 type ToggleKey =
 	'guest_tracking' | 'recovery_email_enabled' | 'admin_recovery_email';
 
+// WooCommerce order statuses selectable as "counts as recovered". Reversed
+// states (refunded/cancelled/failed) and unpaid pending are intentionally
+// omitted; custom statuses can be added via the cart_rebound_paid_order_statuses
+// filter.
+const PAID_STATUS_OPTIONS: Array<{ key: string; label: string }> = [
+	{ key: 'on-hold', label: __('On hold', 'cart-rebound') },
+	{ key: 'processing', label: __('Processing', 'cart-rebound') },
+	{ key: 'completed', label: __('Completed', 'cart-rebound') },
+];
+
 const Field = ({
 	id,
 	label,
@@ -93,6 +103,25 @@ export const Settings = () => {
 	const onToggle =
 		(key: ToggleKey) => (event: ChangeEvent<HTMLInputElement>) => {
 			setField(key, event.target.checked);
+		};
+
+	const onStatusToggle =
+		(status: string) => (event: ChangeEvent<HTMLInputElement>) => {
+			setForm((previous) => {
+				if (!previous) {
+					return previous;
+				}
+
+				const next = new Set(previous.paid_order_statuses);
+
+				if (event.target.checked) {
+					next.add(status);
+				} else {
+					next.delete(status);
+				}
+
+				return { ...previous, paid_order_statuses: [...next] };
+			});
 		};
 
 	const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -227,6 +256,40 @@ export const Settings = () => {
 							onChange={onNumber('converted_cleanup_days')}
 						/>
 					</Field>
+				</div>
+
+				<div className="cr-field">
+					<span className="cr-field__label">
+						{__(
+							'Count a cart as recovered when its order is',
+							'cart-rebound'
+						)}
+					</span>
+					<div className="cr-checks">
+						{PAID_STATUS_OPTIONS.map((option) => (
+							<label
+								key={option.key}
+								htmlFor={`cr-paid-${option.key}`}
+								className="cr-check"
+							>
+								<input
+									id={`cr-paid-${option.key}`}
+									type="checkbox"
+									checked={form.paid_order_statuses.includes(
+										option.key
+									)}
+									onChange={onStatusToggle(option.key)}
+								/>
+								<span>{option.label}</span>
+							</label>
+						))}
+					</div>
+					<p className="cr-field__hint">
+						{__(
+							'Order statuses that mark a tracked cart as paid and attributed.',
+							'cart-rebound'
+						)}
+					</p>
 				</div>
 			</div>
 

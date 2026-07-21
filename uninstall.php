@@ -41,6 +41,7 @@ if ( is_readable( $cart_rebound_autoloader ) ) {
 	$cart_rebound_tables = array(
 		$wpdb->prefix . 'cart_rebound_sessions',
 		$wpdb->prefix . 'cart_rebound_logs',
+		$wpdb->prefix . 'cart_rebound_unsubscribes',
 	);
 
 	foreach ( $cart_rebound_tables as $cart_rebound_table ) {

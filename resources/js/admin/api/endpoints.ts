@@ -169,6 +169,22 @@ export const previewTemplate = async (input: {
 	return data;
 };
 
+export const testTemplate = async (input: {
+	email: string;
+	subject: string;
+	body: string;
+	coupon: string;
+	from_name: string;
+	from_email: string;
+}): Promise<{ sent: boolean; message?: string }> => {
+	const { data } = await apiClient.post<{ sent: boolean; message?: string }>(
+		'templates/test',
+		input
+	);
+
+	return data;
+};
+
 export const bulkCarts = async (input: {
 	action: BulkAction;
 	ids: number[];
