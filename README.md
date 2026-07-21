@@ -141,9 +141,11 @@ For each release:
 
 Publishing a stable GitHub release starts `.github/workflows/release.yml`.
 Drafts and prereleases do not deploy. Deployment stops before SVN is changed if
-the release tag is not the current `main` commit, versions disagree, QA fails,
-or the production build fails. Reusable actions are pinned to full commit
-hashes so their executed code cannot change when a moving tag changes.
+the release tag commit is not contained in `main` history, versions disagree,
+QA fails, or the production build fails. This allows `main` to advance after a
+release tag is created without allowing releases from unmerged branches.
+Reusable actions are pinned to full commit hashes so their executed code cannot
+change when a moving tag changes.
 
 ## Privacy
 

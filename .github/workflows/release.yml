@@ -27,12 +27,12 @@ jobs:
                   fetch-depth: 0
                   persist-credentials: false
 
-            - name: Require the current main commit
+            - name: Require the release commit on main
               shell: bash
               run: |
-                  git fetch origin main --depth=1
-                  if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
-                      echo "The release tag must point to the current main commit." >&2
+                  git fetch origin main
+                  if ! git merge-base --is-ancestor HEAD origin/main; then
+                      echo "The release tag commit must be contained in main history." >&2
                       exit 1
                   fi
 
@@ -46,7 +46,13 @@ jobs:
             - name: Verify release versions
               env:
                   RELEASE_TAG: ${{ github.event.release.tag_name }}
-              run: bash scripts/check-release-version.sh "${RELEASE_TAG}"
+              shell: bash
+              run: |
+                  normalized_tag="${RELEASE_TAG}"
+                  if [[ "${normalized_tag}" != v* ]]; then
+                      normalized_tag="v${normalized_tag}"
+                  fi
+                  bash scripts/check-release-version.sh "${normalized_tag}"
 
             - name: Install Composer dependencies
               uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
@@ -102,12 +108,12 @@ jobs:
                   fetch-depth: 0
                   persist-credentials: false
 
-            - name: Reconfirm the current main commit
+            - name: Reconfirm the release commit on main
               shell: bash
               run: |
-                  git fetch origin main --depth=1
-                  if [[ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]]; then
-                      echo "The release tag must point to the current main commit." >&2
+                  git fetch origin main
+                  if ! git merge-base --is-ancestor HEAD origin/main; then
+                      echo "The release tag commit must be contained in main history." >&2
                       exit 1
                   fi
 
