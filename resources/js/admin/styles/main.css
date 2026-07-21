@@ -214,6 +214,11 @@
 	background: var(--cr-warning-soft);
 }
 
+.cr-badge.is-pending-payment {
+	color: var(--cr-accent);
+	background: var(--cr-accent-soft);
+}
+
 .cr-badge.is-recovered {
 	color: var(--cr-success);
 	background: var(--cr-success-soft);
@@ -646,6 +651,108 @@ textarea.cr-input {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
+}
+
+/* ---- Status guide ---- */
+.cr-guide {
+	margin-bottom: 12px;
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-panel);
+}
+
+.cr-guide__summary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 14px;
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--cr-ink-soft);
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+}
+
+.cr-guide__summary::-webkit-details-marker {
+	display: none;
+}
+
+.cr-guide__summary::before {
+	content: "";
+	width: 6px;
+	height: 6px;
+	border-right: 1.5px solid var(--cr-muted);
+	border-bottom: 1.5px solid var(--cr-muted);
+	transform: rotate(-45deg);
+	transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.cr-guide[open] .cr-guide__summary::before {
+	transform: rotate(45deg);
+}
+
+.cr-guide__summary:focus-visible {
+	outline: none;
+	box-shadow: var(--cr-ring);
+	border-radius: var(--cr-radius-sm);
+}
+
+.cr-guide__body {
+	padding: 2px 14px 14px;
+}
+
+.cr-guide__list {
+	display: grid;
+	gap: 10px;
+	margin: 0 0 14px;
+	padding: 0;
+	list-style: none;
+}
+
+.cr-guide__item {
+	display: grid;
+	grid-template-columns: 132px 1fr;
+	gap: 12px;
+	align-items: baseline;
+}
+
+.cr-guide__meaning {
+	color: var(--cr-muted);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.cr-guide__item .cr-badge {
+	justify-self: start;
+}
+
+.cr-guide__flow {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	padding-top: 12px;
+	border-top: 1px solid var(--cr-border);
+}
+
+.cr-guide__arrow,
+.cr-guide__sep {
+	color: var(--cr-muted);
+	font-size: 13px;
+}
+
+.cr-guide__note {
+	margin: 10px 0 0;
+	color: var(--cr-muted);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cr-guide__summary::before {
+		transition: none;
+	}
 }
 
 /* ---- Loading spinner ---- */

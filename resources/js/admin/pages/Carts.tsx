@@ -39,12 +39,13 @@ const CHANGE_STATUSES = [
 	'lost',
 ];
 const PER_PAGE = 20;
-const COLUMN_COUNT = 8;
+const COLUMN_COUNT = 9;
 
 type Feedback = { type: 'success' | 'error'; message: string };
 
 // Column key → the backend sort column it maps to.
 const SORTABLE = {
+	id: 'id',
 	email: 'email',
 	items: 'items_count',
 	total: 'cart_total',
@@ -76,6 +77,91 @@ const statusLabel = (status: string): string => {
 			return status;
 	}
 };
+
+// Each cart status paired with a plain-language meaning for the status guide.
+const STATUS_GUIDE: Array<[string, string]> = [
+	[
+		'active',
+		__(
+			'Shopper is still building their cart — no order placed yet.',
+			'cart-rebound'
+		),
+	],
+	[
+		'abandoned',
+		__(
+			'Idle past the threshold; a recovery email may be scheduled.',
+			'cart-rebound'
+		),
+	],
+	[
+		'pending-payment',
+		__(
+			'Order placed but not paid yet (e.g. cheque or bank transfer). Items are kept and no recovery email is sent.',
+			'cart-rebound'
+		),
+	],
+	[
+		'recovered',
+		__(
+			'An abandoned cart that came back and paid — a recovery win.',
+			'cart-rebound'
+		),
+	],
+	[
+		'completed',
+		__(
+			'Converted to a paid order without ever being abandoned.',
+			'cart-rebound'
+		),
+	],
+	[
+		'lost',
+		__(
+			'Abandoned and cleaned up, or a paid order later refunded or cancelled.',
+			'cart-rebound'
+		),
+	],
+];
+
+const GuideBadge = ({ status }: { status: string }) => (
+	<span className={`cr-badge is-${status}`}>{statusLabel(status)}</span>
+);
+
+const StatusGuide = () => (
+	<details className="cr-guide">
+		<summary className="cr-guide__summary">
+			{__('What do these statuses mean?', 'cart-rebound')}
+		</summary>
+		<div className="cr-guide__body">
+			<ul className="cr-guide__list">
+				{STATUS_GUIDE.map(([key, meaning]) => (
+					<li key={key} className="cr-guide__item">
+						<GuideBadge status={key} />
+						<span className="cr-guide__meaning">{meaning}</span>
+					</li>
+				))}
+			</ul>
+			<div className="cr-guide__flow" aria-hidden="true">
+				<GuideBadge status="active" />
+				<span className="cr-guide__arrow">→</span>
+				<GuideBadge status="abandoned" />
+				<span className="cr-guide__arrow">→</span>
+				<GuideBadge status="pending-payment" />
+				<span className="cr-guide__arrow">→</span>
+				<GuideBadge status="recovered" />
+				<span className="cr-guide__sep">/</span>
+				<GuideBadge status="completed" />
+			</div>
+			<p className="cr-guide__note">
+				{__(
+					'A cancelled or failed order returns the cart to Active with its items kept; a refund moves a converted cart to Lost.',
+					'cart-rebound'
+				)}
+			</p>
+		</div>
+	</details>
+);
 
 const orderLabel = (order: Order): string => {
 	const who = order.email !== '' ? order.email : __('guest', 'cart-rebound');
@@ -350,6 +436,7 @@ const CartRow = ({
 					}}
 				/>
 			</td>
+			<td className="cr-muted cr-nowrap">#{cart.id}</td>
 			<td className="cr-cell-email">
 				{cart.email !== '' ? cart.email : <Dash />}
 			</td>
@@ -956,6 +1043,8 @@ export const Carts = () => {
 				)}
 			</div>
 
+			<StatusGuide />
+
 			{feedback && (
 				<div
 					className={`cr-notice is-${feedback.type}`}
@@ -1072,6 +1161,12 @@ export const Carts = () => {
 												}}
 											/>
 										</th>
+										<SortHeader
+											label={__('ID', 'cart-rebound')}
+											column={SORTABLE.id}
+											sort={sort}
+											onSort={onSort}
+										/>
 										<SortHeader
 											label={__('Email', 'cart-rebound')}
 											column={SORTABLE.email}

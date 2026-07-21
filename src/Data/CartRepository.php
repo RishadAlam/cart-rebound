@@ -30,6 +30,7 @@ final class CartRepository {
 	 * @var array<int, string>
 	 */
 	private const SORTABLE = array(
+		'id',
 		'email',
 		'items_count',
 		'cart_total',
