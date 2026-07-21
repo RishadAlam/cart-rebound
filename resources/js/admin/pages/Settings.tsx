@@ -21,7 +21,8 @@ type NumberKey =
 	| 'converted_cleanup_days'
 	| 'email_delay_minutes';
 
-type ToggleKey = 'guest_tracking' | 'recovery_email_enabled';
+type ToggleKey =
+	'guest_tracking' | 'recovery_email_enabled' | 'admin_recovery_email';
 
 const Field = ({
 	id,
@@ -255,6 +256,24 @@ export const Settings = () => {
 						</p>
 					</div>
 					{toggle('recovery_email_enabled', 'cr-email-enabled')}
+				</div>
+
+				<div className="cr-field--row">
+					<div>
+						<label
+							htmlFor="cr-admin-notify"
+							className="cr-field__label"
+						>
+							{__('Notify admin on recovery', 'cart-rebound')}
+						</label>
+						<p className="cr-field__hint">
+							{__(
+								'Email the site admin whenever a tracked cart is recovered into a paid order.',
+								'cart-rebound'
+							)}
+						</p>
+					</div>
+					{toggle('admin_recovery_email', 'cr-admin-notify')}
 				</div>
 
 				<div className="cr-field__grid">

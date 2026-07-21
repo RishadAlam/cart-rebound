@@ -25,6 +25,7 @@ const FILTER_STATUSES = [
 	'',
 	'active',
 	'abandoned',
+	'pending-payment',
 	'recovered',
 	'completed',
 	'lost',
@@ -32,6 +33,7 @@ const FILTER_STATUSES = [
 const CHANGE_STATUSES = [
 	'active',
 	'abandoned',
+	'pending-payment',
 	'recovered',
 	'completed',
 	'lost',
@@ -62,6 +64,8 @@ const statusLabel = (status: string): string => {
 			return _x('Active', 'cart status', 'cart-rebound');
 		case 'abandoned':
 			return _x('Abandoned', 'cart status', 'cart-rebound');
+		case 'pending-payment':
+			return _x('Pending payment', 'cart status', 'cart-rebound');
 		case 'recovered':
 			return _x('Recovered', 'cart status', 'cart-rebound');
 		case 'completed':

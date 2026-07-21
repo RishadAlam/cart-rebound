@@ -37,6 +37,14 @@ final class CartSession extends Model {
 	public const STATUS_ABANDONED = 'abandoned';
 
 	/**
+	 * An order was placed from the cart but its payment is not yet confirmed
+	 * (e.g. cheque / bank transfer awaiting payment, or a pending gateway).
+	 *
+	 * @var string
+	 */
+	public const STATUS_PENDING_PAYMENT = 'pending-payment';
+
+	/**
 	 * Abandoned cart that converted to an order.
 	 *
 	 * @var string
@@ -65,6 +73,7 @@ final class CartSession extends Model {
 	public const STATUSES = array(
 		self::STATUS_ACTIVE,
 		self::STATUS_ABANDONED,
+		self::STATUS_PENDING_PAYMENT,
 		self::STATUS_RECOVERED,
 		self::STATUS_COMPLETED,
 		self::STATUS_LOST,

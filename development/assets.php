@@ -10,7 +10,13 @@
 
 declare( strict_types=1 );
 
-defined( 'ABSPATH' ) || exit;
+// This file is eagerly evaluated through Composer's `files` autoloader, so it
+// must `return` (never `exit`) when WordPress is absent: an `exit` here would
+// kill any CLI process that loads the autoloader — PHPCS, PHPUnit, PHPStan —
+// the moment it starts. Direct web access still executes no plugin code.
+if ( ! defined( 'ABSPATH' ) ) {
+	return;
+}
 
 if ( function_exists( 'add_filter' ) ) {
 	add_filter( 'cart_rebound_use_compiled_admin_assets', 'cart_rebound_load_development_assets', 10, 3 );

@@ -37,6 +37,10 @@ const cardsFrom = (stats: Stats): Card[] => [
 		value: stats.counts.abandoned ?? 0,
 	},
 	{
+		label: __('Pending payment', 'cart-rebound'),
+		value: stats.counts['pending-payment'] ?? 0,
+	},
+	{
 		label: __('Recovered', 'cart-rebound'),
 		value: stats.counts.recovered ?? 0,
 	},

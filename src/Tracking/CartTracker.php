@@ -124,12 +124,29 @@ final class CartTracker {
 	public function upsert( string $key, array $data ): int {
 		$existing = CartSession::query()->where( 'session_key', '=', $key )->first();
 		$now      = gmdate( 'Y-m-d H:i:s' );
+		$is_empty = (int) ( $data['items_count'] ?? 0 ) < 1;
 
 		if ( is_array( $existing ) ) {
 			$id     = (int) ( $existing['id'] ?? 0 );
 			$status = (string) ( $existing['status'] ?? '' );
 
 			if ( ! $this->is_terminal( $status ) ) {
+				// WooCommerce empties the cart the moment an order is placed (it
+				// fires `woocommerce_cart_emptied` / `woocommerce_cart_updated`
+				// with a now-empty cart). While an order is awaiting payment for
+				// this session that empty snapshot must not wipe the tracked
+				// contents/total: the row is about to be linked to the order, and
+				// a not-yet-paid order still needs its items to drive recovery — so
+				// the last non-empty snapshot and its abandonment clock stay put.
+				//
+				// An empty cart with NO order in flight is a genuine discard (the
+				// shopper removed every item), so it falls through to the normal
+				// update below and the row is zeroed as before, keeping a
+				// deliberately-emptied cart out of the abandonment funnel.
+				if ( $is_empty && $this->order_in_progress() ) {
+					return $id;
+				}
+
 				$update = array_merge( $data, array( 'last_activity' => $now ) );
 
 				if ( CartSession::STATUS_ABANDONED === $status ) {
@@ -153,7 +170,7 @@ final class CartTracker {
 		// `woocommerce_cart_updated` on ordinary page loads (shop, product,
 		// account) where the cart holds nothing, which would otherwise litter
 		// the list with 0-item rows. Existing rows are still updated above.
-		if ( (int) ( $data['items_count'] ?? 0 ) < 1 ) {
+		if ( $is_empty ) {
 			return 0;
 		}
 
@@ -301,6 +318,26 @@ final class CartTracker {
 	}
 
 	/**
+	 * Whether a checkout order was placed earlier in this request.
+	 *
+	 * WooCommerce empties the cart during payment processing, which fires the
+	 * tracking hooks with an empty cart. Both the classic and the Store API
+	 * (block) checkout fire their `*_order_processed` action before that point,
+	 * so a fired action tells an order-placement empty apart from a shopper who
+	 * deliberately removed every item (no checkout action has run). This is used
+	 * instead of the session's `order_awaiting_payment`, which the classic
+	 * checkout sets but the Store API does not.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return bool
+	 */
+	private function order_in_progress(): bool {
+		return did_action( 'woocommerce_checkout_order_processed' ) > 0
+			|| did_action( 'woocommerce_store_api_checkout_order_processed' ) > 0;
+	}
+
+	/**
 	 * Whether a status is terminal (no further tracking for that row).
 	 *
 	 * @since 0.1.0
@@ -311,7 +348,12 @@ final class CartTracker {
 	private function is_terminal( string $status ): bool {
 		return in_array(
 			$status,
-			array( CartSession::STATUS_RECOVERED, CartSession::STATUS_COMPLETED, CartSession::STATUS_LOST ),
+			array(
+				CartSession::STATUS_PENDING_PAYMENT,
+				CartSession::STATUS_RECOVERED,
+				CartSession::STATUS_COMPLETED,
+				CartSession::STATUS_LOST,
+			),
 			true
 		);
 	}

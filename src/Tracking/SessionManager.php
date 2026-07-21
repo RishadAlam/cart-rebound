@@ -109,6 +109,47 @@ final class SessionManager {
 	}
 
 	/**
+	 * Forget the current visitor's tracking session after their cart converts.
+	 *
+	 * Best-effort: drops the WooCommerce session slot and expires the first-party
+	 * cookie so the shopper's next cart opens a brand-new tracked row instead of
+	 * reusing the just-converted key. Safe to call in any context — it no-ops when
+	 * WooCommerce has no session or headers are already sent.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return void
+	 */
+	public function clear(): void {
+		// Only retire the session from the shopper's own front-end request. On a
+		// wp-admin order edit or a cron/webhook status change the current cookie
+		// and WooCommerce session belong to someone else (or no one), and
+		// CartTracker archives the converted key on the next cart regardless.
+		if ( is_admin() || wp_doing_cron() ) {
+			return;
+		}
+
+		// Once output has started the cookie can no longer be expired; bail before
+		// touching the WooCommerce session too, so the cookie and the session slot
+		// can never diverge (the cookie is read first on the next request).
+		if ( headers_sent() ) {
+			return;
+		}
+
+		if ( function_exists( 'WC' ) ) {
+			$wc = WC();
+
+			if ( is_object( $wc ) && null !== $wc->session ) {
+				$wc->session->set( self::WC_SESSION_KEY, null );
+			}
+		}
+
+		unset( $_COOKIE[ self::COOKIE ] );
+
+		setcookie( self::COOKIE, '', $this->cookie_options( time() - DAY_IN_SECONDS ) );
+	}
+
+	/**
 	 * Resolve or create the plugin-specific key stored in WooCommerce's session.
 	 *
 	 * @since 0.1.0
@@ -184,16 +225,28 @@ final class SessionManager {
 			return;
 		}
 
-		setcookie(
-			self::COOKIE,
-			$value,
-			array(
-				'expires'  => time() + ( 30 * DAY_IN_SECONDS ),
-				'path'     => defined( 'COOKIEPATH' ) && '' !== COOKIEPATH ? COOKIEPATH : '/',
-				'secure'   => is_ssl(),
-				'httponly' => true,
-				'samesite' => 'Lax',
-			)
+		setcookie( self::COOKIE, $value, $this->cookie_options( time() + ( 30 * DAY_IN_SECONDS ) ) );
+	}
+
+	/**
+	 * Build the cookie option array shared by the set and clear paths.
+	 *
+	 * Keeping one definition guarantees the expiring cookie carries the exact
+	 * path/secure/samesite scope the original was set with — a mismatch would
+	 * leave the browser holding the old cookie.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param int $expires Unix expiry timestamp.
+	 * @return array<string, mixed>
+	 */
+	private function cookie_options( int $expires ): array {
+		return array(
+			'expires'  => $expires,
+			'path'     => defined( 'COOKIEPATH' ) && '' !== COOKIEPATH ? COOKIEPATH : '/',
+			'secure'   => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
 		);
 	}
 }

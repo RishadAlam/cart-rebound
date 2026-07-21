@@ -107,6 +107,24 @@ final class Janitor {
 				->where( 'completed_at', '<', $converted_cutoff )
 		);
 
+		// Orders placed but never paid (e.g. cheque / bank transfer left unpaid)
+		// stay in pending payment; retire them on the converted-retention window
+		// so the table stays bounded.
+		$deleted += $this->purge(
+			CartSession::query()
+				->where( 'status', '=', CartSession::STATUS_PENDING_PAYMENT )
+				->where( 'last_activity', '<', $converted_cutoff )
+		);
+
+		// A paid conversion that was later reversed (refund/cancel) drops to `lost`
+		// with no abandonment clock, so the abandoned/lost sweep above (keyed on
+		// abandoned_at) can miss it; retire lost carts on last activity as well.
+		$deleted += $this->purge(
+			CartSession::query()
+				->where( 'status', '=', CartSession::STATUS_LOST )
+				->where( 'last_activity', '<', $unrecovered_cutoff )
+		);
+
 		return $deleted;
 	}
 

@@ -612,6 +612,11 @@ textarea.cr-input {
 	background-color: var(--cr-warning-soft);
 }
 
+.cr-status--pending-payment {
+	color: var(--cr-accent);
+	background-color: var(--cr-accent-soft);
+}
+
 .cr-status--recovered {
 	color: var(--cr-success);
 	background-color: var(--cr-success-soft);
@@ -1423,6 +1428,11 @@ textarea.cr-input {
 .cr-combo__trigger--abandoned {
 	color: var(--cr-warning);
 	background: var(--cr-warning-soft);
+}
+
+.cr-combo__trigger--pending-payment {
+	color: var(--cr-accent);
+	background: var(--cr-accent-soft);
 }
 
 .cr-combo__trigger--recovered {

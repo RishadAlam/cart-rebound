@@ -14,6 +14,7 @@ defined( 'ABSPATH' ) || exit;
 use CartRebound\Models\CartSession;
 use CartRebound\Recovery\RecoveryLink;
 use CartRebound\Support\Settings;
+use WC_Order;
 use WP_Error;
 
 /**
@@ -134,6 +135,73 @@ final class RecoveryMailer {
 			 */
 			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
 		}
+	}
+
+	/**
+	 * Email the site admin that a tracked cart was recovered into a paid order.
+	 *
+	 * A no-op unless the `admin_recovery_email` setting is enabled. Sends a
+	 * plain-text summary to the WordPress admin address; independent of the
+	 * shopper-facing recovery email toggle and never throws.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $row   The recovered cart row.
+	 * @param WC_Order             $order The paid order that recovered it.
+	 * @return void
+	 */
+	public function notify_admin( array $row, WC_Order $order ): void {
+		if ( ! $this->settings->get( 'admin_recovery_email' ) ) {
+			return;
+		}
+
+		$recipient = (string) get_option( 'admin_email' );
+
+		if ( '' === $recipient || ! is_email( $recipient ) ) {
+			return;
+		}
+
+		$name     = trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) );
+		$email    = (string) ( $row['email'] ?? '' );
+		$customer = '' !== $name ? $name : ( '' !== $email ? $email : $order->get_billing_email() );
+		$amount   = html_entity_decode(
+			wp_strip_all_tags( wc_price( (float) $order->get_total(), array( 'currency' => $order->get_currency() ) ) ),
+			ENT_QUOTES,
+			'UTF-8'
+		);
+
+		$subject = sprintf(
+			/* translators: %s: order number. */
+			__( '[Cart Rebound] Recovered cart — order #%s', 'cart-rebound' ),
+			$order->get_order_number()
+		);
+
+		$body = implode(
+			"\n",
+			array(
+				__( 'A tracked cart was recovered into a paid order.', 'cart-rebound' ),
+				'',
+				sprintf(
+					/* translators: %s: order number. */
+					__( 'Order: #%s', 'cart-rebound' ),
+					$order->get_order_number()
+				),
+				sprintf(
+					/* translators: %s: formatted order total. */
+					__( 'Amount: %s', 'cart-rebound' ),
+					$amount
+				),
+				sprintf(
+					/* translators: %s: customer name or email. */
+					__( 'Customer: %s', 'cart-rebound' ),
+					'' !== $customer ? $customer : __( '(unknown)', 'cart-rebound' )
+				),
+				'',
+				$order->get_edit_order_url(),
+			)
+		);
+
+		wp_mail( $recipient, $subject, $body );
 	}
 
 	/**
