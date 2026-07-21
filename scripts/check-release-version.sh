@@ -9,8 +9,8 @@ if [[ -z "${TAG_NAME}" ]]; then
 	exit 1
 fi
 
-if [[ ! "${TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-	echo "Release tags must use the vX.Y.Z format; received ${TAG_NAME}." >&2
+if [[ ! "${TAG_NAME}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	echo "Release tags must use X.Y.Z or vX.Y.Z; received ${TAG_NAME}." >&2
 	exit 1
 fi
 

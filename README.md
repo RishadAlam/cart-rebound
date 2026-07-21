@@ -132,10 +132,12 @@ For each release:
 1. Update the version in `package.json`, `composer.json`, the plugin header and
    `CART_REBOUND_VERSION` in `cart-rebound.php`, and `Stable tag` plus the
    changelog in `readme.txt`.
-2. Run `bash scripts/check-release-version.sh vX.Y.Z` and
+2. Run `bash scripts/check-release-version.sh X.Y.Z` and
    `pnpm production-zip`.
 3. Commit and push the release to `main`. On GitHub, create a release with a
-   `vX.Y.Z` tag targeting that exact commit, then publish the release.
+   `X.Y.Z` tag targeting that exact commit, then publish the release. A leading
+   `v` is also accepted, but the unprefixed tag matches the WordPress.org SVN
+   version directly.
 
 Publishing a stable GitHub release starts `.github/workflows/release.yml`.
 Drafts and prereleases do not deploy. Deployment stops before SVN is changed if
