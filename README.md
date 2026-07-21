@@ -72,6 +72,8 @@ REST (namespace `cart-rebound/v1`, capability `manage_woocommerce`, nonce-protec
 
 Built on a Laravel-style, container-driven OOP framework (service providers, REST routing with middleware, form requests, a query builder, dbDelta migrations) with a React + TypeScript + Vite admin.
 
+Development and release builds require Node.js 24+ and pnpm 11.5.0.
+
 The complete, human-readable source is maintained in this public repository. Production archives contain compiled assets; their uncompressed TypeScript, React, and CSS sources are under [`resources/`](resources/).
 
 ```bash
@@ -92,6 +94,53 @@ Vite removes the marker and the plugin automatically falls back to the hashed
 assets in `public/build`. Production environments ignore the marker.
 
 The archive command also requires WP-CLI with `wp i18n make-pot` available. `pnpm production-zip` runs the full PHP and JavaScript quality gates and writes the submission archive to `build/cart-rebound.zip`.
+
+## Releasing to WordPress.org
+
+The release workflow runs the complete QA suite, builds the production-only
+plugin directory, deploys it to the `cart-rebound` WordPress.org SVN repository,
+copies `.wordpress-org` artwork to the SVN assets directory, and publishes the
+same zip on GitHub. Build, SVN deployment, and GitHub publishing run as separate
+jobs so build tooling never receives SVN credentials or a write-capable GitHub
+token, and the GitHub release can be retried without repeating a successful SVN
+deployment.
+
+Add these encrypted repository secrets under **Settings → Secrets and variables
+→ Actions** before the first release:
+
+- `SVN_USERNAME` — the case-sensitive WordPress.org username.
+- `SVN_PASSWORD` — the SVN-specific password generated in the WordPress.org
+  **Account & Security** settings. Do not use the normal account password.
+
+For an optional approval gate, create a GitHub environment named
+`wordpress-org` and configure required reviewers for it. The production job is
+already assigned to that environment.
+
+Before using production credentials, run **WordPress.org Deployment Dry Run**
+from the repository's Actions page. It accepts a branch, tag, or commit, uses a
+read-only GitHub token, receives no SVN credentials, simulates the SVN changes,
+and uploads the resulting zip as a seven-day workflow artifact.
+
+The WordPress Playground definition is maintained at
+`.wordpress-org/blueprints/blueprint.json`. Deployment places it at
+`assets/blueprints/blueprint.json` in SVN, where WordPress.org uses it to
+install WooCommerce and open Cart Rebound's dashboard. After the first deploy,
+test the preview and enable public previews from the plugin's Advanced View.
+
+For each release:
+
+1. Update the version in `package.json`, `composer.json`, the plugin header and
+   `CART_REBOUND_VERSION` in `cart-rebound.php`, and `Stable tag` plus the
+   changelog in `readme.txt`.
+2. Run `bash scripts/check-release-version.sh vX.Y.Z` and
+   `pnpm production-zip`.
+3. Commit and push the release to `main`, then create and push `vX.Y.Z` from
+   that exact commit.
+
+The tag push starts `.github/workflows/release.yml`. Deployment stops before
+SVN is changed if the tag is not the current `main` commit, versions disagree,
+QA fails, or the production build fails. Reusable actions are pinned to full
+commit hashes so their executed code cannot change when a moving tag changes.
 
 ## Privacy
 

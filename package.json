@@ -7,15 +7,15 @@
 	"type": "module",
 	"packageManager": "pnpm@11.5.0",
 	"engines": {
-		"node": ">=20"
+		"node": ">=24"
 	},
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
 		"ts-check": "tsc --noEmit",
-		"pretty": "prettier --check \"resources/**/*.{ts,tsx,css,scss,json}\"",
-		"pretty:fix": "prettier --write \"resources/**/*.{ts,tsx,css,scss,json}\"",
+		"pretty": "prettier --check \"resources/**/*.{ts,tsx,css,scss,json}\" \".wordpress-org/**/*.json\"",
+		"pretty:fix": "prettier --write \"resources/**/*.{ts,tsx,css,scss,json}\" \".wordpress-org/**/*.json\"",
 		"lint": "eslint resources/js --max-warnings=0",
 		"lint:fix": "eslint resources/js --fix",
 		"stylelint": "stylelint \"resources/**/*.{css,scss}\"",

@@ -1,0 +1,31 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"landingPage": "/wp-admin/admin.php?page=cart-rebound",
+	"preferredVersions": {
+		"php": "8.3",
+		"wp": "latest"
+	},
+	"login": true,
+	"siteOptions": {
+		"blogname": "Cart Rebound Demo"
+	},
+	"meta": {
+		"title": "Cart Rebound for WooCommerce",
+		"description": "Explore Cart Rebound's WooCommerce cart recovery dashboard in a temporary WordPress site.",
+		"author": "RishadAlam",
+		"categories": ["ecommerce", "woocommerce"]
+	},
+	"steps": [
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "wordpress.org/plugins",
+				"slug": "woocommerce"
+			},
+			"options": {
+				"activate": true,
+				"onError": "throw"
+			}
+		}
+	]
+}

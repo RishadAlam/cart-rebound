@@ -8,26 +8,35 @@ on:
 permissions:
     contents: read
 
+concurrency:
+    group: qa-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     php:
         name: PHP QA (PHP ${{ matrix.php }})
         runs-on: ubuntu-latest
+        timeout-minutes: 20
         strategy:
             fail-fast: false
             matrix:
                 php: ['7.4', '8.0', '8.1', '8.2', '8.3']
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+              with:
+                  persist-credentials: false
 
             - name: Set up PHP
-              uses: shivammathur/setup-php@v2
+              uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
               with:
                   php-version: ${{ matrix.php }}
                   coverage: none
                   tools: composer:v2
 
             - name: Install Composer dependencies
-              uses: ramsey/composer-install@v3
+              uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+              with:
+                  require-lock-file: true
 
             - name: Run the PHP quality gate
               run: composer qa
@@ -35,17 +44,23 @@ jobs:
     js:
         name: JS QA
         runs-on: ubuntu-latest
+        timeout-minutes: 20
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+              with:
+                  persist-credentials: false
 
             - name: Set up pnpm
-              uses: pnpm/action-setup@v4
+              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
+              with:
+                  run_install: false
 
             - name: Set up Node
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
               with:
-                  node-version: 20
+                  node-version: 24
                   cache: pnpm
+                  cache-dependency-path: pnpm-lock.yaml
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
