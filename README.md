@@ -97,13 +97,13 @@ The archive command also requires WP-CLI with `wp i18n make-pot` available. `pnp
 
 ## Releasing to WordPress.org
 
-The release workflow runs the complete QA suite, builds the production-only
-plugin directory, deploys it to the `cart-rebound` WordPress.org SVN repository,
-copies `.wordpress-org` artwork to the SVN assets directory, and publishes the
-same zip on GitHub. Build, SVN deployment, and GitHub publishing run as separate
-jobs so build tooling never receives SVN credentials or a write-capable GitHub
-token, and the GitHub release can be retried without repeating a successful SVN
-deployment.
+The release workflow runs the complete QA suite and WordPress Plugin Check,
+builds the production-only plugin directory, deploys it to the `cart-rebound`
+WordPress.org SVN repository, copies `.wordpress-org` artwork to the SVN assets
+directory, and publishes the same zip on GitHub. Build, SVN deployment, and
+GitHub publishing run as separate jobs so build tooling never receives SVN
+credentials or a write-capable GitHub token, and the GitHub release can be
+retried without repeating a successful SVN deployment.
 
 Add these encrypted repository secrets under **Settings → Secrets and variables
 → Actions** before the first release:
@@ -134,13 +134,14 @@ For each release:
    changelog in `readme.txt`.
 2. Run `bash scripts/check-release-version.sh vX.Y.Z` and
    `pnpm production-zip`.
-3. Commit and push the release to `main`, then create and push `vX.Y.Z` from
-   that exact commit.
+3. Commit and push the release to `main`. On GitHub, create a release with a
+   `vX.Y.Z` tag targeting that exact commit, then publish the release.
 
-The tag push starts `.github/workflows/release.yml`. Deployment stops before
-SVN is changed if the tag is not the current `main` commit, versions disagree,
-QA fails, or the production build fails. Reusable actions are pinned to full
-commit hashes so their executed code cannot change when a moving tag changes.
+Publishing a stable GitHub release starts `.github/workflows/release.yml`.
+Drafts and prereleases do not deploy. Deployment stops before SVN is changed if
+the release tag is not the current `main` commit, versions disagree, QA fails,
+or the production build fails. Reusable actions are pinned to full commit
+hashes so their executed code cannot change when a moving tag changes.
 
 ## Privacy
 

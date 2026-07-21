@@ -1,8 +1,9 @@
 name: Release
+run-name: Deploy ${{ github.event.release.tag_name }} to WordPress.org
 
 on:
-    push:
-        tags: ['v*.*.*']
+    release:
+        types: [published]
 
 permissions: {}
 
@@ -13,6 +14,7 @@ concurrency:
 jobs:
     build:
         name: Test and build
+        if: ${{ github.event.release.prerelease == false }}
         runs-on: ubuntu-latest
         timeout-minutes: 30
         permissions:
@@ -21,6 +23,7 @@ jobs:
             - name: Check out the release tag
               uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
               with:
+                  ref: ${{ github.event.release.tag_name }}
                   fetch-depth: 0
                   persist-credentials: false
 
@@ -38,10 +41,12 @@ jobs:
               with:
                   php-version: '8.2'
                   coverage: none
-                  tools: composer:v2
+                  tools: composer:v2, wp-cli
 
             - name: Verify release versions
-              run: bash scripts/check-release-version.sh "${GITHUB_REF_NAME}"
+              env:
+                  RELEASE_TAG: ${{ github.event.release.tag_name }}
+              run: bash scripts/check-release-version.sh "${RELEASE_TAG}"
 
             - name: Install Composer dependencies
               uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
@@ -66,6 +71,11 @@ jobs:
             - name: Run QA and build the distributable
               run: pnpm production-zip
 
+            - name: Run WordPress Plugin Check
+              uses: wordpress/plugin-check-action@98a1788320d0add90df2d8183934ecccbc4e05d2 # v1
+              with:
+                  build-dir: ./build/cart-rebound
+
             - name: Upload the verified plugin build
               uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
               with:
@@ -88,6 +98,7 @@ jobs:
             - name: Check out the release tag
               uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
               with:
+                  ref: ${{ github.event.release.tag_name }}
                   fetch-depth: 0
                   persist-credentials: false
 
@@ -153,4 +164,5 @@ jobs:
                   GITHUB_TOKEN: ${{ github.token }}
               with:
                   files: release-artifact/*.zip
-                  generate_release_notes: true
+                  fail_on_unmatched_files: true
+                  tag_name: ${{ github.event.release.tag_name }}
