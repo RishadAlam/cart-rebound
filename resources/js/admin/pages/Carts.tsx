@@ -573,104 +573,161 @@ const CartDetail = ({
 	}
 	timeline.push([__('Last activity', 'cart-rebound'), cart.last_activity]);
 
+	const identity = name !== '' ? name : cart.email;
+	const avatar = (identity.trim()[0] ?? '#').toUpperCase();
+	const hasItems = cart.products.length > 0;
+
 	return (
-		<dialog ref={ref} className="cr-dialog is-wide" onClose={onClose}>
-			<div className="cr-detail__head">
-				<h2 className="cr-dialog__title">
-					{sprintf(
-						/* translators: %d: cart id. */
-						__('Cart #%d', 'cart-rebound'),
-						cart.id
-					)}
-				</h2>
+		<dialog
+			ref={ref}
+			className="cr-dialog is-wide cr-detail"
+			onClose={onClose}
+		>
+			<header className="cr-detail__head">
+				<span className="cr-detail__avatar" aria-hidden="true">
+					{avatar}
+				</span>
+				<div className="cr-detail__ident">
+					<h2 className="cr-detail__name">
+						{identity !== '' ? (
+							identity
+						) : (
+							<span className="cr-muted">
+								{__('Guest cart', 'cart-rebound')}
+							</span>
+						)}
+					</h2>
+					<p className="cr-detail__sub">
+						{sprintf(
+							/* translators: %d: cart id. */
+							__('Cart #%d', 'cart-rebound'),
+							cart.id
+						)}
+					</p>
+				</div>
 				<span className={`cr-badge is-${cart.status}`}>
 					{statusLabel(cart.status)}
 				</span>
-			</div>
+			</header>
 
-			<dl className="cr-detail__meta">
-				<div>
-					<dt>{__('Customer', 'cart-rebound')}</dt>
-					<dd>{name !== '' ? name : <Dash />}</dd>
-				</div>
-				<div>
-					<dt>{__('Email', 'cart-rebound')}</dt>
-					<dd>{cart.email !== '' ? cart.email : <Dash />}</dd>
-				</div>
-				<div>
-					<dt>{__('Phone', 'cart-rebound')}</dt>
-					<dd>{cart.phone !== '' ? cart.phone : <Dash />}</dd>
-				</div>
-				<div>
-					<dt>{__('Order', 'cart-rebound')}</dt>
-					<dd>
-						{cart.order_id > 0 ? `#${cart.order_id}` : <Dash />}
-					</dd>
-				</div>
-			</dl>
+			<div className="cr-detail__body">
+				<dl className="cr-detail__meta">
+					<div>
+						<dt>{__('Customer', 'cart-rebound')}</dt>
+						<dd>{name !== '' ? name : <Dash />}</dd>
+					</div>
+					<div>
+						<dt>{__('Email', 'cart-rebound')}</dt>
+						<dd>{cart.email !== '' ? cart.email : <Dash />}</dd>
+					</div>
+					<div>
+						<dt>{__('Phone', 'cart-rebound')}</dt>
+						<dd>{cart.phone !== '' ? cart.phone : <Dash />}</dd>
+					</div>
+					<div>
+						<dt>{__('Order', 'cart-rebound')}</dt>
+						<dd>
+							{cart.order_id > 0 ? `#${cart.order_id}` : <Dash />}
+						</dd>
+					</div>
+				</dl>
 
-			<table className="cr-detail__items">
-				<thead>
-					<tr>
-						<th>{__('Product', 'cart-rebound')}</th>
-						<th style={{ textAlign: 'center' }}>
-							{__('Qty', 'cart-rebound')}
-						</th>
-						<th style={{ textAlign: 'right' }}>
-							{__('Total', 'cart-rebound')}
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					{cart.products.length === 0 ? (
-						<tr>
-							<td colSpan={3} className="cr-muted">
-								{__('No items recorded.', 'cart-rebound')}
-							</td>
-						</tr>
-					) : (
-						cart.products.map((product, index) => (
-							<tr key={`${product.product_id}-${index}`}>
-								<td>{product.name}</td>
+				<section className="cr-detail__block">
+					<h3 className="cr-detail__blocktitle">
+						{__('Items', 'cart-rebound')}
+					</h3>
+					<table className="cr-detail__items">
+						<thead>
+							<tr>
+								<th>{__('Product', 'cart-rebound')}</th>
+								<th style={{ textAlign: 'center' }}>
+									{__('Qty', 'cart-rebound')}
+								</th>
+								<th style={{ textAlign: 'right' }}>
+									{__('Total', 'cart-rebound')}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{hasItems ? (
+								cart.products.map((product, index) => (
+									<tr key={`${product.product_id}-${index}`}>
+										<td>{product.name}</td>
+										<td style={{ textAlign: 'center' }}>
+											{product.qty}
+										</td>
+										<td
+											className="cr-money"
+											style={{ textAlign: 'right' }}
+										>
+											{money(product.total)}
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td
+										colSpan={3}
+										className="cr-detail__empty"
+									>
+										{__(
+											'No items recorded.',
+											'cart-rebound'
+										)}
+									</td>
+								</tr>
+							)}
+						</tbody>
+						<tfoot>
+							<tr>
+								<th>{__('Cart total', 'cart-rebound')}</th>
 								<td style={{ textAlign: 'center' }}>
-									{product.qty}
+									{cart.items_count}
 								</td>
-								<td style={{ textAlign: 'right' }}>
-									{money(product.total)}
+								<td
+									className="cr-money"
+									style={{ textAlign: 'right' }}
+								>
+									{money(cart.cart_total)}
 								</td>
 							</tr>
-						))
+						</tfoot>
+					</table>
+
+					{cart.coupons.length > 0 && (
+						<div className="cr-detail__coupons">
+							<span className="cr-detail__couponlabel">
+								{__('Coupons', 'cart-rebound')}
+							</span>
+							{cart.coupons.map((code) => (
+								<span key={code} className="cr-chip">
+									{code}
+								</span>
+							))}
+						</div>
 					)}
-				</tbody>
-				<tfoot>
-					<tr>
-						<th>{__('Cart total', 'cart-rebound')}</th>
-						<td style={{ textAlign: 'center' }}>
-							{cart.items_count}
-						</td>
-						<td style={{ textAlign: 'right' }}>
-							{money(cart.cart_total)}
-						</td>
-					</tr>
-				</tfoot>
-			</table>
+				</section>
 
-			{cart.coupons.length > 0 && (
-				<p className="cr-detail__coupons">
-					{__('Coupons:', 'cart-rebound')} {cart.coupons.join(', ')}
-				</p>
-			)}
+				<section className="cr-detail__block">
+					<h3 className="cr-detail__blocktitle">
+						{__('Timeline', 'cart-rebound')}
+					</h3>
+					<ul className="cr-detail__timeline">
+						{timeline.map(([label, value]) => (
+							<li key={label}>
+								<span className="cr-detail__tl-label">
+									{label}
+								</span>
+								<span className="cr-detail__tl-value">
+									{value}
+								</span>
+							</li>
+						))}
+					</ul>
+				</section>
+			</div>
 
-			<ul className="cr-detail__timeline">
-				{timeline.map(([label, value]) => (
-					<li key={label}>
-						<span className="cr-detail__tl-label">{label}</span>
-						<span className="cr-detail__tl-value">{value}</span>
-					</li>
-				))}
-			</ul>
-
-			<div className="cr-dialog__actions">
+			<footer className="cr-detail__foot">
 				<button
 					type="button"
 					className="cr-btn is-ghost"
@@ -678,7 +735,7 @@ const CartDetail = ({
 				>
 					{__('Close', 'cart-rebound')}
 				</button>
-			</div>
+			</footer>
 		</dialog>
 	);
 };

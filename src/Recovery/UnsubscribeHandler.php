@@ -67,74 +67,60 @@ final class UnsubscribeHandler {
 		if ( ! $this->is_post() ) {
 			// A GET may be a mail-client / scanner prefetch, which must never
 			// unsubscribe anyone — only offer a confirmation the shopper submits.
-			$this->render_confirmation( $token );
+			$this->render( 'confirm', $token );
 		}
 
 		$row   = CartSession::query()->where( 'recovery_token', '=', $token )->first();
 		$email = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
 
 		if ( '' !== $email && Unsubscribe::suppress( $email ) ) {
-			$this->render_page(
-				esc_html__( 'You have been unsubscribed and will no longer receive cart recovery emails.', 'cart-rebound' )
-			);
+			$this->render( 'done', $token );
 		}
 
-		$this->render_page(
-			esc_html__( 'This unsubscribe link is no longer valid.', 'cart-rebound' )
-		);
+		$this->render( 'invalid', $token );
 	}
 
 	/**
-	 * Render the confirmation form (submitting it performs the unsubscribe).
+	 * Render the standalone, theme-independent unsubscribe page and stop.
+	 *
+	 * All dynamic values are escaped inside the view; only the trusted static
+	 * markup and CSS live there, so this bypasses wp_die() (whose wp_kses would
+	 * strip the styled layout) and outputs a complete document directly.
 	 *
 	 * @since 0.1.0
 	 *
+	 * @param string $state One of 'confirm', 'done', 'invalid'.
 	 * @param string $token Recovery token.
 	 * @return void
 	 */
-	private function render_confirmation( string $token ): void {
-		$html = '<form method="post" action="' . esc_url( $this->links->unsubscribe_url( $token ) ) . '">'
-			. '<p>' . esc_html__( 'Stop receiving cart recovery emails from this store?', 'cart-rebound' ) . '</p>'
-			. '<input type="hidden" name="' . esc_attr( RecoveryLink::QUERY_UNSUBSCRIBE ) . '" value="1" />'
-			. '<input type="hidden" name="' . esc_attr( RecoveryLink::QUERY_TOKEN ) . '" value="' . esc_attr( $token ) . '" />'
-			. '<p><button type="submit">' . esc_html__( 'Unsubscribe', 'cart-rebound' ) . '</button></p>'
-			. '</form>';
+	private function render( string $state, string $token ): void {
+		$view = defined( 'CART_REBOUND_PATH' )
+			? CART_REBOUND_PATH . 'resources/views/unsubscribe.php'
+			: '';
 
-		$this->render_page( $html );
-	}
+		if ( '' === $view || ! is_readable( $view ) ) {
+			// Fall back to a bare status page if the view is somehow missing.
+			wp_die(
+				esc_html__( 'Unsubscribe', 'cart-rebound' ),
+				esc_html__( 'Unsubscribe', 'cart-rebound' ),
+				array( 'response' => 200 )
+			);
+		}
 
-	/**
-	 * Output a minimal status page and stop.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @param string $body Pre-escaped HTML body.
-	 * @return void
-	 */
-	private function render_page( string $body ): void {
-		// The body is assembled from esc_* helpers above; allow just the small set
-		// of form tags the confirmation needs (wp_kses_post would strip them).
-		$allowed = array(
-			'form'   => array(
-				'method' => array(),
-				'action' => array(),
-			),
-			'p'      => array(),
-			'input'  => array(
-				'type'  => array(),
-				'name'  => array(),
-				'value' => array(),
-			),
-			'button' => array(
-				'type' => array(),
-			),
-		);
+		if ( ! headers_sent() ) {
+			nocache_headers();
+			status_header( 200 );
+			header( 'Content-Type: text/html; charset=utf-8' );
+		}
 
-		wp_die(
-			wp_kses( $body, $allowed ),
-			esc_html__( 'Unsubscribe', 'cart-rebound' ),
-			array( 'response' => 200 )
-		);
+		// Variables consumed by the view.
+		$form_action = $this->links->unsubscribe_url( $token );
+		$field_flag  = RecoveryLink::QUERY_UNSUBSCRIBE;
+		$field_token = RecoveryLink::QUERY_TOKEN;
+		$home_url    = home_url( '/' );
+
+		require $view; // The view calls exit; execution stops here.
+		exit;
 	}
 
 	/**

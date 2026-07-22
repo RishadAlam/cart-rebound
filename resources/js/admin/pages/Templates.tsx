@@ -699,24 +699,50 @@ export const Templates = () => {
 					}
 				}}
 			>
-				<div className="cr-dialog__body">
+				<div className="cr-dialog__body cr-preview">
 					<h2 id="cr-preview-title" className="cr-dialog__title">
 						{__('Email preview', 'cart-rebound')}
 					</h2>
-					<p className="cr-preview__subject">
-						<span className="cr-preview__label">
-							{__('Subject', 'cart-rebound')}
-						</span>
-						{previewData?.subject !== ''
-							? previewData?.subject
-							: __('(no subject)', 'cart-rebound')}
-					</p>
-					<iframe
-						className="cr-preview__frame"
-						title={__('Email preview', 'cart-rebound')}
-						sandbox=""
-						srcDoc={previewData?.html ?? ''}
-					/>
+
+					<div className="cr-preview__mail">
+						<div className="cr-preview__mailhead">
+							<span
+								className="cr-preview__avatar"
+								aria-hidden="true"
+							>
+								{(
+									form.from_name.trim()[0] ?? 'S'
+								).toUpperCase()}
+							</span>
+							<div className="cr-preview__meta">
+								<p className="cr-preview__from">
+									{form.from_name.trim() !== ''
+										? form.from_name
+										: __('Your store', 'cart-rebound')}
+									{form.from_email.trim() !== '' && (
+										<span className="cr-preview__addr">
+											{`<${form.from_email}>`}
+										</span>
+									)}
+								</p>
+								<p className="cr-preview__subjectline">
+									{previewData?.subject !== ''
+										? previewData?.subject
+										: __('(no subject)', 'cart-rebound')}
+								</p>
+							</div>
+							<span className="cr-preview__chip">
+								{__('To: shopper', 'cart-rebound')}
+							</span>
+						</div>
+						<iframe
+							className="cr-preview__frame"
+							title={__('Email preview', 'cart-rebound')}
+							sandbox=""
+							srcDoc={previewData?.html ?? ''}
+						/>
+					</div>
+
 					<p className="cr-field__hint">
 						{__(
 							'Rendered with sample data (name “Jordan”, two demo items).',
