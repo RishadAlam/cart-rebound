@@ -422,6 +422,9 @@ export const OnboardingWizard = () => {
 								className={`cr-onb__step${
 									index === step ? ' is-active' : ''
 								}${index < step ? ' is-done' : ''}`}
+								aria-current={
+									index === step ? 'step' : undefined
+								}
 							>
 								<span className="cr-onb__badge">
 									{index < step ? <CheckIcon /> : index + 1}

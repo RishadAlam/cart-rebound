@@ -581,6 +581,7 @@ const CartDetail = ({
 		<dialog
 			ref={ref}
 			className="cr-dialog is-wide cr-detail"
+			aria-labelledby="cr-detail-title"
 			onClose={onClose}
 		>
 			<header className="cr-detail__head">
@@ -588,7 +589,7 @@ const CartDetail = ({
 					{avatar}
 				</span>
 				<div className="cr-detail__ident">
-					<h2 className="cr-detail__name">
+					<h2 id="cr-detail-title" className="cr-detail__name">
 						{identity !== '' ? (
 							identity
 						) : (
