@@ -59,6 +59,7 @@ export interface Settings {
 	converted_cleanup_days: number;
 	recovery_email_enabled: boolean;
 	admin_recovery_email: boolean;
+	admin_notification_email: string;
 	paid_order_statuses: string[];
 	email_delay_minutes: number;
 	email_subject: string;

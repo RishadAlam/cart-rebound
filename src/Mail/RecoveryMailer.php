@@ -162,7 +162,12 @@ final class RecoveryMailer {
 			return;
 		}
 
-		$recipient = (string) get_option( 'admin_email' );
+		// Use the address the merchant configured, falling back to the site admin.
+		$recipient = (string) $this->settings->get( 'admin_notification_email', '' );
+
+		if ( '' === $recipient || ! is_email( $recipient ) ) {
+			$recipient = (string) get_option( 'admin_email' );
+		}
 
 		if ( '' === $recipient || ! is_email( $recipient ) ) {
 			return;

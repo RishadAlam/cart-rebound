@@ -331,13 +331,41 @@ export const Settings = () => {
 						</label>
 						<p className="cr-field__hint">
 							{__(
-								'Email the site admin whenever a tracked cart is recovered into a paid order.',
+								'Send an email whenever a tracked cart is recovered into a paid order.',
 								'cart-rebound'
 							)}
 						</p>
 					</div>
 					{toggle('admin_recovery_email', 'cr-admin-notify')}
 				</div>
+
+				{form.admin_recovery_email && (
+					<Field
+						id="cr-admin-email"
+						label={__('Notification email', 'cart-rebound')}
+						hint={__(
+							'Where recovery notifications are sent. Leave blank to use the site admin address.',
+							'cart-rebound'
+						)}
+					>
+						<input
+							id="cr-admin-email"
+							className="cr-input"
+							type="email"
+							value={form.admin_notification_email}
+							placeholder={__(
+								'Defaults to the site admin email',
+								'cart-rebound'
+							)}
+							onChange={(event) => {
+								setField(
+									'admin_notification_email',
+									event.target.value
+								);
+							}}
+						/>
+					</Field>
+				)}
 
 				<div className="cr-field__grid">
 					<Field

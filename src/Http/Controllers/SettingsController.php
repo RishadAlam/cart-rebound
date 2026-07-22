@@ -72,6 +72,7 @@ final class SettingsController extends Controller {
 			'converted_cleanup_days',
 			'recovery_email_enabled',
 			'admin_recovery_email',
+			'admin_notification_email',
 			'paid_order_statuses',
 			'email_delay_minutes',
 			'email_subject',

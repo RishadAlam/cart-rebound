@@ -80,4 +80,21 @@ final class SettingsTest extends TestCase {
 		$this->assertFalse( $result['recovery_email_enabled'] );
 		$this->assertSame( $result, $saved );
 	}
+
+	public function test_admin_notification_email_defaults_empty_and_sanitises(): void {
+		Functions\when( 'get_option' )->justReturn( array() );
+		Functions\when( 'sanitize_text_field' )->returnArg();
+		Functions\when( 'sanitize_textarea_field' )->returnArg();
+		Functions\when( 'sanitize_email' )->returnArg();
+		Functions\when( 'sanitize_key' )->returnArg();
+		Functions\when( 'update_option' )->justReturn( true );
+
+		$settings = new Settings();
+
+		$this->assertSame( '', $settings->all()['admin_notification_email'] );
+
+		$result = $settings->update( array( 'admin_notification_email' => 'owner@example.com' ) );
+
+		$this->assertSame( 'owner@example.com', $result['admin_notification_email'] );
+	}
 }
