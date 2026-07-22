@@ -8,14 +8,26 @@ plugin itself. They are excluded from the shipped zip (`.gitattributes`
 
 ## Files
 
-| File                  | Purpose                  | Notes                              |
-| --------------------- | ------------------------ | ---------------------------------- |
-| `icon.svg`            | Icon source (vector)     | Edit here, then re-render the PNGs |
-| `icon-256x256.png`    | Plugin icon (hi-dpi)     | Directory + admin                  |
-| `icon-128x128.png`    | Plugin icon (standard)   |                                    |
-| `banner.svg`          | Banner source (vector)   |                                    |
-| `banner-1544x500.png` | Header banner (retina)   |                                    |
-| `banner-772x250.png`  | Header banner (standard) |                                    |
+| File                        | Purpose                  | Notes                                       |
+| --------------------------- | ------------------------ | ------------------------------------------- |
+| `icon.svg`                  | Icon source (vector)     | Edit here, then re-render the PNGs          |
+| `icon-256x256.png`          | Plugin icon (hi-dpi)     | Directory + admin                           |
+| `icon-128x128.png`          | Plugin icon (standard)   |                                             |
+| `banner.svg`                | Banner source (vector)   |                                             |
+| `banner-1544x500.png`       | Header banner (retina)   |                                             |
+| `banner-772x250.png`        | Header banner (standard) |                                             |
+| `blueprints/blueprint.json` | Playground preview       | Installs WooCommerce and opens Cart Rebound |
+
+## Playground preview
+
+`blueprints/blueprint.json` is deployed to SVN as
+`assets/blueprints/blueprint.json`. WordPress.org adds Cart Rebound itself to
+the Blueprint, while this file installs and activates its WooCommerce
+dependency and opens the Cart Rebound dashboard.
+
+After deploying the Blueprint, use **Test Preview** on the plugin page. Once
+the preview has been verified, set the plugin preview to **public** from the
+plugin's WordPress.org **Advanced View**.
 
 ## Credits
 
