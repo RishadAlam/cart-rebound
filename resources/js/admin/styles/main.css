@@ -47,6 +47,13 @@
 	-webkit-font-smoothing: antialiased;
 }
 
+/* Data-dense pages (dashboard, carts, log) fill the admin width so tables and
+   charts can breathe. Form pages keep the default measure — stretching a
+   label/input row across a wide monitor only makes it harder to scan. */
+.cr-app.is-wide {
+	max-width: none;
+}
+
 .cr-app *,
 .cr-app *::before,
 .cr-app *::after {
