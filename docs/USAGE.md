@@ -77,28 +77,61 @@ Use this if you just want to run the plugin and not build it yourself.
 
 The release zip is already production-ready: its front-end assets are pre-built and it ships with a bundled `vendor/autoload.php`, so no `composer install` or `pnpm build` step is needed on the server.
 
-### Path B — Build from source
+### Path B — Build or develop from source
 
-Clone or download the source, then produce the same distributable zip the release ships. You need PHP with Composer, and Node.js **20+** with pnpm.
+Clone or download the source into (or link it at)
+`wp-content/plugins/cart-rebound`. Source development requires:
+
+- A local WordPress 6.2+ installation with WooCommerce active
+- PHP 7.4+ and Composer
+- Node.js 24+ and pnpm 11.5.0
 
 ```bash
 # from the plugin root (cart-rebound/)
 composer install      # PHP dependencies + generates vendor/autoload.php
 pnpm install --frozen-lockfile # JS/TS toolchain (React, Vite, etc.)
-pnpm dev              # optional: serve source assets with HMR during development
 pnpm build            # vite build → compiles resources/js into public/build assets
 bash scripts/build-zip.sh
 ```
 
-Local HMR is deliberately opt-in. In `wp-config.php`, set `WP_DEBUG` to `true`,
-set `WP_ENVIRONMENT_TYPE` to `local` or `development`, and define
-`CART_REBOUND_ENABLE_HMR` as `true`. When `pnpm dev` is listening, Vite creates
-`public/hot`. On Cart Rebound admin pages, PHP reads that marker and enqueues the
-Vite module client and `resources/js/admin/main.tsx` strictly from
-`http://localhost:5173`, so edits update via HMR instead of loading
-`public/build`. A normal Vite shutdown removes the marker; `pnpm build` also
-removes any stale marker before producing production assets. Production
-environments ignore the marker.
+#### Local development with HMR
+
+HMR means **Hot Module Replacement**. While the Vite development server is
+running, React, TypeScript, and CSS changes can appear on Cart Rebound admin
+pages without a full page reload.
+
+HMR is deliberately opt-in. Add the following to the local WordPress
+`wp-config.php` before it loads `wp-settings.php`. If `WP_DEBUG` is already
+defined, update that declaration rather than defining the constant twice.
+
+```php
+define( 'WP_DEBUG', true );
+define( 'WP_ENVIRONMENT_TYPE', 'local' );
+define( 'CART_REBOUND_ENABLE_HMR', true );
+```
+
+`WP_ENVIRONMENT_TYPE` may be either `local` or `development`. Start Vite from
+the plugin root and keep the command running:
+
+```bash
+pnpm dev
+```
+
+Vite uses the fixed origin `http://localhost:5173` and fails to start if port
+5173 is occupied. Once listening, it writes `public/hot`. On Cart Rebound admin
+pages, PHP reads that marker and loads the Vite module client and
+`resources/js/admin/main.tsx` instead of the compiled `public/build` assets.
+The local WordPress site must also be opened over HTTP; an HTTPS admin page will
+block the HTTP development scripts as mixed content.
+
+A normal Vite shutdown removes `public/hot`. If Vite exits unexpectedly and
+leaves a stale marker, restart `pnpm dev` or run `pnpm build` to remove the
+marker and regenerate the compiled assets.
+
+To develop without HMR, leave `CART_REBOUND_ENABLE_HMR` undefined or set it to
+`false`, run `pnpm build` after front-end changes, and let WordPress load the
+hashed assets in `public/build`. Production environments always ignore
+`public/hot`.
 
 `scripts/build-zip.sh` automates the full packaging flow:
 

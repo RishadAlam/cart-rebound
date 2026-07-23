@@ -106,7 +106,11 @@ Site owners are responsible for choosing an appropriate legal basis, obtaining a
 
 The human-readable source code is maintained at [github.com/RishadAlam/cart-rebound](https://github.com/RishadAlam/cart-rebound). The repository contains the uncompressed PHP, TypeScript, React, and CSS source as well as all build configuration.
 
-Building requires PHP 7.4 or later, Composer, Node.js 20 or later, pnpm, and WP-CLI with the i18n command. From the repository root, run `composer install`, `pnpm install --frozen-lockfile`, and `pnpm build`. Run `pnpm production-zip` to execute the quality checks, generate the translation template, and create `build/cart-rebound.zip`.
+Source development requires a local WordPress 6.2 or later installation with WooCommerce active, PHP 7.4 or later, Composer, Node.js 24 or later, and pnpm 11.5.0. Install the repository at `wp-content/plugins/cart-rebound`. From the plugin root, run `composer install`, `pnpm install --frozen-lockfile`, and `pnpm build`.
+
+For optional Hot Module Replacement (HMR), set `WP_DEBUG` to `true`, set `WP_ENVIRONMENT_TYPE` to `local` or `development`, and set `CART_REBOUND_ENABLE_HMR` to `true` in the local `wp-config.php`; then run `pnpm dev`. Vite serves the Cart Rebound admin source from `http://localhost:5173`, so the local WordPress admin must also be opened over HTTP. A normal shutdown removes `public/hot`; after an unexpected shutdown, restart `pnpm dev` or run `pnpm build` to clear a stale marker. Production environments ignore the marker and use compiled assets.
+
+Release packaging additionally requires WP-CLI with the i18n command. Run `pnpm production-zip` to execute the quality checks, generate the translation template, and create `build/cart-rebound.zip`.
 
 Bundled third-party JavaScript libraries are GPL-compatible and distributed under the MIT License. Copyright and license notices are included in `THIRD-PARTY-LICENSES.txt`.
 
