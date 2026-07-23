@@ -40,11 +40,8 @@ jobs:
               id: version
               shell: bash
               run: |
-                  version="$(php -r '
-                      $data = json_decode(file_get_contents("package.json"), true, 512, JSON_THROW_ON_ERROR);
-                      echo $data["version"] ?? "";
-                  ')"
-                  bash scripts/check-release-version.sh "v${version}"
+                  version="$(sed -nE 's/^[[:space:]]*\*[[:space:]]*Version:[[:space:]]*([^[:space:]]+).*/\1/p' cart-rebound.php | head -n 1)"
+                  bash scripts/check-release-version.sh "${version}"
                   echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
             - name: Install Composer dependencies

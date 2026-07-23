@@ -1,7 +1,7 @@
 {
 	"name": "cart-rebound/cart-rebound",
 	"description": "Track WooCommerce carts, detect abandonment, recover sales with tokenized links and automated emails, and attribute recovered revenue.",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
 	"keywords": [
@@ -71,6 +71,7 @@
 		"compat": "phpcs -p --standard=PHPCompatibilityWP --runtime-set testVersion 7.4- ./src",
 		"rector": "rector process --dry-run",
 		"rector:fix": "rector process",
+		"bump-version": "php scripts/bump-version.php",
 		"test": "phpunit",
 		"test:coverage": "phpunit --coverage-html coverage",
 		"qa": [
@@ -88,6 +89,7 @@
 		"cs-check": "PHP-CS-Fixer dry-run (no writes).",
 		"compat": "Check PHP 7.4+ compatibility of src/.",
 		"rector": "Rector dry-run (no writes).",
+		"bump-version": "Synchronize all maintained plugin version fields and refresh composer.lock.",
 		"test": "Run the PHPUnit suite.",
 		"qa": "Run the full PHP quality gate."
 	}

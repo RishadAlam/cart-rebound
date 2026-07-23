@@ -175,15 +175,21 @@ test the preview and enable public previews from the plugin's Advanced View.
 
 For each release:
 
-1. Update the version in `package.json`, `composer.json`, the plugin header and
-   `CART_REBOUND_VERSION` in `cart-rebound.php`, and `Stable tag` plus the
-   changelog in `readme.txt`.
+1. Run `composer bump-version X.Y.Z`. This synchronizes `package.json`,
+   `composer.json`, the plugin header, `CART_REBOUND_VERSION`, and the
+   `readme.txt` Stable tag, then refreshes `composer.lock`. Add the matching
+   `= X.Y.Z =` changelog entry in `readme.txt`; the command deliberately does
+   not invent release notes. Preview the changes with
+   `composer bump-version -- X.Y.Z --dry-run`.
 2. Run `bash scripts/check-release-version.sh X.Y.Z` and
    `pnpm production-zip`.
 3. Commit and push the release to `main`. On GitHub, create a release with a
    `X.Y.Z` tag targeting that exact commit, then publish the release. A leading
    `v` is also accepted, but the unprefixed tag matches the WordPress.org SVN
    version directly.
+
+The production build regenerates the POT metadata from the plugin header, so
+the translation template does not need manual version maintenance.
 
 Publishing a stable GitHub release starts `.github/workflows/release.yml`.
 Drafts and prereleases do not deploy. Deployment stops before SVN is changed if
