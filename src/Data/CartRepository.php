@@ -41,6 +41,14 @@ final class CartRepository {
 	);
 
 	/**
+	 * Maximum session rows scanned when tallying the product report.
+	 *
+	 * @since 0.1.0
+	 * @var int
+	 */
+	private const REPORT_SCAN_LIMIT = 2000;
+
+	/**
 	 * Event dispatcher.
 	 *
 	 * @since 0.1.0
@@ -158,6 +166,9 @@ final class CartRepository {
 
 		$revenue = CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->sum( 'recovered_amount' );
 
+		// Still-open money: what the carts sitting in `abandoned` are worth.
+		$recoverable = CartSession::query()->where( 'status', '=', CartSession::STATUS_ABANDONED )->sum( 'cart_total' );
+
 		// Use purge-immune lifetime counters: the Janitor deletes unrecovered
 		// abandoned carts, so live status counts would inflate the rate over time.
 		$lifetime_abandoned = (int) get_option( EventDispatcher::OPTION_ABANDONED, 0 );
@@ -167,11 +178,198 @@ final class CartRepository {
 			: 0.0;
 
 		return array(
-			'counts'            => $counts,
-			'recovered_revenue' => $revenue,
-			'recovery_rate'     => $rate,
-			'currency'          => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '',
+			'counts'              => $counts,
+			'recovered_revenue'   => $revenue,
+			'recoverable_revenue' => $recoverable,
+			'recovery_rate'       => $rate,
+			'currency'            => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '',
 		);
+	}
+
+	/**
+	 * Daily recovery time series for the dashboard chart.
+	 *
+	 * Points are bucketed on the UTC date a cart was abandoned (recoverable) or
+	 * recovered (recovered) — the same UTC basis the rest of the plugin stores
+	 * and renders. The window is zero-filled so quiet days still produce a point
+	 * and the chart keeps an even time axis.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param int $days Window length in days, including today.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function get_timeseries( int $days ): array {
+		$days  = max( 1, min( 180, $days ) );
+		$start = gmdate( 'Y-m-d', (int) strtotime( '-' . ( $days - 1 ) . ' days' ) );
+		$table = ( new CartSession() )->get_table();
+
+		$abandoned = $this->daily_totals( $table, 'abandoned_at', 'cart_total', $start );
+		$recovered = $this->daily_totals( $table, 'recovered_at', 'recovered_amount', $start );
+
+		$series = array();
+
+		for ( $offset = 0; $offset < $days; $offset++ ) {
+			$date = gmdate( 'Y-m-d', (int) strtotime( $start . ' +' . $offset . ' days' ) );
+
+			$series[] = array(
+				'date'                => $date,
+				'recoverable_revenue' => (float) ( $abandoned[ $date ]['sum'] ?? 0 ),
+				'recovered_revenue'   => (float) ( $recovered[ $date ]['sum'] ?? 0 ),
+				'abandoned'           => (int) ( $abandoned[ $date ]['count'] ?? 0 ),
+				'recovered'           => (int) ( $recovered[ $date ]['count'] ?? 0 ),
+			);
+		}
+
+		return $series;
+	}
+
+	/**
+	 * Per-product abandonment/recovery tallies for the dashboard report.
+	 *
+	 * Line items live in the JSON cart snapshot rather than their own table, so
+	 * the tally runs in PHP over a bounded slice of rows. Each cart counts at
+	 * most once per distinct product, and the scan stops at
+	 * {@see self::REPORT_SCAN_LIMIT} rows so a busy store cannot blow the
+	 * request budget.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param int $days  Window length in days, including today.
+	 * @param int $limit Maximum number of products returned.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function get_product_report( int $days, int $limit ): array {
+		$days  = max( 1, min( 180, $days ) );
+		$limit = max( 1, min( 50, $limit ) );
+		$since = gmdate( 'Y-m-d', (int) strtotime( '-' . ( $days - 1 ) . ' days' ) ) . ' 00:00:00';
+		$table = ( new CartSession() )->get_table();
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT cart_contents, abandoned_at, recovered_at FROM %i WHERE abandoned_at >= %s OR recovered_at >= %s ORDER BY id DESC LIMIT %d',
+				$table,
+				$since,
+				$since,
+				self::REPORT_SCAN_LIMIT
+			),
+			ARRAY_A
+		);
+
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+
+		$tally = array();
+
+		foreach ( $rows as $row ) {
+			$abandoned_at = (string) ( $row['abandoned_at'] ?? '' );
+			$recovered_at = (string) ( $row['recovered_at'] ?? '' );
+
+			// Datetimes are stored as 'Y-m-d H:i:s', so a string compare is a
+			// chronological compare — no parsing needed per row.
+			$was_abandoned = '' !== $abandoned_at && $abandoned_at >= $since;
+			$was_recovered = '' !== $recovered_at && $recovered_at >= $since;
+
+			if ( ! $was_abandoned && ! $was_recovered ) {
+				continue;
+			}
+
+			$seen = array();
+
+			foreach ( $this->decode_products( $row ) as $product ) {
+				$id = (int) ( $product['product_id'] ?? 0 );
+
+				if ( 0 === $id || isset( $seen[ $id ] ) ) {
+					continue;
+				}
+
+				$seen[ $id ] = true;
+
+				if ( ! isset( $tally[ $id ] ) ) {
+					$tally[ $id ] = array(
+						'product_id' => $id,
+						'name'       => (string) ( $product['name'] ?? '' ),
+						'abandoned'  => 0,
+						'recovered'  => 0,
+					);
+				}
+
+				if ( $was_abandoned ) {
+					++$tally[ $id ]['abandoned'];
+				}
+
+				if ( $was_recovered ) {
+					++$tally[ $id ]['recovered'];
+				}
+			}
+		}
+
+		$products = array_values( $tally );
+
+		usort(
+			$products,
+			static function ( array $a, array $b ): int {
+				return ( (int) $b['abandoned'] + (int) $b['recovered'] ) <=> ( (int) $a['abandoned'] + (int) $a['recovered'] );
+			}
+		);
+
+		return array_slice( $products, 0, $limit );
+	}
+
+	/**
+	 * Group one timestamp column into per-day count/sum buckets.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string $table  Sessions table name.
+	 * @param string $column Datetime column to bucket on.
+	 * @param string $amount Numeric column to sum.
+	 * @param string $start  Inclusive start date (Y-m-d, UTC).
+	 * @return array<string, array<string, float>>
+	 */
+	private function daily_totals( string $table, string $column, string $amount, string $start ): array {
+		global $wpdb;
+
+		// A NULL timestamp never satisfies `>=`, so unabandoned/unrecovered rows
+		// drop out without an extra IS NOT NULL clause.
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT DATE(%i) AS bucket, COUNT(*) AS cnt, SUM(%i) AS total FROM %i WHERE %i >= %s GROUP BY DATE(%i)',
+				$column,
+				$amount,
+				$table,
+				$column,
+				$start . ' 00:00:00',
+				$column
+			),
+			ARRAY_A
+		);
+
+		$buckets = array();
+
+		if ( ! is_array( $rows ) ) {
+			return $buckets;
+		}
+
+		foreach ( $rows as $row ) {
+			$bucket = (string) ( $row['bucket'] ?? '' );
+
+			if ( '' === $bucket ) {
+				continue;
+			}
+
+			$buckets[ $bucket ] = array(
+				'count' => (float) ( $row['cnt'] ?? 0 ),
+				'sum'   => (float) ( $row['total'] ?? 0 ),
+			);
+		}
+
+		return $buckets;
 	}
 
 	/**

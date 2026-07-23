@@ -2278,3 +2278,459 @@ textarea.cr-input {
 		transform: none;
 	}
 }
+
+/* ============================================================
+   Dashboard — overview metrics, revenue trend, supporting reports.
+   ============================================================ */
+
+.cr-dash {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* Used across the admin for de-emphasised table text. */
+.cr-muted {
+	color: var(--cr-muted);
+}
+
+/* ---- Card headers shared by the overview and trend panels ---- */
+.cr-overview {
+	padding: 20px 22px 22px;
+}
+
+.cr-overview__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 18px;
+}
+
+.cr-overview__title {
+	margin: 0;
+	color: var(--cr-ink);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.cr-overview__sub {
+	margin: 4px 0 0;
+	max-width: 64ch;
+	color: var(--cr-muted);
+	font-size: 13px;
+}
+
+/* ---- Headline metric strip ---- */
+.cr-metrics {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 12px;
+}
+
+@media (max-width: 1280px) {
+	.cr-metrics {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 640px) {
+	.cr-metrics {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.cr-metric {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 14px 15px 15px;
+	background: var(--cr-surface);
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius-sm);
+}
+
+.cr-metric__top {
+	display: flex;
+	align-items: flex-start;
+	gap: 5px;
+	min-height: 32px;
+}
+
+.cr-metric__label {
+	min-width: 0;
+	color: var(--cr-muted);
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.35;
+}
+
+.cr-metric__value {
+	margin: 8px 0 0;
+	color: var(--cr-ink);
+	font-size: 22px;
+	font-weight: 600;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	font-variant-numeric: tabular-nums;
+	overflow-wrap: anywhere;
+}
+
+.cr-metric__value.is-risk {
+	color: var(--cr-warning);
+}
+
+.cr-metric__value.is-won {
+	color: var(--cr-success);
+}
+
+/* ---- Info hint bubble ---- */
+.cr-hint {
+	position: relative;
+	display: inline-flex;
+	flex: none;
+	margin-top: 1px;
+}
+
+.cr-hint__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--cr-border-strong);
+	cursor: help;
+	transition: color 140ms var(--cr-ease);
+}
+
+.cr-hint__btn svg {
+	width: 13px;
+	height: 13px;
+}
+
+.cr-hint__btn:hover {
+	color: var(--cr-muted);
+}
+
+.cr-hint__btn:focus-visible {
+	outline: none;
+	border-radius: 999px;
+	box-shadow: var(--cr-ring);
+}
+
+.cr-hint__bubble {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	left: 50%;
+	z-index: 20;
+	width: max-content;
+	max-width: 210px;
+	padding: 8px 10px;
+	background: var(--cr-ink);
+	color: var(--cr-accent-ink);
+	border-radius: var(--cr-radius-sm);
+	box-shadow: 0 8px 20px oklch(0 0 0 / 0.18);
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 1.45;
+	text-align: left;
+	opacity: 0;
+	transform: translate(-50%, 4px);
+	pointer-events: none;
+	transition:
+		opacity 140ms var(--cr-ease),
+		transform 140ms var(--cr-ease);
+}
+
+.cr-hint:hover .cr-hint__bubble,
+.cr-hint:focus-within .cr-hint__bubble {
+	opacity: 1;
+	transform: translate(-50%, 0);
+}
+
+/* ---- Range selector ---- */
+.cr-range {
+	display: inline-flex;
+	flex: none;
+	gap: 2px;
+	padding: 3px;
+	background: var(--cr-panel);
+	border: 1px solid var(--cr-border);
+	border-radius: 999px;
+}
+
+.cr-range__btn {
+	padding: 5px 12px;
+	border: 0;
+	border-radius: 999px;
+	background: none;
+	color: var(--cr-muted);
+	font-size: 12px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+	transition:
+		background-color 140ms var(--cr-ease),
+		color 140ms var(--cr-ease);
+}
+
+.cr-range__btn:hover {
+	color: var(--cr-ink);
+}
+
+.cr-range__btn.is-active {
+	background: var(--cr-surface);
+	color: var(--cr-ink);
+	box-shadow: var(--cr-shadow-sm);
+}
+
+.cr-range__btn:focus-visible {
+	outline: none;
+	box-shadow: var(--cr-ring);
+}
+
+/* ---- Revenue trend ---- */
+.cr-trend {
+	padding: 20px 22px 16px;
+}
+
+.cr-trend__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px 16px;
+}
+
+.cr-chart__legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 20px;
+	margin: 14px 0 4px;
+}
+
+.cr-chart__key {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	color: var(--cr-muted);
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.cr-chart__swatch {
+	flex: none;
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+}
+
+.cr-chart__swatch.is-risk {
+	background: var(--cr-warning);
+}
+
+.cr-chart__swatch.is-won {
+	background: var(--cr-success);
+}
+
+.cr-chart__plot {
+	position: relative;
+	width: 100%;
+}
+
+.cr-chart__grid {
+	stroke: var(--cr-border);
+	stroke-width: 1;
+}
+
+.cr-chart__axis {
+	fill: var(--cr-muted);
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+
+.cr-chart__line {
+	fill: none;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.cr-chart__line.is-risk {
+	stroke: var(--cr-warning);
+}
+
+.cr-chart__line.is-won {
+	stroke: var(--cr-success);
+}
+
+.cr-chart__stop-risk {
+	stop-color: var(--cr-warning);
+}
+
+.cr-chart__stop-won {
+	stop-color: var(--cr-success);
+}
+
+.cr-chart__crosshair {
+	stroke: var(--cr-border-strong);
+	stroke-width: 1;
+	stroke-dasharray: 3 3;
+}
+
+.cr-chart__dot {
+	stroke: var(--cr-surface);
+	stroke-width: 2;
+}
+
+.cr-chart__dot.is-risk {
+	fill: var(--cr-warning);
+}
+
+.cr-chart__dot.is-won {
+	fill: var(--cr-success);
+}
+
+.cr-chart__tip {
+	position: absolute;
+	top: 6px;
+	z-index: 5;
+	min-width: 118px;
+	padding: 9px 11px;
+	background: var(--cr-ink);
+	color: var(--cr-accent-ink);
+	border-radius: var(--cr-radius-sm);
+	box-shadow: 0 8px 20px oklch(0 0 0 / 0.2);
+	font-size: 12px;
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+
+.cr-chart__tipdate {
+	margin: 0 0 5px;
+	font-weight: 600;
+	opacity: 0.75;
+}
+
+.cr-chart__tiprow {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	margin: 3px 0 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.cr-chart__blank {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	color: var(--cr-muted);
+	font-size: 13px;
+	text-align: center;
+}
+
+.cr-chart__blank p {
+	margin: 0;
+	max-width: 46ch;
+}
+
+.cr-chart__blanktitle {
+	color: var(--cr-ink);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* ---- Supporting report tables ---- */
+.cr-reports {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+	align-items: start;
+}
+
+@media (max-width: 960px) {
+	.cr-reports {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.cr-report {
+	overflow: hidden;
+}
+
+.cr-report__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 18px 14px;
+	border-bottom: 1px solid var(--cr-border);
+}
+
+.cr-report__title {
+	margin: 0;
+	color: var(--cr-ink);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cr-report__sub {
+	margin: 3px 0 0;
+	color: var(--cr-muted);
+	font-size: 12px;
+}
+
+.cr-report__empty {
+	padding: 28px 18px;
+	color: var(--cr-muted);
+	font-size: 13px;
+	text-align: center;
+}
+
+/* Align the table gutters with the report header padding. */
+.cr-report .cr-table th:first-child,
+.cr-report .cr-table td:first-child {
+	padding-left: 18px;
+}
+
+.cr-report .cr-table th:last-child,
+.cr-report .cr-table td:last-child {
+	padding-right: 18px;
+}
+
+.cr-viewall {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 5px;
+	color: var(--cr-accent);
+	font-size: 12px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.cr-viewall svg {
+	width: 13px;
+	height: 13px;
+}
+
+.cr-viewall:hover {
+	text-decoration: underline;
+}
+
+.cr-viewall:focus-visible {
+	outline: none;
+	border-radius: 5px;
+	box-shadow: var(--cr-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cr-hint__btn,
+	.cr-hint__bubble,
+	.cr-range__btn {
+		transition: none;
+	}
+}

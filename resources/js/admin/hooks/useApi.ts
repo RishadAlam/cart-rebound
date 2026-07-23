@@ -13,9 +13,11 @@ import {
 	fetchLogs,
 	fetchOrders,
 	fetchPing,
+	fetchProductReport,
 	fetchSettings,
 	fetchStats,
 	fetchTemplates,
+	fetchTimeseries,
 	markCartRecovered,
 	previewTemplate,
 	testTemplate,
@@ -34,8 +36,10 @@ import type {
 	LogsQuery,
 	Order,
 	PingResponse,
+	ProductReportRow,
 	Settings,
 	Stats,
+	TimeseriesPoint,
 } from '../types/api';
 
 export const usePing = () =>
@@ -48,6 +52,20 @@ export const useStats = () =>
 	useQuery<Stats>({
 		queryKey: ['stats'],
 		queryFn: fetchStats,
+	});
+
+// Keyed under ['stats', …] so any cart mutation that invalidates 'stats' also
+// refreshes the chart and the product report.
+export const useTimeseries = (days: number) =>
+	useQuery<TimeseriesPoint[]>({
+		queryKey: ['stats', 'timeseries', days],
+		queryFn: () => fetchTimeseries(days),
+	});
+
+export const useProductReport = (days: number, limit: number) =>
+	useQuery<ProductReportRow[]>({
+		queryKey: ['stats', 'products', days, limit],
+		queryFn: () => fetchProductReport({ days, limit }),
 	});
 
 export const useCarts = (query: CartsQuery) =>

@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
 import { formatMoney } from '../lib/format';
+import { statusLabel } from '../lib/status';
 import {
 	useBulkCarts,
 	useCarts,
@@ -59,25 +60,6 @@ const messageOf = (error: unknown): string =>
 	error instanceof Error
 		? error.message
 		: __('Something went wrong.', 'cart-rebound');
-
-const statusLabel = (status: string): string => {
-	switch (status) {
-		case 'active':
-			return _x('Active', 'cart status', 'cart-rebound');
-		case 'abandoned':
-			return _x('Abandoned', 'cart status', 'cart-rebound');
-		case 'pending-payment':
-			return _x('Pending payment', 'cart status', 'cart-rebound');
-		case 'recovered':
-			return _x('Recovered', 'cart status', 'cart-rebound');
-		case 'completed':
-			return _x('Completed', 'cart status', 'cart-rebound');
-		case 'lost':
-			return _x('Lost', 'cart status', 'cart-rebound');
-		default:
-			return status;
-	}
-};
 
 // Each cart status paired with a plain-language meaning for the status guide.
 const STATUS_GUIDE: Array<[string, string]> = [

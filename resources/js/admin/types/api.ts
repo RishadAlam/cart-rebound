@@ -47,8 +47,26 @@ export interface CartList {
 export interface Stats {
 	counts: Record<string, number>;
 	recovered_revenue: number;
+	recoverable_revenue: number;
 	recovery_rate: number;
 	currency: string;
+}
+
+/** One day of the dashboard revenue chart. */
+export interface TimeseriesPoint {
+	date: string;
+	recoverable_revenue: number;
+	recovered_revenue: number;
+	abandoned: number;
+	recovered: number;
+}
+
+/** One row of the per-product abandonment/recovery report. */
+export interface ProductReportRow {
+	product_id: number;
+	name: string;
+	abandoned: number;
+	recovered: number;
 }
 
 export interface Settings {

@@ -14,8 +14,10 @@ import type {
 	LogsQuery,
 	Order,
 	PingResponse,
+	ProductReportRow,
 	Settings,
 	Stats,
+	TimeseriesPoint,
 } from '../types/api';
 
 export type TemplateInput = Omit<EmailTemplate, 'id'>;
@@ -30,6 +32,29 @@ export const fetchStats = async (): Promise<Stats> => {
 	const { data } = await apiClient.get<Stats>('stats');
 
 	return data;
+};
+
+export const fetchTimeseries = async (
+	days: number
+): Promise<TimeseriesPoint[]> => {
+	const { data } = await apiClient.get<{ items: TimeseriesPoint[] }>(
+		'stats/timeseries',
+		{ params: { days } }
+	);
+
+	return data.items;
+};
+
+export const fetchProductReport = async (input: {
+	days: number;
+	limit: number;
+}): Promise<ProductReportRow[]> => {
+	const { data } = await apiClient.get<{ items: ProductReportRow[] }>(
+		'stats/products',
+		{ params: input }
+	);
+
+	return data.items;
 };
 
 export const fetchCarts = async (query: CartsQuery): Promise<CartList> => {
