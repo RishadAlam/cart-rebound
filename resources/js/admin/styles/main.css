@@ -965,6 +965,18 @@ textarea.cr-input {
 	text-decoration: underline;
 }
 
+/* One treatment serves both the button that opens a cart and the anchor that
+   deep-links into WooCommerce, so drop the anchor's default underline. */
+a.cr-linkbtn {
+	text-decoration: none;
+}
+
+.cr-linkbtn:focus-visible {
+	outline: none;
+	border-radius: 4px;
+	box-shadow: var(--cr-ring);
+}
+
 /* The detail dialog is a column: pinned header, scrolling body, pinned foot. */
 .cr-detail {
 	display: flex;

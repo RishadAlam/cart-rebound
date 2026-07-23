@@ -12,6 +12,9 @@ import { Combobox } from './Combobox';
 /** Page sizes offered to the user. The REST layer caps `per_page` at 100. */
 export const PER_PAGE_OPTIONS = [10, 20, 50, 100];
 
+/** Starting page size for every paginated table, so they open consistently. */
+export const DEFAULT_PER_PAGE = 20;
+
 export const Pagination = ({
 	page,
 	perPage,

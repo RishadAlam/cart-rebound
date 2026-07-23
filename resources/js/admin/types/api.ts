@@ -27,6 +27,8 @@ export interface Cart {
 	items_count: number;
 	status: string;
 	order_id: number;
+	/** wp-admin edit URL for the linked order; empty when there is none. */
+	order_edit_url: string;
 	recovered_amount: number;
 	created_at: string;
 	last_activity: string;

@@ -11,6 +11,7 @@ namespace CartRebound\Data;
 
 defined( 'ABSPATH' ) || exit;
 
+use Automattic\WooCommerce\Utilities\OrderUtil;
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\QueryBuilder;
@@ -47,6 +48,17 @@ final class CartRepository {
 	 * @var int
 	 */
 	private const REPORT_SCAN_LIMIT = 2000;
+
+	/**
+	 * Memoised admin URL prefix an order is edited under.
+	 *
+	 * Resolved once per request: whether HPOS is enabled cannot change midway,
+	 * and presenting a page of carts would otherwise repeat the check per row.
+	 *
+	 * @since 0.1.0
+	 * @var string|null
+	 */
+	private $order_url_base = null;
 
 	/**
 	 * Event dispatcher.
@@ -561,6 +573,7 @@ final class CartRepository {
 			'items_count'      => (int) ( $row['items_count'] ?? 0 ),
 			'status'           => (string) ( $row['status'] ?? '' ),
 			'order_id'         => (int) ( $row['order_id'] ?? 0 ),
+			'order_edit_url'   => $this->order_edit_url( (int) ( $row['order_id'] ?? 0 ) ),
 			'recovered_amount' => (float) ( $row['recovered_amount'] ?? 0 ),
 			'created_at'       => (string) ( $row['created_at'] ?? '' ),
 			'last_activity'    => (string) ( $row['last_activity'] ?? '' ),
@@ -570,6 +583,50 @@ final class CartRepository {
 			'products'         => $this->decode_products( $row ),
 			'coupons'          => $this->decode_coupons( $row ),
 		);
+	}
+
+	/**
+	 * Build the wp-admin edit URL for the order a cart converted to.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param int $order_id Order id, or 0 when the cart never converted.
+	 * @return string Empty string when there is no order, or no WordPress admin.
+	 */
+	private function order_edit_url( int $order_id ): string {
+		if ( $order_id <= 0 ) {
+			return '';
+		}
+
+		if ( null === $this->order_url_base ) {
+			$this->order_url_base = $this->resolve_order_url_base();
+		}
+
+		return '' === $this->order_url_base ? '' : $this->order_url_base . $order_id;
+	}
+
+	/**
+	 * Resolve the admin URL prefix orders are edited under.
+	 *
+	 * HPOS moves orders off the posts table onto their own admin screen, so the
+	 * edit link differs per store. Deriving it from the flag keeps presenting a
+	 * page of carts cheap — calling get_edit_order_url() instead would mean
+	 * loading every linked order just to read a URL off it.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return string
+	 */
+	private function resolve_order_url_base(): string {
+		if ( ! function_exists( 'admin_url' ) ) {
+			return '';
+		}
+
+		if ( class_exists( OrderUtil::class ) && OrderUtil::custom_orders_table_usage_is_enabled() ) {
+			return admin_url( 'admin.php?page=wc-orders&action=edit&id=' );
+		}
+
+		return admin_url( 'post.php?action=edit&post=' );
 	}
 
 	/**

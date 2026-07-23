@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
-import { Pagination } from '../components/Pagination';
+import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
 import { useClearLog, useLogs } from '../hooks/useApi';
 import type { LogEntry } from '../types/api';
 
@@ -16,7 +16,6 @@ const EVENTS = [
 	{ value: 'abandoned', label: __('Abandoned', 'cart-rebound') },
 	{ value: 'recovered', label: __('Recovered', 'cart-rebound') },
 ];
-const DEFAULT_PER_PAGE = 30;
 const COLUMN_COUNT = 5;
 
 const levelLabel = (level: string): string => {

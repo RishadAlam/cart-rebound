@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
-import { Pagination } from '../components/Pagination';
+import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
 import { formatMoney } from '../lib/format';
 import { statusLabel } from '../lib/status';
 import {
@@ -41,7 +41,6 @@ const CHANGE_STATUSES = [
 	'completed',
 	'lost',
 ];
-const DEFAULT_PER_PAGE = 20;
 const COLUMN_COUNT = 9;
 
 type Feedback = { type: 'success' | 'error'; message: string };
@@ -249,6 +248,35 @@ const TrashIcon = () => (
 );
 
 const Dash = () => <span className="cr-muted">—</span>;
+
+/**
+ * The linked order number, deep-linking into WooCommerce when we have a URL for
+ * it. The URL is built server-side because only PHP knows whether the store is
+ * on HPOS, which changes where orders are edited.
+ * @param root0
+ * @param root0.cart
+ */
+const OrderLink = ({ cart }: { cart: Cart }) => {
+	if (cart.order_id <= 0) {
+		return <Dash />;
+	}
+
+	const label = `#${cart.order_id}`;
+
+	if (cart.order_edit_url === '') {
+		return <>{label}</>;
+	}
+
+	return (
+		<a
+			className="cr-linkbtn"
+			href={cart.order_edit_url}
+			title={__('Open this order in WooCommerce', 'cart-rebound')}
+		>
+			{label}
+		</a>
+	);
+};
 
 const Spinner = ({ size = 15 }: { size?: number }) => (
 	<svg
@@ -462,7 +490,7 @@ const CartRow = ({
 			</td>
 			<td className="cr-muted cr-nowrap">{cart.last_activity}</td>
 			<td style={{ textAlign: 'right' }}>
-				{cart.order_id > 0 ? `#${cart.order_id}` : <Dash />}
+				<OrderLink cart={cart} />
 			</td>
 			<td>
 				<div className="cr-row-actions">
@@ -638,7 +666,7 @@ const CartDetail = ({
 					<div>
 						<dt>{__('Order', 'cart-rebound')}</dt>
 						<dd>
-							{cart.order_id > 0 ? `#${cart.order_id}` : <Dash />}
+							<OrderLink cart={cart} />
 						</dd>
 					</div>
 				</dl>
