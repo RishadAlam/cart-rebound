@@ -1610,12 +1610,20 @@ textarea.cr-input {
 /* ---- Pagination ---- */
 .cr-pagination {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 14px;
 	padding: 14px 16px;
 	border-top: 1px solid var(--cr-border);
 	color: var(--cr-muted);
 	font-size: 13px;
+}
+
+.cr-pagination__limit {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	white-space: nowrap;
 }
 
 .cr-pagination__spacer {

@@ -1,14 +1,15 @@
 /**
  * Carts page — filterable, sortable, paginated list of tracked carts.
  *
- * Each row keeps a calm surface: an inline color-coded status select and three
- * icon actions (recover, send email, delete). The heavier "mark recovered"
+ * Each row keeps a calm surface: an inline color-coded status select and four
+ * icon actions (view, recover, send email, delete). The heavier "mark recovered"
  * order picker lives in a native <dialog> so it escapes the table's horizontal
  * scroll container instead of being clipped by it.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
+import { TablePagination } from '../components/TablePagination';
 import { formatMoney } from '../lib/format';
 import { statusLabel } from '../lib/status';
 import {
@@ -40,7 +41,7 @@ const CHANGE_STATUSES = [
 	'completed',
 	'lost',
 ];
-const PER_PAGE = 20;
+const DEFAULT_PER_PAGE = 20;
 const COLUMN_COUNT = 9;
 
 type Feedback = { type: 'success' | 'error'; message: string };
@@ -199,6 +200,19 @@ const RecoverIcon = () => (
 			strokeLinecap="round"
 			strokeLinejoin="round"
 		/>
+	</svg>
+);
+
+const EyeIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<path
+			d="M1.8 8s2.2-4 6.2-4 6.2 4 6.2 4-2.2 4-6.2 4S1.8 8 1.8 8Z"
+			stroke="currentColor"
+			strokeWidth="1.3"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		/>
+		<circle cx="8" cy="8" r="1.7" stroke="currentColor" strokeWidth="1.3" />
 	</svg>
 );
 
@@ -429,6 +443,11 @@ const CartRow = ({
 						onView(cart);
 					}}
 					title={__('View cart details', 'cart-rebound')}
+					aria-label={sprintf(
+						/* translators: %d: cart ID. */
+						__('Cart %d ID — view details', 'cart-rebound'),
+						cart.id
+					)}
 				>
 					#{cart.id}
 				</button>
@@ -453,6 +472,21 @@ const CartRow = ({
 			</td>
 			<td>
 				<div className="cr-row-actions">
+					<button
+						type="button"
+						className="cr-iconbtn"
+						onClick={() => {
+							onView(cart);
+						}}
+						title={__('View cart details', 'cart-rebound')}
+						aria-label={sprintf(
+							/* translators: %d: cart ID. */
+							__('View cart %d details', 'cart-rebound'),
+							cart.id
+						)}
+					>
+						<EyeIcon />
+					</button>
 					{cart.order_id === 0 && (
 						<button
 							type="button"
@@ -1054,6 +1088,7 @@ const SkeletonRows = () => (
 export const Carts = () => {
 	const [status, setStatus] = useState('');
 	const [page, setPage] = useState(1);
+	const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
 	const [sort, setSort] = useState<{ by: string; order: SortOrder }>({
 		by: 'last_activity',
 		order: 'desc',
@@ -1069,7 +1104,7 @@ export const Carts = () => {
 		status,
 		email: '',
 		page,
-		per_page: PER_PAGE,
+		per_page: perPage,
 		orderby: sort.by,
 		order: sort.order,
 	});
@@ -1451,41 +1486,16 @@ export const Carts = () => {
 							</table>
 						</div>
 
-						<div className="cr-pagination">
-							<button
-								type="button"
-								className="cr-btn is-ghost is-sm"
-								disabled={page <= 1}
-								onClick={() => {
-									setPage((current) =>
-										Math.max(1, current - 1)
-									);
-								}}
-							>
-								{__('Previous', 'cart-rebound')}
-							</button>
-							<span>
-								{sprintf(
-									/* translators: 1: current page, 2: total pages. */
-									__('Page %1$d of %2$d', 'cart-rebound'),
-									page,
-									totalPages
-								)}
-							</span>
-							<span className="cr-pagination__spacer" />
-							<button
-								type="button"
-								className="cr-btn is-ghost is-sm"
-								disabled={page >= totalPages}
-								onClick={() => {
-									setPage((current) =>
-										Math.min(totalPages, current + 1)
-									);
-								}}
-							>
-								{__('Next', 'cart-rebound')}
-							</button>
-						</div>
+						<TablePagination
+							page={page}
+							totalPages={totalPages}
+							perPage={perPage}
+							onPageChange={setPage}
+							onPerPageChange={(nextPerPage) => {
+								setPerPage(nextPerPage);
+								setPage(1);
+							}}
+						/>
 					</>
 				)}
 			</div>

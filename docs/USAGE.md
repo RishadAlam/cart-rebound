@@ -503,11 +503,13 @@ The Carts view (`resources/js/admin/pages/Carts.tsx`) lists tracked carts via `G
 | Order         | `order_id`      | `#{order_id}` when linked to an order, otherwise `—`.       |
 | Actions       | —               | Row actions (see below).                                    |
 
-**Ordering & pagination.** Results are ordered by `last_activity` descending. The UI requests `per_page: 20` (the `PER_PAGE` constant); the API defaults to 20 and caps `per_page` at 100. Pagination uses **Previous** / **Next** buttons with a `Page X of Y` indicator, where the total page count is `ceil(total / per_page)`. Previous is disabled on page 1 and Next is disabled on the last page. When a page has no rows, the view shows `No carts found.` The list shows `Loading…` while fetching and `Could not load carts.` on error.
+**Ordering & pagination.** Results are ordered by `last_activity` descending. The Carts UI defaults to 20 rows per page, while the Activity Log defaults to 30. Both tables use the shared **Rows per page** selector with options for 10, 20, 30, 50, or 100 rows; changing it resets the table to page 1. The API defaults to 20 when no value is supplied and caps `per_page` at 100. Pagination uses **Previous** / **Next** buttons with a `Page X of Y` indicator, where the total page count is `ceil(total / per_page)`. Previous is disabled on page 1 and Next is disabled on the last page. When a page has no rows, the view shows `No carts found.` The list shows `Loading…` while fetching and `Could not load carts.` on error.
 
 ### Row actions
 
-Each cart row offers two actions:
+Each cart row offers four icon actions:
+
+**View details.** The eye button opens the cart-detail dialog with the captured customer identity, line items, totals, coupons, linked order, and lifecycle timeline. Clicking the cart ID provides the same shortcut.
 
 **Mark recovered.** Enter an order ID into the numeric input (minimum `1`) and click **Mark recovered**. The component parses the input with `parseInt` and only sends the request when the value is greater than `0`. It calls `POST carts/{id}/mark-recovered` with the body `{ id, order_id }`. The request is validated by `MarkRecoveredRequest`, whose rules require both fields:
 

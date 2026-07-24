@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
+import { TablePagination } from '../components/TablePagination';
 import { useClearLog, useLogs } from '../hooks/useApi';
 import type { LogEntry } from '../types/api';
 
@@ -15,7 +16,7 @@ const EVENTS = [
 	{ value: 'abandoned', label: __('Abandoned', 'cart-rebound') },
 	{ value: 'recovered', label: __('Recovered', 'cart-rebound') },
 ];
-const PER_PAGE = 30;
+const DEFAULT_PER_PAGE = 30;
 const COLUMN_COUNT = 5;
 
 const levelLabel = (level: string): string => {
@@ -90,13 +91,14 @@ export const Log = () => {
 	const [event, setEvent] = useState('');
 	const [cart, setCart] = useState('');
 	const [page, setPage] = useState(1);
+	const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
 	const cartId = Number.parseInt(cart, 10);
 	const { data, isLoading, isError } = useLogs({
 		level,
 		event,
 		cart_id: cartId > 0 ? cartId : 0,
 		page,
-		per_page: PER_PAGE,
+		per_page: perPage,
 	});
 	const clear = useClearLog();
 
@@ -254,41 +256,16 @@ export const Log = () => {
 							</table>
 						</div>
 
-						<div className="cr-pagination">
-							<button
-								type="button"
-								className="cr-btn is-ghost is-sm"
-								disabled={page <= 1}
-								onClick={() => {
-									setPage((current) =>
-										Math.max(1, current - 1)
-									);
-								}}
-							>
-								{__('Previous', 'cart-rebound')}
-							</button>
-							<span>
-								{sprintf(
-									/* translators: 1: current page, 2: total pages. */
-									__('Page %1$d of %2$d', 'cart-rebound'),
-									page,
-									totalPages
-								)}
-							</span>
-							<span className="cr-pagination__spacer" />
-							<button
-								type="button"
-								className="cr-btn is-ghost is-sm"
-								disabled={page >= totalPages}
-								onClick={() => {
-									setPage((current) =>
-										Math.min(totalPages, current + 1)
-									);
-								}}
-							>
-								{__('Next', 'cart-rebound')}
-							</button>
-						</div>
+						<TablePagination
+							page={page}
+							totalPages={totalPages}
+							perPage={perPage}
+							onPageChange={setPage}
+							onPerPageChange={(nextPerPage) => {
+								setPerPage(nextPerPage);
+								setPage(1);
+							}}
+						/>
 					</>
 				)}
 			</div>
