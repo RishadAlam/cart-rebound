@@ -116,10 +116,16 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 
 == Changelog ==
 
+= 0.2.0 =
+* Added richer revenue and product reporting, stronger cart-to-order lifecycle attribution, an improved onboarding and admin experience, and refined recovery email and unsubscribe flows.
+
 = 0.1.0 =
 * Initial release: cart tracking (logged-in + guest, classic + block checkout), configurable abandonment detection via Action Scheduler, tokenized recovery links, explicit order-to-cart linking with recovered/completed attribution, recovery emails with a rich-text multi-template editor (Media Library images, preview, per-cart send, `{coupon_code}` and WooCommerce coupon selection), an activity log filterable by level/event/cart, event + REST API, and an admin dashboard.
 
 == Upgrade Notice ==
+
+= 0.2.0 =
+Adds expanded reporting and improves the cart recovery lifecycle and administration experience.
 
 = 0.1.0 =
 Initial release.

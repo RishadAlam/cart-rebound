@@ -82,17 +82,44 @@ The release zip is already production-ready: its front-end assets are pre-built 
 Clone or download the source into (or link it at)
 `wp-content/plugins/cart-rebound`. Source development requires:
 
-- A local WordPress 6.2+ installation with WooCommerce active
-- PHP 7.4+ and Composer
+- A local WordPress 6.2+ installation with WP-CLI available
+- PHP 7.4+ and Composer (`phpdbg` is needed only for `composer test:coverage`)
 - Node.js 24+ and pnpm 11.5.0
 
 ```bash
 # from the plugin root (cart-rebound/)
-composer install      # PHP dependencies + generates vendor/autoload.php
-pnpm install --frozen-lockfile # JS/TS toolchain (React, Vite, etc.)
-pnpm build            # vite build → compiles resources/js into public/build assets
+composer setup        # install PHP + pnpm dependencies and build admin assets
 bash scripts/build-zip.sh
 ```
+
+`composer setup` invokes `bash scripts/setup-development.sh`; the setup script
+may also be run directly.
+
+`composer setup` assumes the repository is at the standard plugin path, making
+the WordPress root `../../..`. It installs both dependency sets, builds the
+admin assets, enables local WordPress debugging and Cart Rebound HMR, installs
+WooCommerce if necessary, activates both plugins, and runs the plugin database
+migrations. The long-running Vite server is intentionally separate; start it
+with `pnpm dev` after setup.
+
+The equivalent dependency/build setup is `composer install`, followed by
+`pnpm install --frozen-lockfile` and `pnpm build`. The remaining setup steps use
+WP-CLI to configure `wp-config.php`, install and activate WooCommerce, activate
+Cart Rebound, and run `wp cart-rebound migrate`.
+
+For dependency maintenance, use the individual project commands:
+
+```bash
+pnpm run clean
+pnpm run fresh-install
+composer clean
+composer fresh-install
+```
+
+`pnpm run clean` preserves `pnpm-lock.yaml`. `composer clean` removes both
+`vendor` and `composer.lock`. Therefore, `composer fresh-install` resolves the
+current allowed dependency versions and generates a new lockfile. Neither
+cleaner removes compiled assets.
 
 #### Local development with HMR
 

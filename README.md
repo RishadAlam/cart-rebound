@@ -74,23 +74,63 @@ Built on a Laravel-style, container-driven OOP framework (service providers, RES
 
 ### Prerequisites
 
-- A local WordPress 6.2+ installation with WooCommerce active
-- PHP 7.4+ and Composer
+- A local WordPress 6.2+ installation with WP-CLI available
+- PHP 7.4+ and Composer (`phpdbg` is needed only for coverage)
 - Node.js 24+ and pnpm 11.5.0
 - This repository installed or linked at
   `wp-content/plugins/cart-rebound`
 
 The complete, human-readable source is maintained in this public repository. Production archives contain compiled assets; their uncompressed TypeScript, React, and CSS sources are under [`resources/`](resources/).
 
+After cloning the repository into `wp-content/plugins/cart-rebound`, run the
+complete development setup:
+
+```bash
+composer setup
+```
+
+This invokes [`scripts/setup-development.sh`](scripts/setup-development.sh).
+The script may also be run directly with
+`bash scripts/setup-development.sh`.
+
+The command:
+
+1. Installs the PHP and locked pnpm dependencies.
+2. Builds the admin assets.
+3. Enables WordPress debug logging, sets the environment to `local`, and opts
+   Cart Rebound into HMR.
+4. Installs WooCommerce when missing and activates it.
+5. Activates Cart Rebound and runs its database migrations.
+
+It assumes the standard plugin path shown above, so the WordPress root resolves
+to `../../..`. After setup, run `pnpm dev` whenever you want the long-running
+Vite HMR server.
+
+The dependency and build steps can also be run individually:
+
 ```bash
 composer install
 pnpm install --frozen-lockfile
+pnpm build
 
 composer qa        # phpcs (WP-Extra), PHPStan L8, PHP 7.4 compat, Rector, PHPUnit
+composer test:coverage # PHPUnit HTML report → coverage/
 pnpm qa            # tsc strict, prettier, eslint, stylelint
 pnpm dev           # live Vite source assets + HMR on the plugin admin pages
-pnpm build         # compile the admin app
 bash scripts/build-zip.sh   # build assets/POT → build/cart-rebound.zip
+```
+
+Dependency cleanup and fresh installation are kept separate for each package
+manager:
+
+```bash
+pnpm run clean         # remove node_modules and the project-local pnpm store
+pnpm install           # install from pnpm-lock.yaml
+pnpm run fresh-install # clean pnpm dependencies, then install them
+
+composer clean         # remove vendor and composer.lock
+composer install       # install from composer.lock
+composer fresh-install # clean, resolve dependencies, and generate a new lockfile
 ```
 
 ### Local development with HMR

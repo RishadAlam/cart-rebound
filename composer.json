@@ -59,6 +59,12 @@
 	"minimum-stability": "stable",
 	"prefer-stable": true,
 	"scripts": {
+		"setup": "bash scripts/setup-development.sh",
+		"clean": "rm -rf vendor composer.lock",
+		"fresh-install": [
+			"@clean",
+			"@composer install --no-interaction"
+		],
 		"phpcs": "phpcs",
 		"phpcbf": "phpcbf",
 		"phpstan": "phpstan analyse --memory-limit=2G",
@@ -73,7 +79,7 @@
 		"rector:fix": "rector process",
 		"bump-version": "php scripts/bump-version.php",
 		"test": "phpunit",
-		"test:coverage": "phpunit --coverage-html coverage",
+		"test:coverage": "phpdbg -qrr vendor/bin/phpunit --coverage-html coverage",
 		"qa": [
 			"@test:lint",
 			"@phpstan",
@@ -83,14 +89,20 @@
 		]
 	},
 	"scripts-descriptions": {
+		"setup": "Completely configure local development: dependencies, assets, WordPress debug/HMR, WooCommerce, activation, and migrations.",
+		"clean": "Remove the Composer vendor directory and composer.lock.",
+		"fresh-install": "Remove vendor and composer.lock, then resolve dependencies and generate a new lockfile.",
 		"phpcs": "Lint PHP against the WordPress-Extra coding standard.",
 		"phpcbf": "Auto-fix fixable PHPCS violations.",
 		"phpstan": "Static analysis at level 8 with WordPress stubs.",
+		"cs-fix": "Auto-fix PHP formatting with PHP-CS-Fixer.",
 		"cs-check": "PHP-CS-Fixer dry-run (no writes).",
 		"compat": "Check PHP 7.4+ compatibility of src/.",
 		"rector": "Rector dry-run (no writes).",
+		"rector:fix": "Apply Rector refactors.",
 		"bump-version": "Synchronize all maintained plugin version fields and refresh composer.lock.",
 		"test": "Run the PHPUnit suite.",
+		"test:coverage": "Run PHPUnit through phpdbg and write HTML coverage to coverage/.",
 		"qa": "Run the full PHP quality gate."
 	}
 }

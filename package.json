@@ -1,6 +1,6 @@
 {
 	"name": "cart-rebound",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Tracks abandoned WooCommerce carts and helps recover them with email reminders and secure recovery links.",
 	"license": "GPL-2.0-or-later",
 	"private": true,
@@ -10,6 +10,8 @@
 		"node": ">=24"
 	},
 	"scripts": {
+		"clean": "rm -rf node_modules .pnpm-store",
+		"fresh-install": "pnpm run clean && pnpm install --frozen-lockfile",
 		"dev": "vite",
 		"build": "vite build",
 		"preview": "vite preview",
