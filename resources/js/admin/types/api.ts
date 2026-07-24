@@ -42,6 +42,7 @@ export interface CartList {
 	total: number;
 	page: number;
 	per_page: number;
+	currency: string;
 }
 
 export interface Stats {

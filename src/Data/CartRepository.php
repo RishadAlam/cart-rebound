@@ -117,6 +117,7 @@ final class CartRepository {
 			'total'    => $total,
 			'page'     => $page,
 			'per_page' => $per_page,
+			'currency' => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '',
 		);
 	}
 

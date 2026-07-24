@@ -191,10 +191,22 @@ final class AssetServiceProvider extends ServiceProvider {
 	 * @return string
 	 */
 	private function boot_data( string $route ): string {
+		$currency = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '';
+
 		$data = array(
 			'apiUrl'       => esc_url_raw( rest_url( 'cart-rebound/v1' ) ),
 			'nonce'        => wp_create_nonce( 'wp_rest' ),
 			'initialRoute' => $route,
+			'currency'     => array(
+				'code'              => $currency,
+				'symbol'            => function_exists( 'get_woocommerce_currency_symbol' )
+					? html_entity_decode( get_woocommerce_currency_symbol( $currency ), ENT_QUOTES | ENT_HTML5, 'UTF-8' )
+					: $currency,
+				'position'          => (string) get_option( 'woocommerce_currency_pos', 'left' ),
+				'decimalSeparator'  => function_exists( 'wc_get_price_decimal_separator' ) ? wc_get_price_decimal_separator() : '.',
+				'thousandSeparator' => function_exists( 'wc_get_price_thousand_separator' ) ? wc_get_price_thousand_separator() : ',',
+				'decimals'          => function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2,
+			),
 			'currentUser'  => array(
 				'id'   => get_current_user_id(),
 				'caps' => $this->current_user_caps(),

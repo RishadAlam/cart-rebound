@@ -147,7 +147,7 @@ const StatusGuide = () => (
 	</details>
 );
 
-const orderLabel = (order: Order): string => {
+const orderLabel = (order: Order, currency: string): string => {
 	const who = order.email !== '' ? order.email : __('guest', 'cart-rebound');
 
 	return sprintf(
@@ -156,7 +156,7 @@ const orderLabel = (order: Order): string => {
 		order.number,
 		who,
 		order.total.toFixed(2),
-		order.currency
+		currency
 	);
 };
 
@@ -379,6 +379,7 @@ const CartRow = ({
 	onSendEmail,
 	onView,
 	notify,
+	currency,
 }: {
 	cart: Cart;
 	selected: boolean;
@@ -387,6 +388,7 @@ const CartRow = ({
 	onSendEmail: (cart: Cart) => void;
 	onView: (cart: Cart) => void;
 	notify: (feedback: Feedback) => void;
+	currency: string;
 }) => {
 	const remove = useDeleteCart();
 	const status = useUpdateStatus();
@@ -457,7 +459,7 @@ const CartRow = ({
 			</td>
 			<td>{cart.items_count}</td>
 			<td className="cr-money" style={{ textAlign: 'right' }}>
-				{cart.cart_total.toFixed(2)}
+				{formatMoney(cart.cart_total, currency)}
 			</td>
 			<td>
 				<StatusSelect
@@ -538,9 +540,11 @@ const CartRow = ({
 const CartDetail = ({
 	cart,
 	onClose,
+	currency,
 }: {
 	cart: Cart | null;
 	onClose: () => void;
+	currency: string;
 }) => {
 	const ref = useRef<HTMLDialogElement>(null);
 
@@ -562,7 +566,7 @@ const CartDetail = ({
 		return null;
 	}
 
-	const money = (value: number) => formatMoney(value, cart.currency);
+	const money = (value: number) => formatMoney(value, currency);
 	const name = `${cart.first_name} ${cart.last_name}`.trim();
 
 	const timeline: Array<[string, string]> = [
@@ -762,11 +766,13 @@ const RecoverDialog = ({
 	orders,
 	onClose,
 	notify,
+	currency,
 }: {
 	cart: Cart | null;
 	orders: Order[];
 	onClose: () => void;
 	notify: (feedback: Feedback) => void;
+	currency: string;
 }) => {
 	const ref = useRef<HTMLDialogElement>(null);
 	const [picked, setPicked] = useState('');
@@ -868,7 +874,7 @@ const RecoverDialog = ({
 							},
 							...orders.map((order) => ({
 								value: String(order.id),
-								label: orderLabel(order),
+								label: orderLabel(order, currency),
 							})),
 						]}
 					/>
@@ -1113,6 +1119,7 @@ export const Carts = () => {
 	const bulk = useBulkCarts();
 
 	const items = useMemo(() => data?.items ?? [], [data]);
+	const currency = data?.currency ?? '';
 
 	// A selection only makes sense for rows currently on screen, so prune it to
 	// the visible ids on every list change — filter/page/sort switch, or a
@@ -1479,6 +1486,7 @@ export const Carts = () => {
 												onSendEmail={setSendCart}
 												onView={setDetailCart}
 												notify={setFeedback}
+												currency={currency}
 											/>
 										))
 									)}
@@ -1503,6 +1511,7 @@ export const Carts = () => {
 			<RecoverDialog
 				cart={recoverCart}
 				orders={orders ?? []}
+				currency={currency}
 				onClose={() => {
 					setRecoverCart(null);
 				}}
@@ -1520,6 +1529,7 @@ export const Carts = () => {
 
 			<CartDetail
 				cart={detailCart}
+				currency={currency}
 				onClose={() => {
 					setDetailCart(null);
 				}}

@@ -746,7 +746,8 @@ Results are ordered by `last_activity DESC`. Success response:
 	"items": [{/* cart object, see below */}],
 	"total": 42,
 	"page": 1,
-	"per_page": 20
+	"per_page": 20,
+	"currency": "USD"
 }
 ```
 
