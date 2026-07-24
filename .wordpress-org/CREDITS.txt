@@ -1,35 +1,14 @@
-Cart Rebound — listing asset credits
-=====================================
+Cart Rebound listing asset credits
+==================================
 
-The shopping-cart glyph in icon.svg / banner.svg (and their rendered PNGs)
-is the "shopping-cart" (solid) icon from Heroicons (https://heroicons.com),
-by Tailwind Labs / Refactoring UI Inc., used under the MIT License. The
-badge, gradient, layout, wordmark and copy are original to this project.
+The cart-recovery mark, layout, wordmark, and copy in the current icon and
+banner assets are original to this project.
+
+The 3D commerce-recovery artwork in banner-art.png and icon-art.png was
+created for this project with OpenAI's built-in image-generation tool.
+icon-art.png is a purpose-built square recreation of the banner's chrome
+cart, parcels, and recovery ribbon; it is not a crop of banner-art.png. The
+user-provided reference image was used for general visual mood only.
 
 These assets are listing images for the wordpress.org directory page only;
 they are not part of the shipped plugin code.
-
-Heroicons — MIT License
------------------------
-
-MIT License
-
-Copyright (c) 2020 Refactoring UI Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
