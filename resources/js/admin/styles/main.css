@@ -312,9 +312,19 @@
 }
 
 /* ---- Form controls ---- */
-.cr-input,
-.cr-select {
+
+/*
+ * Element-qualified selectors intentionally outrank WordPress admin's global
+ * input[type="…"] rules, keeping text/number/email controls aligned with the
+ * Combobox trigger.
+ */
+input.cr-input,
+textarea.cr-input,
+select.cr-select {
+	box-sizing: border-box;
 	width: 100%;
+	height: auto;
+	min-height: 0;
 	padding: 8px 12px;
 	border: 1px solid var(--cr-border-strong);
 	border-radius: var(--cr-radius-sm);
@@ -328,33 +338,50 @@
 		box-shadow 140ms var(--cr-ease);
 }
 
-.cr-input:focus,
-.cr-select:focus {
+input.cr-input:hover:not(:disabled),
+textarea.cr-input:hover:not(:disabled),
+select.cr-select:hover:not(:disabled) {
+	border-color: var(--cr-accent);
+}
+
+input.cr-input:focus,
+textarea.cr-input:focus,
+select.cr-select:focus {
 	outline: none;
 	border-color: var(--cr-accent);
 	box-shadow: var(--cr-ring);
 }
 
-.cr-input::placeholder {
+input.cr-input::placeholder,
+textarea.cr-input::placeholder {
 	color: var(--cr-muted);
 }
 
-.cr-select {
+select.cr-select {
 	padding-right: 34px;
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23667085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 	background-position: right 11px center;
 }
 
-.cr-input.is-compact,
-.cr-select.is-compact {
+input.cr-input.is-compact,
+select.cr-select.is-compact {
 	width: auto;
+	padding: 6px 10px;
+	font-size: 13px;
 }
 
 textarea.cr-input {
 	min-height: 96px;
 	resize: vertical;
 	line-height: 1.6;
+}
+
+input.cr-input:disabled,
+textarea.cr-input:disabled,
+select.cr-select:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 
 /* ---- Toggle switch ---- */
