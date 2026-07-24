@@ -31,4 +31,19 @@
 	<text x="99" y="288" fill="#554c63" font-size="29" font-weight="500">
 		Recover abandoned WooCommerce carts.
 	</text>
+
+	<!-- Compact, scan-friendly feature list. -->
+	<g fill="#554c63" font-size="21" font-weight="600">
+		<circle cx="105" cy="343" r="7" fill="#8b5cc3" />
+		<text x="124" y="350">Guest Cart Capture</text>
+
+		<circle cx="419" cy="343" r="7" fill="#8b5cc3" />
+		<text x="438" y="350">Automated Recovery Emails</text>
+
+		<circle cx="105" cy="399" r="7" fill="#8b5cc3" />
+		<text x="124" y="406">Secure Recovery Links</text>
+
+		<circle cx="419" cy="399" r="7" fill="#8b5cc3" />
+		<text x="438" y="406">Exact Revenue Attribution</text>
+	</g>
 </svg>

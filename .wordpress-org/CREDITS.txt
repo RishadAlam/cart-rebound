@@ -10,5 +10,10 @@ icon-art.png is a purpose-built square recreation of the banner's chrome
 cart, parcels, and recovery ribbon; it is not a crop of banner-art.png. The
 user-provided reference image was used for general visual mood only.
 
+The animation keyframes in scripts/wordpress-org-assets/story/ were created
+with the same built-in image-generation tool as precise visual-state edits of
+banner-art.png. They preserve the cart and studio scene while showing the
+empty, products-added, message-sent, and purchase-confirmed states.
+
 These assets are listing images for the wordpress.org directory page only;
 they are not part of the shipped plugin code.
