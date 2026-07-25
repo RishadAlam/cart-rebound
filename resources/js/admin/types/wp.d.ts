@@ -10,6 +10,15 @@ declare global {
 		nonce: string;
 		// Route the WordPress submenu seeded into the hash router at load.
 		initialRoute?: string;
+		// The store's WooCommerce price display settings.
+		currency: {
+			code: string;
+			symbol: string;
+			position: 'left' | 'right' | 'left_space' | 'right_space';
+			decimalSeparator: string;
+			thousandSeparator: string;
+			decimals: number;
+		};
 		currentUser: {
 			id: number;
 			caps: string[];

@@ -44,6 +44,8 @@ export interface CartList {
 	total: number;
 	page: number;
 	per_page: number;
+	/** Store currency the listed totals are denominated in. */
+	currency: string;
 }
 
 export interface Stats {

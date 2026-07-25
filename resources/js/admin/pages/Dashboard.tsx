@@ -314,7 +314,7 @@ const RecentCarts = () => {
 										>
 											{formatMoney(
 												cart.cart_total,
-												cart.currency
+												data?.currency ?? ''
 											)}
 										</td>
 										<td>

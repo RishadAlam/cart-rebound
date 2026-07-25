@@ -104,7 +104,8 @@ final class CartRepository {
 	 *     @type string                    $orderby  Sort column (whitelisted).
 	 *     @type string                    $order    Sort direction (ASC|DESC).
 	 * }
-	 * @return array<string, mixed>
+	 * @return array<string, mixed> The page slice, the unfiltered total, and the
+	 *                              store currency the totals are denominated in.
 	 */
 	public function get_carts( array $args ): array {
 		$page     = max( 1, (int) ( $args['page'] ?? 1 ) );
@@ -129,6 +130,7 @@ final class CartRepository {
 			'total'    => $total,
 			'page'     => $page,
 			'per_page' => $per_page,
+			'currency' => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '',
 		);
 	}
 

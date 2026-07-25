@@ -493,21 +493,23 @@ The Carts view (`resources/js/admin/pages/Carts.tsx`) lists tracked carts via `G
 
 **Columns.** Each row renders:
 
-| Column        | Field           | Display                                                     |
-| ------------- | --------------- | ----------------------------------------------------------- |
-| Email         | `email`         | The email, or `—` when blank.                               |
-| Items         | `items_count`   | Number of line items.                                       |
-| Total         | `cart_total`    | Shown with two decimals (`toFixed(2)`); no currency symbol. |
-| Status        | `status`        | Rendered as a small badge.                                  |
-| Last activity | `last_activity` | Timestamp string from the row.                              |
-| Order         | `order_id`      | `#{order_id}` when linked to an order, otherwise `—`.       |
-| Actions       | —               | Row actions (see below).                                    |
+| Column        | Field           | Display                                                |
+| ------------- | --------------- | ------------------------------------------------------ |
+| Email         | `email`         | The email, or `—` when blank.                          |
+| Items         | `items_count`   | Number of line items.                                  |
+| Total         | `cart_total`    | Formatted with the store's WooCommerce price settings. |
+| Status        | `status`        | Rendered as a small badge.                             |
+| Last activity | `last_activity` | Timestamp string from the row.                         |
+| Order         | `order_id`      | `#{order_id}` when linked to an order, otherwise `—`.  |
+| Actions       | —               | Row actions (see below).                               |
 
-**Ordering & pagination.** Results are ordered by `last_activity` descending. The UI requests `per_page: 20` (the `PER_PAGE` constant); the API defaults to 20 and caps `per_page` at 100. Pagination uses **Previous** / **Next** buttons with a `Page X of Y` indicator, where the total page count is `ceil(total / per_page)`. Previous is disabled on page 1 and Next is disabled on the last page. When a page has no rows, the view shows `No carts found.` The list shows `Loading…` while fetching and `Could not load carts.` on error.
+**Ordering & pagination.** Results are ordered by `last_activity` descending. Every paginated table opens at `DEFAULT_PER_PAGE` (20) and shares the **Rows per page** selector with options for 10, 20, 30, 50, or 100 rows; changing it resets the table to page 1. The API defaults to 20 when no value is supplied and caps `per_page` at 100. Pagination uses **Previous** / **Next** buttons with a `Page X of Y` indicator, where the total page count is `ceil(total / per_page)`. Previous is disabled on page 1 and Next is disabled on the last page. When a page has no rows, the view shows `No carts found.` The list shows `Loading…` while fetching and `Could not load carts.` on error.
 
 ### Row actions
 
-Each cart row offers two actions:
+Each cart row offers four icon actions:
+
+**View details.** The eye button opens the cart-detail dialog with the captured customer identity, line items, totals, coupons, linked order, and lifecycle timeline. Clicking the cart ID provides the same shortcut.
 
 **Mark recovered.** Enter an order ID into the numeric input (minimum `1`) and click **Mark recovered**. The component parses the input with `parseInt` and only sends the request when the value is greater than `0`. It calls `POST carts/{id}/mark-recovered` with the body `{ id, order_id }`. The request is validated by `MarkRecoveredRequest`, whose rules require both fields:
 
@@ -737,14 +739,15 @@ Query params:
 | `page`     | int             | 1-based; clamped to a minimum of 1.                                                                                                                             |
 | `per_page` | int             | Default 20, capped at 100.                                                                                                                                      |
 
-Results are ordered by `last_activity DESC`. Success response:
+Results are ordered by `last_activity DESC`. The `currency` field is the store currency (`get_woocommerce_currency()`) the listed totals are denominated in. Success response:
 
 ```json
 {
 	"items": [{/* cart object, see below */}],
 	"total": 42,
 	"page": 1,
-	"per_page": 20
+	"per_page": 20,
+	"currency": "USD"
 }
 ```
 
