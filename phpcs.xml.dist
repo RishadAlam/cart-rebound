@@ -20,6 +20,7 @@
 	<!-- Dev-only tooling configs run on the local PHP CLI, not inside WordPress. -->
 	<exclude-pattern>*/rector.php</exclude-pattern>
 	<exclude-pattern>*.php-cs-fixer.dist.php</exclude-pattern>
+	<exclude-pattern>*/scripts/bump-version.php</exclude-pattern>
 
 	<!-- Project compatibility targets. -->
 	<config name="minimum_wp_version" value="6.2"/>

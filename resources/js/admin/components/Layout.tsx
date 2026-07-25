@@ -44,7 +44,7 @@ export const Layout = () => {
 				</h1>
 				<p className="cr-header__subtitle">
 					{__(
-						'Recover abandoned WooCommerce carts with tokenized links and automated emails — and track the revenue you win back.',
+						'Recover more WooCommerce sales with automated emails, secure recovery links, and clear revenue tracking.',
 						'cart-rebound'
 					)}
 				</p>

@@ -56,7 +56,9 @@ RUNTIME_PATHS=(
 )
 
 for runtime_path in "${RUNTIME_PATHS[@]}"; do
-	rsync -a --relative --exclude='.gitkeep' \
+	rsync -a --relative --prune-empty-dirs \
+		--exclude='.gitkeep' \
+		--exclude='.DS_Store' \
 		"./${runtime_path}" "${STAGE}/"
 done
 

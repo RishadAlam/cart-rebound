@@ -72,26 +72,112 @@ REST (namespace `cart-rebound/v1`, capability `manage_woocommerce`, nonce-protec
 
 Built on a Laravel-style, container-driven OOP framework (service providers, REST routing with middleware, form requests, a query builder, dbDelta migrations) with a React + TypeScript + Vite admin.
 
-Development and release builds require Node.js 24+ and pnpm 11.5.0.
+### Prerequisites
+
+- A local WordPress 6.2+ installation with WP-CLI available
+- PHP 7.4+ and Composer (`phpdbg` is needed only for coverage)
+- Node.js 24+ and pnpm 11.5.0
+- This repository installed or linked at
+  `wp-content/plugins/cart-rebound`
 
 The complete, human-readable source is maintained in this public repository. Production archives contain compiled assets; their uncompressed TypeScript, React, and CSS sources are under [`resources/`](resources/).
 
+After cloning the repository into `wp-content/plugins/cart-rebound`, run the
+complete development setup:
+
 ```bash
-composer install && pnpm install
+composer setup
+```
+
+This invokes [`scripts/setup-development.sh`](scripts/setup-development.sh).
+The script may also be run directly with
+`bash scripts/setup-development.sh`.
+
+The command:
+
+1. Installs the PHP and locked pnpm dependencies.
+2. Builds the admin assets.
+3. Enables WordPress debug logging, sets the environment to `local`, and opts
+   Cart Rebound into HMR.
+4. Installs WooCommerce when missing and activates it.
+5. Activates Cart Rebound and runs its database migrations.
+
+It assumes the standard plugin path shown above, so the WordPress root resolves
+to `../../..`. After setup, run `pnpm dev` whenever you want the long-running
+Vite HMR server.
+
+The dependency and build steps can also be run individually:
+
+```bash
+composer install
+pnpm install --frozen-lockfile
+pnpm build
+
 composer qa        # phpcs (WP-Extra), PHPStan L8, PHP 7.4 compat, Rector, PHPUnit
+composer test:coverage # PHPUnit HTML report → coverage/
 pnpm qa            # tsc strict, prettier, eslint, stylelint
 pnpm dev           # live Vite source assets + HMR on the plugin admin pages
-pnpm build         # compile the admin app
 bash scripts/build-zip.sh   # build assets/POT → build/cart-rebound.zip
 ```
 
-Local HMR is deliberately opt-in. Set `WP_DEBUG` to `true`, set
-`WP_ENVIRONMENT_TYPE` to `local` or `development`, and define
-`CART_REBOUND_ENABLE_HMR` as `true` in `wp-config.php`. While `pnpm dev` is
-running, Vite writes `public/hot` and WordPress loads `@vite/client` plus
-`resources/js/admin/main.tsx` strictly from `http://localhost:5173`. Stopping
-Vite removes the marker and the plugin automatically falls back to the hashed
-assets in `public/build`. Production environments ignore the marker.
+Dependency cleanup and fresh installation are kept separate for each package
+manager:
+
+```bash
+pnpm run clean         # remove node_modules and the project-local pnpm store
+pnpm install           # install from pnpm-lock.yaml
+pnpm run fresh-install # clean pnpm dependencies, then install them
+
+composer clean         # remove vendor and composer.lock
+composer install       # install from composer.lock
+composer fresh-install # clean, resolve dependencies, and generate a new lockfile
+```
+
+### Local development with HMR
+
+HMR means **Hot Module Replacement**: while `pnpm dev` is running, React,
+TypeScript, and CSS changes appear on Cart Rebound admin pages without a full
+page reload whenever Vite can replace the changed module.
+
+HMR is deliberately opt-in. Add the following to the local WordPress
+`wp-config.php` before it loads `wp-settings.php`. If `WP_DEBUG` is already
+defined, update the existing declaration instead of defining it twice.
+
+```php
+define( 'WP_DEBUG', true );
+define( 'WP_ENVIRONMENT_TYPE', 'local' );
+define( 'CART_REBOUND_ENABLE_HMR', true );
+```
+
+`WP_ENVIRONMENT_TYPE` may also be set to `development`. Then start Vite from
+the plugin root and keep that process running:
+
+```bash
+pnpm dev
+```
+
+Vite listens on the fixed origin `http://localhost:5173`, writes its origin to
+`public/hot`, and WordPress loads `@vite/client` plus
+`resources/js/admin/main.tsx` from that server. Because the development origin
+uses HTTP, access the local WordPress site over HTTP as well; an HTTPS admin
+page will block the scripts as mixed content.
+
+A normal Vite shutdown removes `public/hot`. If Vite was terminated abruptly
+and the admin app tries to load from an unavailable development server, restart
+`pnpm dev` or run `pnpm build` to remove the stale marker and regenerate the
+compiled assets.
+
+### Development without HMR
+
+Leave `CART_REBOUND_ENABLE_HMR` undefined or set it to `false`, then compile the
+admin app whenever its source changes:
+
+```bash
+pnpm build
+```
+
+WordPress will load the hashed assets in `public/build`. Production
+environments always use compiled assets and ignore `public/hot`.
 
 The archive command also requires WP-CLI with `wp i18n make-pot` available. `pnpm production-zip` runs the full PHP and JavaScript quality gates and writes the submission archive to `build/cart-rebound.zip`.
 
@@ -129,15 +215,21 @@ test the preview and enable public previews from the plugin's Advanced View.
 
 For each release:
 
-1. Update the version in `package.json`, `composer.json`, the plugin header and
-   `CART_REBOUND_VERSION` in `cart-rebound.php`, and `Stable tag` plus the
-   changelog in `readme.txt`.
+1. Run `composer bump-version X.Y.Z`. This synchronizes `package.json`,
+   `composer.json`, the plugin header, `CART_REBOUND_VERSION`, and the
+   `readme.txt` Stable tag, then refreshes `composer.lock`. Add the matching
+   `= X.Y.Z =` changelog entry in `readme.txt`; the command deliberately does
+   not invent release notes. Preview the changes with
+   `composer bump-version -- X.Y.Z --dry-run`.
 2. Run `bash scripts/check-release-version.sh X.Y.Z` and
    `pnpm production-zip`.
 3. Commit and push the release to `main`. On GitHub, create a release with a
    `X.Y.Z` tag targeting that exact commit, then publish the release. A leading
    `v` is also accepted, but the unprefixed tag matches the WordPress.org SVN
    version directly.
+
+The production build regenerates the POT metadata from the plugin header, so
+the translation template does not need manual version maintenance.
 
 Publishing a stable GitHub release starts `.github/workflows/release.yml`.
 Drafts and prereleases do not deploy. Deployment stops before SVN is changed if

@@ -10,7 +10,7 @@ parameters:
 		- src
 	excludePaths:
 		- vendor
-		- node_modules
+		- node_modules (?)
 		- tests
 	scanFiles:
 		- vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
