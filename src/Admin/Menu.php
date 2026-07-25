@@ -118,6 +118,41 @@ final class Menu {
 				$this->page_hooks[ $sub_hook ] = $meta[1];
 			}
 		}
+
+		/*
+		 * WooCommerce's own menu_order filter pins Products immediately after
+		 * WooCommerce, regardless of numeric menu positions. Run later and
+		 * place Cart Rebound in that exact slot.
+		 */
+		add_filter( 'menu_order', array( $this, 'place_after_woocommerce' ), 20 );
+	}
+
+	/**
+	 * Place Cart Rebound immediately below WooCommerce in the admin menu.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<int, string> $menu_order Current top-level menu slug order.
+	 * @return array<int, string>
+	 */
+	public function place_after_woocommerce( array $menu_order ): array {
+		$cart_index        = array_search( self::SLUG, $menu_order, true );
+		$woocommerce_index = array_search( 'woocommerce', $menu_order, true );
+
+		if ( false === $cart_index || false === $woocommerce_index ) {
+			return $menu_order;
+		}
+
+		unset( $menu_order[ $cart_index ] );
+		$menu_order = array_values( $menu_order );
+
+		if ( $cart_index < $woocommerce_index ) {
+			--$woocommerce_index;
+		}
+
+		array_splice( $menu_order, $woocommerce_index + 1, 0, array( self::SLUG ) );
+
+		return $menu_order;
 	}
 
 	/**
