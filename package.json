@@ -1,6 +1,6 @@
 {
 	"name": "cart-rebound",
-	"version": "0.2.0",
+	"version": "1.0.0",
 	"description": "Tracks abandoned WooCommerce carts and helps recover them with email reminders and secure recovery links.",
 	"license": "GPL-2.0-or-later",
 	"private": true,

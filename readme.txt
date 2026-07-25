@@ -4,7 +4,7 @@ Tags: woocommerce, abandoned cart, cart abandonment, cart recovery, recovery ema
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -401,13 +401,44 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 
 == Changelog ==
 
-= 0.2.0 =
-* Added richer revenue and product reporting, stronger cart-to-order lifecycle attribution, an improved onboarding and admin experience, and refined recovery email and unsubscribe flows.
+= 1.0.0 =
+
+**Release date:** 2026-07-26
+
+**Added**
+
+* Added pending-payment tracking and clear active, abandoned, recovered, completed, and lost cart lifecycle states.
+* Added configurable WooCommerce order statuses that determine when a cart counts as recovered.
+* Added confirmation-based unsubscribe and persistent suppression for shoppers who opt out of recovery emails.
+* Added recovery email test sends with sample customer, product, coupon, and recovery-link data.
+* Added a first-run wizard for guest tracking, abandonment timing, and recovery email setup.
+* Added complete cart details, linked orders, status history, cart IDs, lifecycle guidance, and explicit view actions.
+* Added recoverable revenue, 7-day, 30-day, and 90-day trends, recent activity, and product-level abandonment and recovery reports.
+* Added optional administrator notifications when an abandoned cart becomes a paid order.
+
+**Improved**
+
+* Improved cart and activity tables with configurable page sizes and HPOS-aware WooCommerce order links.
+* Redesigned the dashboard, cart details, email template preview, unsubscribe screen, settings, and data-dense administration layouts.
+
+**Fixed**
+
+* Formatted monetary values using the store's WooCommerce currency symbol, position, decimal, and thousands-separator settings.
+* Prevented checkout events from clearing tracked cart contents prematurely or leaving completed carts active.
+* Kept recovery status and recovered revenue accurate after linked orders are cancelled, failed, or refunded.
+* Corrected admin form alignment and positioned the Cart Rebound menu directly below WooCommerce.
+
+**Security**
+
+* Sanitized recovery-email unsubscribe request values before processing.
 
 = 0.1.0 =
-* Initial release with registered and guest cart tracking, classic and block checkout support, configurable abandonment detection, secure recovery links, recovered-revenue attribution, recovery email templates, activity logs, developer events, a REST API, privacy tools, and an admin dashboard.
 
-== Upgrade Notice ==
+**Release date:** 2026-07-22
 
-= 0.2.0 =
-Adds expanded reporting and improves the cart recovery lifecycle and administration experience.
+**Initial release**
+
+* Launched registered-customer and optional guest cart tracking for classic checkout and the WooCommerce Checkout Block.
+* Added configurable abandonment detection, recovery email templates, manual reminders, and secure one-click cart restoration.
+* Added explicit recovered-order attribution, recovered revenue reporting, an administration dashboard, and a filterable activity log.
+* Added HPOS compatibility, privacy tools, protected REST endpoints, and WordPress actions for custom recovery workflows.
