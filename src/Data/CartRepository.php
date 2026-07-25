@@ -58,7 +58,7 @@ final class CartRepository {
 	 * @since 0.1.0
 	 * @var string|null
 	 */
-	private $order_url_base = null;
+	private $order_url_base;
 
 	/**
 	 * Event dispatcher.
