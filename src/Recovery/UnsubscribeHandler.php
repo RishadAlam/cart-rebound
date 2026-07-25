@@ -148,8 +148,12 @@ final class UnsubscribeHandler {
 	 */
 	private function input( string $key ): string {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.NonceVerification.Missing -- authenticated by the unguessable recovery token, not a nonce (the shopper is logged out); only an explicit POST suppresses, so a scanner GET cannot act.
-		$raw = $_POST[ $key ] ?? ( $_GET[ $key ] ?? '' );
+		if ( isset( $_POST[ $key ] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- see the authentication rationale above.
+			return sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+		}
 
-		return is_string( $raw ) ? sanitize_text_field( wp_unslash( $raw ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- see the authentication rationale above.
+		return isset( $_GET[ $key ] ) ? sanitize_text_field( wp_unslash( $_GET[ $key ] ) ) : '';
 	}
 }
