@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/lockup-inverse.svg">
+  <img src="assets/brand/lockup.svg" alt="Cart Rebound" height="56">
+</picture>
+
 # Cart Rebound — WooCommerce Abandoned Cart Recovery
 
 > Recover abandoned WooCommerce carts with secure links, optional emails, configurable tracking, and accurate revenue attribution.
@@ -12,6 +17,8 @@
 ## Documentation
 
 📖 **[Full usage & developer guide → `docs/USAGE.md`](docs/USAGE.md)** — step-by-step installation, every setting, how tracking & recovery work end to end, the admin dashboard, and the events + REST API reference.
+
+🎨 **[Brand & logo system → `docs/BRAND.md`](docs/BRAND.md)** — the mark, the palette, and how every icon, lockup and listing asset is generated from a single source file.
 
 ## Features
 

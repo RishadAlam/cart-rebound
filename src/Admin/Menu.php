@@ -64,6 +64,47 @@ final class Menu {
 	}
 
 	/**
+	 * The brand mark, as the data URI add_menu_page() expects.
+	 *
+	 * WordPress serves a data-URI menu icon as a background image and never
+	 * recolours it — core only swaps opacity (0.6 idle, 1 on hover and on the
+	 * current item). The asset is therefore authored white, which lands on
+	 * exactly the idle grey core expects and brightens correctly when active.
+	 *
+	 * Falls back to the generic cart dashicon if the asset is missing, so a
+	 * partial deploy degrades to a working menu rather than a broken image.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string Data URI, or a dashicon name.
+	 */
+	private static function menu_icon(): string {
+		static $icon = null;
+
+		if ( null !== $icon ) {
+			return $icon;
+		}
+
+		$path = defined( 'CART_REBOUND_PATH' )
+			? CART_REBOUND_PATH . 'assets/brand/menu-icon.svg'
+			: '';
+
+		// A bundled file on local disk, never a remote URL, so wp_remote_get()
+		// does not apply here.
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$svg = '' !== $path && is_readable( $path ) ? file_get_contents( $path ) : false;
+
+		// Not obfuscation: add_menu_page() only accepts an SVG icon as a
+		// base64 data URI, which is the format core itself documents.
+		$icon = is_string( $svg ) && '' !== $svg
+			// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+			? 'data:image/svg+xml;base64,' . base64_encode( $svg )
+			: 'dashicons-cart';
+
+		return $icon;
+	}
+
+	/**
 	 * Register the admin menu page.
 	 *
 	 * @since 0.1.0
@@ -79,7 +120,7 @@ final class Menu {
 			$capability,
 			self::SLUG,
 			array( $this->dashboard, 'render' ),
-			'dashicons-cart',
+			self::menu_icon(),
 			58
 		);
 
