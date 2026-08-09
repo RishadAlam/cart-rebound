@@ -11,6 +11,7 @@ namespace CartRebound\Mail;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Followup\Step;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
 use CartRebound\Recovery\RecoveryLink;
@@ -19,10 +20,14 @@ use WC_Order;
 use WP_Error;
 
 /**
- * Sends the optional single recovery email, scheduled a delay after abandonment.
+ * Renders and delivers recovery email.
  *
- * Skips carts that already converted or were already emailed; restores the
- * wp_mail content type after sending so it never leaks to other mail.
+ * This is the only place the plugin talks to wp_mail: it owns the HTML shell,
+ * the From header, the content-type swap, and the failure capture. Everything
+ * that sends — the scheduled follow-up pipeline, the admin's on-demand send,
+ * the test send, and an add-on's own message — goes through {@see deliver()},
+ * so none of them can drift from the others or leak the HTML content type into
+ * unrelated site mail.
  *
  * @since 0.1.0
  */
@@ -135,13 +140,106 @@ final class RecoveryMailer {
 			 * Fires after a recovery email is sent (drives the activity log).
 			 *
 			 * @since 0.1.0
+			 * @since 1.1.0 Added the `$step` parameter.
 			 *
 			 * @param int                  $cart_id  The cart id.
 			 * @param array<string, mixed> $row      The cart row.
 			 * @param array<string, mixed> $template The template that was sent.
+			 * @param Step|null            $step     The follow-up step, or null for a send outside the plan.
 			 */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template, null );
 		}
+	}
+
+	/**
+	 * Send one step of a cart's follow-up plan.
+	 *
+	 * The eligibility guards deliberately live in {@see \CartRebound\Followup\Runner},
+	 * which has already decided this cart still deserves mail and has claimed
+	 * this exact step. This method renders and delivers, nothing more.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array<string, mixed> $row  The cart row.
+	 * @param Step                 $step The step to send.
+	 * @return bool True when the message was handed to wp_mail successfully.
+	 */
+	public function send_step( array $row, Step $step ): bool {
+		$cart_id  = (int) ( $row['id'] ?? 0 );
+		$email    = (string) ( $row['email'] ?? '' );
+		$template = $this->resolve_template( $step->template_id() );
+		$context  = $this->context( $row, $template, $step );
+		$rendered = $this->render( $row, $template, $context );
+		$sent     = $this->deliver( $email, $rendered['subject'], $rendered['html'], $template );
+
+		if ( ! $sent ) {
+			return false;
+		}
+
+		CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+
+		/** This action is documented in src/Mail/RecoveryMailer.php */
+		do_action( 'cart_rebound_email_sent', $cart_id, $row, $template, $step );
+
+		return true;
+	}
+
+	/**
+	 * Render a template against a cart row.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array<string, mixed> $row      The cart row.
+	 * @param array<string, mixed> $template The template to render.
+	 * @param array<string, mixed> $context  Render context passed to the token/HTML filters.
+	 * @return array{subject: string, html: string}
+	 */
+	public function render( array $row, array $template, array $context = array() ): array {
+		if ( array() === $context ) {
+			$context = $this->context( $row, $template, null );
+		}
+
+		$tokens = $this->text_tokens( $row, $template, $context );
+
+		return array(
+			'subject' => $this->subject( $template, $tokens ),
+			'html'    => $this->build_body( $row, $template, $tokens, $context ),
+		);
+	}
+
+	/**
+	 * Hand an already-rendered message to wp_mail.
+	 *
+	 * Forces the HTML content type and captures the transport's error for the
+	 * duration of this send only, then restores both — so a failure here is
+	 * reportable and cannot leak into unrelated site mail.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param string               $email    Recipient address.
+	 * @param string               $subject  Rendered subject.
+	 * @param string               $html     Rendered HTML body.
+	 * @param array<string, mixed> $template Template supplying the From header.
+	 * @return bool
+	 */
+	public function deliver( string $email, string $subject, string $html, array $template = array() ): bool {
+		$this->last_error = __( 'WordPress could not send the email. Check the site SMTP or mail transport configuration and try again.', 'cart-rebound' );
+
+		add_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
+		add_action( 'wp_mail_failed', array( $this, 'capture_mail_error' ) );
+
+		try {
+			$sent = wp_mail( $email, $subject, $html, $this->headers( $template ) );
+		} finally {
+			remove_action( 'wp_mail_failed', array( $this, 'capture_mail_error' ) );
+			remove_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
+		}
+
+		if ( $sent ) {
+			$this->last_error = '';
+		}
+
+		return $sent;
 	}
 
 	/**
@@ -260,15 +358,14 @@ final class RecoveryMailer {
 			return $this->fail( __( 'This address has unsubscribed from recovery emails.', 'cart-rebound' ) );
 		}
 
-		$chosen   = '' !== $template_id ? $this->templates->get( $template_id ) : null;
-		$template = is_array( $chosen ) ? $chosen : $this->templates->default();
+		$template = $this->resolve_template( $template_id );
 		$sent     = $this->dispatch( $email, $row, $template );
 
 		if ( $sent ) {
 			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
 
 			/** This action is documented in src/Mail/RecoveryMailer.php */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template, null );
 		}
 
 		return $sent;
@@ -344,11 +441,40 @@ final class RecoveryMailer {
 	 * @return array{subject: string, html: string}
 	 */
 	public function preview( array $template ): array {
-		$row = $this->sample_row();
+		return $this->render( $this->sample_row(), $template );
+	}
 
+	/**
+	 * Resolve a template id to a template, falling back to the default.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param string $template_id Template id, or '' for the default.
+	 * @return array<string, mixed>
+	 */
+	private function resolve_template( string $template_id ): array {
+		$chosen = '' !== $template_id ? $this->templates->get( $template_id ) : null;
+
+		return is_array( $chosen ) ? $chosen : $this->templates->default();
+	}
+
+	/**
+	 * Build the render context handed to the token and HTML filters.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array<string, mixed> $row      The cart row.
+	 * @param array<string, mixed> $template The template being rendered.
+	 * @param Step|null            $step     The follow-up step, when one drove this send.
+	 * @return array<string, mixed>
+	 */
+	private function context( array $row, array $template, ?Step $step ): array {
 		return array(
-			'subject' => $this->subject( $template, $row ),
-			'html'    => $this->build_body( $row, $template ),
+			'cart_id'     => (int) ( $row['id'] ?? 0 ),
+			'step'        => $step,
+			'step_index'  => null !== $step ? $step->index() : -1,
+			'template_id' => (string) ( $template['id'] ?? '' ),
+			'row'         => $row,
 		);
 	}
 
@@ -379,20 +505,93 @@ final class RecoveryMailer {
 	}
 
 	/**
+	 * Collect the plain-text tokens a message can substitute.
+	 *
+	 * These are text, not markup: they are inserted raw into the subject and
+	 * escaped into the body. An add-on adding a token here — a coupon code, an
+	 * expiry countdown — therefore cannot inject markup into the email, whether
+	 * or not it remembered to escape.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array<string, mixed> $row      The cart row.
+	 * @param array<string, mixed> $template The template being rendered.
+	 * @param array<string, mixed> $context  Render context.
+	 * @return array<string, string>
+	 */
+	private function text_tokens( array $row, array $template, array $context ): array {
+		$tokens = array(
+			'first_name'  => (string) ( $row['first_name'] ?? '' ),
+			'last_name'   => (string) ( $row['last_name'] ?? '' ),
+			'coupon_code' => (string) ( $template['coupon'] ?? '' ),
+		);
+
+		/**
+		 * Filter the plain-text tokens available to a recovery email.
+		 *
+		 * Keys are token names without braces, so `coupon_expiry` is written
+		 * `{coupon_expiry}` in a template. Values are treated as text: they go
+		 * into the subject as-is and are escaped into the HTML body, so markup
+		 * in a value is shown, never rendered. Use the `cart_rebound_email_html`
+		 * filter for anything that has to be markup.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @param array<string, string> $tokens  Token name => value.
+		 * @param array<string, mixed>  $context Render context: cart_id, step, step_index, template_id, row.
+		 */
+		$filtered = apply_filters( 'cart_rebound_email_tokens', $tokens, $context );
+
+		if ( ! is_array( $filtered ) ) {
+			return $tokens;
+		}
+
+		$clean = array();
+
+		foreach ( $filtered as $name => $value ) {
+			$key = sanitize_key( (string) $name );
+
+			if ( '' !== $key && is_scalar( $value ) ) {
+				$clean[ $key ] = (string) $value;
+			}
+		}
+
+		return $clean;
+	}
+
+	/**
 	 * Build the token-substituted subject line.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $template The email template.
-	 * @param array<string, mixed> $row      The cart row.
+	 * @param array<string, mixed>  $template The email template.
+	 * @param array<string, string> $tokens   Plain-text tokens.
 	 * @return string
 	 */
-	private function subject( array $template, array $row ): string {
-		return str_replace(
-			array( '{first_name}', '{coupon_code}' ),
-			array( (string) ( $row['first_name'] ?? '' ), (string) ( $template['coupon'] ?? '' ) ),
-			(string) ( $template['subject'] ?? '' )
-		);
+	private function subject( array $template, array $tokens ): string {
+		return $this->substitute( (string) ( $template['subject'] ?? '' ), $tokens, false );
+	}
+
+	/**
+	 * Replace `{token}` placeholders in a string.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param string                $subject The string to substitute into.
+	 * @param array<string, string> $tokens  Token name => value.
+	 * @param bool                  $escape  Whether values are HTML-escaped.
+	 * @return string
+	 */
+	private function substitute( string $subject, array $tokens, bool $escape ): string {
+		$search  = array();
+		$replace = array();
+
+		foreach ( $tokens as $name => $value ) {
+			$search[]  = '{' . $name . '}';
+			$replace[] = $escape ? esc_html( $value ) : $value;
+		}
+
+		return str_replace( $search, $replace, $subject );
 	}
 
 	/**
@@ -406,26 +605,9 @@ final class RecoveryMailer {
 	 * @return bool
 	 */
 	private function dispatch( string $email, array $row, array $template ): bool {
-		$subject = $this->subject( $template, $row );
-		$body    = $this->build_body( $row, $template );
-		$headers = $this->headers( $template );
+		$rendered = $this->render( $row, $template );
 
-		$this->last_error = __( 'WordPress could not send the email. Check the site SMTP or mail transport configuration and try again.', 'cart-rebound' );
-		add_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
-		add_action( 'wp_mail_failed', array( $this, 'capture_mail_error' ) );
-
-		try {
-			$sent = wp_mail( $email, $subject, $body, $headers );
-		} finally {
-			remove_action( 'wp_mail_failed', array( $this, 'capture_mail_error' ) );
-			remove_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
-		}
-
-		if ( $sent ) {
-			$this->last_error = '';
-		}
-
-		return $sent;
+		return $this->deliver( $email, $rendered['subject'], $rendered['html'], $template );
 	}
 
 	/**
@@ -447,35 +629,54 @@ final class RecoveryMailer {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row      Cart row.
-	 * @param array<string, mixed> $template The email template to render.
+	 * @param array<string, mixed>  $row      Cart row.
+	 * @param array<string, mixed>  $template The email template to render.
+	 * @param array<string, string> $tokens   Plain-text tokens (escaped on substitution).
+	 * @param array<string, mixed>  $context  Render context.
 	 * @return string
 	 */
-	private function build_body( array $row, array $template ): string {
+	private function build_body( array $row, array $template, array $tokens, array $context ): string {
 		$token           = (string) ( $row['recovery_token'] ?? '' );
 		$recovery_url    = $this->links->url( $token );
 		$unsubscribe_url = $this->links->unsubscribe_url( $token );
-		$first_name      = (string) ( $row['first_name'] ?? '' );
-		$coupon_code     = (string) ( $template['coupon'] ?? '' );
-		$products_html   = $this->products_html( $row );
 
+		// Markup tokens are escaped for their own context here; the text tokens
+		// are escaped generically by substitute().
 		$content = str_replace(
-			array( '{first_name}', '{products}', '{recovery_url}', '{coupon_code}', '{unsubscribe_url}' ),
-			array( esc_html( $first_name ), $products_html, esc_url( $recovery_url ), esc_html( $coupon_code ), esc_url( $unsubscribe_url ) ),
+			array( '{products}', '{recovery_url}', '{unsubscribe_url}' ),
+			array( $this->products_html( $row ), esc_url( $recovery_url ), esc_url( $unsubscribe_url ) ),
 			(string) ( $template['body'] ?? '' )
 		);
+
+		$content = $this->substitute( $content, $tokens, true );
 
 		$template_path = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/recovery.php' : '';
 
 		if ( '' === $template_path || ! is_readable( $template_path ) ) {
-			return wpautop( $content );
+			$html = wpautop( $content );
+		} else {
+			ob_start();
+			require $template_path;
+			$rendered = ob_get_clean();
+			$html     = is_string( $rendered ) ? $rendered : wpautop( $content );
 		}
 
-		ob_start();
-		require $template_path;
-		$html = ob_get_clean();
+		/**
+		 * Filter the fully rendered HTML of a recovery email.
+		 *
+		 * Runs last, on the complete document, which is what a tracking pixel or
+		 * a link rewriter needs. Unlike `cart_rebound_email_tokens` the value
+		 * here is markup and is inserted verbatim, so a callback is responsible
+		 * for escaping whatever it injects.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @param string               $html    The rendered message.
+		 * @param array<string, mixed> $context Render context: cart_id, step, step_index, template_id, row.
+		 */
+		$filtered = apply_filters( 'cart_rebound_email_html', $html, $context );
 
-		return is_string( $html ) ? $html : wpautop( $content );
+		return is_string( $filtered ) ? $filtered : $html;
 	}
 
 	/**

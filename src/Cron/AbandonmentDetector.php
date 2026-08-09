@@ -12,7 +12,7 @@ namespace CartRebound\Cron;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Events\EventDispatcher;
-use CartRebound\Mail\RecoveryMailer;
+use CartRebound\Followup\Runner;
 use CartRebound\Models\CartSession;
 use CartRebound\Support\Settings;
 
@@ -49,6 +49,28 @@ final class AbandonmentDetector {
 	private const MAX_PER_RUN = 500;
 
 	/**
+	 * A row this pass transitioned to abandoned.
+	 *
+	 * @var string
+	 */
+	private const OUTCOME_ABANDONED = 'abandoned';
+
+	/**
+	 * A row an extension excluded; it stays active and stays selectable.
+	 *
+	 * @var string
+	 */
+	private const OUTCOME_SKIPPED = 'skipped';
+
+	/**
+	 * A row that stopped matching between the read and the write — the shopper
+	 * came back, it converted, or it emptied. It has left the candidate set.
+	 *
+	 * @var string
+	 */
+	private const OUTCOME_GONE = 'gone';
+
+	/**
 	 * Settings store.
 	 *
 	 * @since 0.1.0
@@ -65,12 +87,12 @@ final class AbandonmentDetector {
 	private $events;
 
 	/**
-	 * Scheduler for follow-up emails.
+	 * Follow-up plan runner.
 	 *
-	 * @since 0.1.0
-	 * @var Scheduler
+	 * @since 1.1.0
+	 * @var Runner
 	 */
-	private $scheduler;
+	private $followups;
 
 	/**
 	 * Constructor.
@@ -79,12 +101,12 @@ final class AbandonmentDetector {
 	 *
 	 * @param Settings        $settings  Settings store.
 	 * @param EventDispatcher $events    Event dispatcher.
-	 * @param Scheduler       $scheduler Scheduler for follow-up emails.
+	 * @param Runner          $followups Follow-up plan runner.
 	 */
-	public function __construct( Settings $settings, EventDispatcher $events, Scheduler $scheduler ) {
+	public function __construct( Settings $settings, EventDispatcher $events, Runner $followups ) {
 		$this->settings  = $settings;
 		$this->events    = $events;
-		$this->scheduler = $scheduler;
+		$this->followups = $followups;
 	}
 
 	/**
@@ -99,6 +121,18 @@ final class AbandonmentDetector {
 		$cutoff    = gmdate( 'Y-m-d H:i:s', time() - ( $threshold * MINUTE_IN_SECONDS ) );
 		$processed = 0;
 
+		/*
+		 * A transitioned or vanished row drops out of the candidate query, so the
+		 * next page naturally starts where this one ended. A row an extension
+		 * excluded does not: nothing about it changed, so it would be re-read on
+		 * every page forever and a full batch of them would starve every eligible
+		 * cart queued behind it. Stepping the offset past exactly those rows —
+		 * and only those — is what keeps the scan moving. Because the query is
+		 * ordered oldest-first, the skipped survivors are always the leading rows
+		 * of the next page, so the offset lands on them precisely.
+		 */
+		$skipped = 0;
+
 		do {
 			$rows = CartSession::query()
 				->where( 'status', '=', CartSession::STATUS_ACTIVE )
@@ -108,12 +142,16 @@ final class AbandonmentDetector {
 				->where( 'last_activity', '<', $cutoff )
 				->order_by( 'last_activity', 'ASC' )
 				->limit( self::BATCH )
+				->offset( $skipped )
 				->get();
 
 			$fetched = count( $rows );
 
 			foreach ( $rows as $row ) {
-				$this->abandon_if_still_idle( $row, $cutoff );
+				if ( self::OUTCOME_SKIPPED === $this->abandon_if_still_idle( $row, $cutoff ) ) {
+					++$skipped;
+				}
+
 				++$processed;
 
 				if ( $processed >= self::MAX_PER_RUN ) {
@@ -166,23 +204,48 @@ final class AbandonmentDetector {
 	 *
 	 * @param array<string, mixed> $row    The candidate cart row (as read).
 	 * @param string               $cutoff The idle cutoff timestamp for this run.
-	 * @return void
+	 * @return string One of the OUTCOME_* constants.
 	 */
-	private function abandon_if_still_idle( array $row, string $cutoff ): void {
+	private function abandon_if_still_idle( array $row, string $cutoff ): string {
 		$id = (int) ( $row['id'] ?? 0 );
+
+		/**
+		 * Filter whether an idle cart should enter the recovery funnel.
+		 *
+		 * Runs before the row is flipped, so returning false leaves the cart
+		 * `active`: it is never abandoned, no event fires, and no follow-up is
+		 * planned. This is where trigger rules belong — a minimum cart value, an
+		 * excluded role, a product that should not be chased.
+		 *
+		 * The decision must be stable for a given cart. The scan pages past the
+		 * carts this filter excludes, so a callback that answers differently on
+		 * each call will make the scan step over carts it should have processed.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @param bool                 $should_abandon Whether to abandon the cart.
+		 * @param array<string, mixed> $row            The candidate cart row.
+		 */
+		if ( ! apply_filters( 'cart_rebound_should_abandon', true, $row ) ) {
+			return self::OUTCOME_SKIPPED;
+		}
+
+		$fields = $this->abandoned_fields();
 
 		$flipped = CartSession::query()
 			->where( 'id', '=', $id )
 			->where( 'status', '=', CartSession::STATUS_ACTIVE )
 			->where( 'items_count', '>', 0 )
 			->where( 'last_activity', '<', $cutoff )
-			->update_where( $this->abandoned_fields() );
+			->update_where( $fields );
 
 		if ( $flipped < 1 ) {
-			return;
+			return self::OUTCOME_GONE;
 		}
 
-		$this->notify( $row, $id );
+		$this->notify( array_merge( $row, $fields ), $id );
+
+		return self::OUTCOME_ABANDONED;
 	}
 
 	/**
@@ -197,11 +260,12 @@ final class AbandonmentDetector {
 	 * @return void
 	 */
 	private function mark_abandoned( array $row ): void {
-		$id = (int) ( $row['id'] ?? 0 );
+		$id     = (int) ( $row['id'] ?? 0 );
+		$fields = $this->abandoned_fields();
 
-		CartSession::update( $id, $this->abandoned_fields() );
+		CartSession::update( $id, $fields );
 
-		$this->notify( $row, $id );
+		$this->notify( array_merge( $row, $fields ), $id );
 	}
 
 	/**
@@ -216,28 +280,26 @@ final class AbandonmentDetector {
 			'status'               => CartSession::STATUS_ABANDONED,
 			'abandoned_at'         => gmdate( 'Y-m-d H:i:s' ),
 			'abandonment_notified' => 1,
+			// Open the follow-up cursor at the first step. A cart re-abandoned by
+			// the admin action starts its plan again rather than resuming a
+			// cursor left over from the cycle before.
+			'followup_step'        => 0,
 		);
 	}
 
 	/**
-	 * Dispatch the abandonment event and queue the recovery email.
+	 * Dispatch the abandonment event and open the cart's follow-up plan.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row The cart row.
+	 * @param array<string, mixed> $row The cart row, including the columns just written.
 	 * @param int                  $id  The cart id.
 	 * @return void
 	 */
 	private function notify( array $row, int $id ): void {
-		$this->events->abandoned( $row );
+		$row['id'] = $id;
 
-		if ( $this->settings->get( 'recovery_email_enabled' ) && '' !== (string) ( $row['email'] ?? '' ) ) {
-			$delay = max( 1, (int) $this->settings->get( 'email_delay_minutes' ) );
-			$this->scheduler->schedule_single(
-				time() + ( $delay * MINUTE_IN_SECONDS ),
-				RecoveryMailer::HOOK,
-				array( $id )
-			);
-		}
+		$this->events->abandoned( $row );
+		$this->followups->start( $row );
 	}
 }

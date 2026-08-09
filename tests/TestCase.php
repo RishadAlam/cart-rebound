@@ -36,6 +36,15 @@ abstract class TestCase extends PolyfillTestCase {
 				'esc_html__',
 				'esc_attr__',
 				'__',
+
+				// Sanitisers that shape a value rather than pass it through keep
+				// their real behaviour, so a test can prove the shaping happened.
+				'sanitize_key'  => static function ( $key ) {
+					return strtolower( (string) preg_replace( '/[^a-zA-Z0-9_\-]/', '', (string) $key ) );
+				},
+				'sanitize_html_class' => static function ( $class ) {
+					return (string) preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $class );
+				},
 			)
 		);
 	}

@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Admin\Menu;
 use CartRebound\Core\ServiceProvider;
+use CartRebound\Extend\Registry;
 
 /**
  * Enqueues the compiled admin assets resolved through Vite's manifest.
@@ -213,6 +214,10 @@ final class AssetServiceProvider extends ServiceProvider {
 				'id'   => get_current_user_id(),
 				'caps' => $this->current_user_caps(),
 			),
+			// Shipped with the page rather than fetched, so the Pro screens
+			// render locked or unlocked on first paint. A screen that flashes
+			// its locked state before unlocking reads as broken.
+			'addons'       => $this->app->make( Registry::class )->state(),
 		);
 
 		$json = wp_json_encode( $data );

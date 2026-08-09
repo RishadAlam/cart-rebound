@@ -2,6 +2,8 @@
  * Ambient typings for the data WordPress injects into the page via
  * `wp_add_inline_script` as `window.CartRebound`.
  */
+import type { AddonState } from './api';
+
 export {};
 
 declare global {
@@ -23,6 +25,9 @@ declare global {
 			id: number;
 			caps: string[];
 		};
+		// Which add-ons are running, shipped with the page rather than fetched
+		// so a locked screen never flashes unlocked (or the reverse) on load.
+		addons: AddonState;
 	}
 
 	interface WpMediaAttachment {

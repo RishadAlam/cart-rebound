@@ -3,9 +3,13 @@
  */
 import { createHashRouter } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { Analytics } from './pages/Analytics';
 import { Carts } from './pages/Carts';
 import { Dashboard } from './pages/Dashboard';
+import { License } from './pages/License';
 import { Log } from './pages/Log';
+import { Rules } from './pages/Rules';
+import { Sequence } from './pages/Sequence';
 import { Settings } from './pages/Settings';
 import { Templates } from './pages/Templates';
 
@@ -17,8 +21,12 @@ export const router = createHashRouter([
 			{ index: true, element: <Dashboard /> },
 			{ path: 'carts', element: <Carts /> },
 			{ path: 'templates', element: <Templates /> },
+			{ path: 'sequence', element: <Sequence /> },
+			{ path: 'analytics', element: <Analytics /> },
+			{ path: 'rules', element: <Rules /> },
 			{ path: 'logs', element: <Log /> },
 			{ path: 'settings', element: <Settings /> },
+			{ path: 'license', element: <License /> },
 		],
 	},
 ]);

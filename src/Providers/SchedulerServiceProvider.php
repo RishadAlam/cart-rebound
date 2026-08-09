@@ -15,6 +15,7 @@ use CartRebound\Core\ServiceProvider;
 use CartRebound\Cron\AbandonmentDetector;
 use CartRebound\Cron\Janitor;
 use CartRebound\Cron\Scheduler;
+use CartRebound\Followup\Runner;
 use CartRebound\Mail\RecoveryMailer;
 use CartRebound\Support\Requirements;
 use CartRebound\Support\Settings;
@@ -49,6 +50,11 @@ final class SchedulerServiceProvider extends ServiceProvider {
 				$this->app->make( Janitor::class )->run();
 			}
 		);
+		add_action( Runner::HOOK, array( $this->app->make( Runner::class ), 'run' ), 10, 2 );
+
+		// 1.0 queued its single email on the mailer's own hook. Sites upgrading
+		// mid-flight still have those jobs pending, so the handler stays bound;
+		// nothing schedules it any more.
 		add_action( RecoveryMailer::HOOK, array( $this->app->make( RecoveryMailer::class ), 'send' ), 10, 1 );
 
 		// phpcs:ignore WordPress.WP.CronInterval.CronSchedulesInterval -- intentional 5-minute scan fallback; Action Scheduler is the primary scheduler when WooCommerce is active.
@@ -72,6 +78,7 @@ final class SchedulerServiceProvider extends ServiceProvider {
 		if ( ! Requirements::has_woocommerce() ) {
 			$scheduler->clear( AbandonmentDetector::HOOK );
 			$scheduler->clear( Janitor::HOOK );
+			$scheduler->clear( Runner::HOOK );
 			$scheduler->clear( RecoveryMailer::HOOK );
 
 			return;
@@ -99,6 +106,7 @@ final class SchedulerServiceProvider extends ServiceProvider {
 		$scheduler->clear( AbandonmentDetector::HOOK );
 
 		if ( ! $settings->get( 'recovery_email_enabled' ) ) {
+			$scheduler->clear( Runner::HOOK );
 			$scheduler->clear( RecoveryMailer::HOOK );
 		}
 

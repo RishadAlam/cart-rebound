@@ -43,7 +43,8 @@ final class LogServiceProvider extends ServiceProvider {
 
 		add_action( 'cart_rebound_abandoned', array( $subscriber, 'on_abandoned' ), 10, 1 );
 		add_action( 'cart_rebound_recovered', array( $subscriber, 'on_recovered' ), 10, 1 );
-		add_action( 'cart_rebound_email_sent', array( $subscriber, 'on_email_sent' ), 10, 3 );
+		add_action( 'cart_rebound_email_sent', array( $subscriber, 'on_email_sent' ), 10, 4 );
+		add_action( 'cart_rebound_followup_failed', array( $subscriber, 'on_followup_failed' ), 10, 4 );
 
 		add_action( 'admin_init', array( $this, 'maybe_upgrade' ) );
 	}

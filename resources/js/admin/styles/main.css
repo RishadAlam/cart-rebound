@@ -2773,6 +2773,260 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
+/* ---- Pro markers on the tab bar ----
+   Small enough to read as metadata rather than a second label, and only ever
+   present on a tab whose feature is genuinely not running. */
+.cr-tab__lock {
+	margin-left: 6px;
+	padding: 1px 5px;
+	border: 1px solid var(--cr-border);
+	border-radius: 4px;
+	background: var(--cr-panel);
+	color: var(--cr-muted);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	vertical-align: 1px;
+}
+
+.cr-tab.is-active .cr-tab__lock {
+	border-color: var(--cr-accent-soft);
+	background: var(--cr-accent-soft);
+	color: var(--cr-accent);
+}
+
+/* ---- Sequence steps ----
+   A step is a card rather than a table row because it holds three unrelated
+   decisions — when, which template, and whether to discount — and a row would
+   force them into columns that share no meaning. */
+.cr-steps {
+	display: grid;
+	gap: 12px;
+	margin: 16px 0;
+	padding: 0;
+	list-style: none;
+}
+
+.cr-step {
+	padding: 16px;
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius);
+	background: var(--cr-surface);
+	transition:
+		border-color 140ms var(--cr-ease),
+		opacity 140ms var(--cr-ease);
+}
+
+/* A disabled step keeps its place in the schedule; it is dimmed rather than
+   collapsed so the order the shopper experiences stays visible. */
+.cr-step.is-off {
+	background: var(--cr-panel);
+	opacity: 0.72;
+}
+
+.cr-step__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.cr-step__number {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: var(--cr-accent-soft);
+	color: var(--cr-accent);
+	font-size: 12px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.cr-step__heading {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.cr-step__title {
+	margin: 0;
+	color: var(--cr-ink);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.cr-step__stats {
+	margin: 2px 0 0;
+	color: var(--cr-muted);
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+}
+
+.cr-step__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 12px 16px;
+	margin-top: 14px;
+}
+
+.cr-step__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--cr-border);
+}
+
+.cr-field__hint.is-warning {
+	color: var(--cr-warning);
+}
+
+.cr-notice.is-warning {
+	border-color: var(--cr-warning);
+	background: var(--cr-warning-soft);
+	color: var(--cr-warning);
+}
+
+.cr-linkbtn.is-danger {
+	color: var(--cr-danger);
+}
+
+/* ---- Analytics ---- */
+.cr-analytics {
+	display: grid;
+	gap: 14px;
+}
+
+/* ---- Pro lock ----
+   The screen underneath is the real one, rendered against a sample store. The
+   lock does three things and no more: hold the preview still, darken the lower
+   half enough for the panel to sit on, and put the one useful control on top. */
+.cr-lock {
+	position: relative;
+	isolation: isolate;
+
+	/* Clips the blur's soft edge to the surface bounds, so the preview does not
+	   bleed a halo past the layout it belongs to. */
+	overflow: hidden;
+	border-radius: var(--cr-radius);
+}
+
+/* Belt and braces around `inert`: even where the attribute is unsupported,
+   nothing here can be clicked, dragged, or selected. */
+.cr-lock__preview {
+	pointer-events: none;
+	user-select: none;
+	filter: blur(2.5px) saturate(0.82);
+	opacity: 0.85;
+}
+
+/* A blurred control that still looked focusable would be a lie; flatten the
+   affordances that imply it can be operated. */
+.cr-lock__preview :focus,
+.cr-lock__preview :focus-visible {
+	outline: none;
+	box-shadow: none;
+}
+
+.cr-lock__scrim {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+
+	/* Transparent across the top third so the merchant can read the real screen,
+	   then deepening to an opaque base exactly where the panel lands. */
+	background: linear-gradient(
+		to bottom,
+		oklch(0.985 0.003 256 / 0) 0%,
+		oklch(0.985 0.003 256 / 0.55) 26%,
+		oklch(0.985 0.003 256 / 0.92) 52%,
+		oklch(0.985 0.003 256 / 0.97) 100%
+	);
+}
+
+.cr-lock__panel {
+	position: absolute;
+	z-index: 2;
+	top: 46%;
+	left: 50%;
+	width: min(480px, calc(100% - 48px));
+	padding: 22px 24px 24px;
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius);
+	background: var(--cr-surface);
+	box-shadow:
+		0 1px 2px oklch(0 0 0 / 0.04),
+		0 12px 32px oklch(0 0 0 / 0.1);
+	transform: translate(-50%, -12%);
+}
+
+.cr-lock__title {
+	margin: 12px 0 0;
+	color: var(--cr-ink);
+	font-size: 17px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+.cr-lock__summary {
+	margin: 6px 0 0;
+	color: var(--cr-muted);
+	font-size: 13px;
+}
+
+.cr-lock__points {
+	margin: 14px 0 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: 7px;
+}
+
+.cr-lock__points li {
+	position: relative;
+	margin: 0;
+	padding-left: 20px;
+	color: var(--cr-ink-soft);
+	font-size: 13px;
+}
+
+.cr-lock__points li::before {
+	content: "";
+	position: absolute;
+	top: 7px;
+	left: 4px;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--cr-accent);
+}
+
+.cr-lock__actions {
+	margin-top: 18px;
+}
+
+.cr-lock__note {
+	margin: 12px 0 0;
+	color: var(--cr-muted);
+	font-size: 12px;
+	line-height: 1.45;
+}
+
+/* A short surface (an empty analytics range, a one-step sequence) has no lower
+   half to hide the panel in, so the panel stops being an overlay and simply
+   follows the preview. */
+@media (max-width: 782px) {
+	.cr-lock__panel {
+		width: calc(100% - 32px);
+		padding: 18px 18px 20px;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.cr-hint__btn,
 	.cr-hint__bubble,

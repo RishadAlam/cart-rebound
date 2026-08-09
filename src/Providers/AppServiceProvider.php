@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Console\CommandLoader;
 use CartRebound\Core\ServiceProvider;
+use CartRebound\Extend\Registry;
 use CartRebound\Http\Kernel;
 use CartRebound\Http\Router;
 use CartRebound\Support\Config;
@@ -36,6 +37,11 @@ final class AppServiceProvider extends ServiceProvider {
 		$this->app->singleton( Config::class );
 		$this->app->singleton( Kernel::class );
 		$this->app->singleton( Router::class );
+
+		// A singleton because the registry memoises the one pass it makes over
+		// the installed add-ons; a fresh instance per resolve would re-run the
+		// registration action on every question asked of it.
+		$this->app->singleton( Registry::class );
 
 		Facade::set_facade_application( $this->app );
 	}

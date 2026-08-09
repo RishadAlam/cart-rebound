@@ -109,7 +109,25 @@ final class CartTracker {
 
 		$data['last_activity'] = gmdate( 'Y-m-d H:i:s' );
 
-		CartSession::update( (int) ( $existing['id'] ?? 0 ), $data );
+		$cart_id = (int) ( $existing['id'] ?? 0 );
+
+		CartSession::update( $cart_id, $data );
+
+		/**
+		 * Fires when identity is back-filled onto a tracked cart.
+		 *
+		 * The moment a previously anonymous cart becomes recoverable. An add-on
+		 * that captures the address earlier than checkout — an exit-intent
+		 * prompt, an inline field — hooks this to react to its own capture as
+		 * well as the checkout beacon's.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @param int                  $cart_id The cart row id.
+		 * @param array<string, mixed> $data    The sanitised identity fields written.
+		 * @param array<string, mixed> $row     The cart row as it was before the write.
+		 */
+		do_action( 'cart_rebound_identity_captured', $cart_id, $data, $existing );
 	}
 
 	/**
@@ -310,11 +328,34 @@ final class CartTracker {
 			return false;
 		}
 
-		if ( get_current_user_id() > 0 ) {
-			return true;
-		}
+		$user_id = get_current_user_id();
+		$allowed = $user_id > 0 || (bool) $this->settings->get( 'guest_tracking' );
 
-		return (bool) $this->settings->get( 'guest_tracking' );
+		/**
+		 * Filter whether the current visitor's cart may be tracked at all.
+		 *
+		 * Returning false stops the row from ever being written, which is the
+		 * only exclusion that leaves nothing to store, export, or erase later.
+		 * Use it for visitors who should be invisible to recovery — staff
+		 * accounts, wholesale roles, a rejected consent banner.
+		 *
+		 * A cart that is merely not worth chasing belongs in
+		 * `cart_rebound_should_abandon` instead: that one still records the cart
+		 * and its revenue, and only keeps it out of the funnel.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @param bool                 $allowed Whether tracking is permitted.
+		 * @param array<string, mixed> $context Visitor context: user_id, is_guest.
+		 */
+		return (bool) apply_filters(
+			'cart_rebound_track_cart',
+			$allowed,
+			array(
+				'user_id'  => $user_id,
+				'is_guest' => 0 === $user_id,
+			)
+		);
 	}
 
 	/**

@@ -11,6 +11,7 @@ namespace CartRebound\Recovery;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Followup\Runner;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
 
@@ -36,14 +37,24 @@ final class UnsubscribeHandler {
 	private $links;
 
 	/**
+	 * Follow-up runner (used to drop the rest of the sequence on opt-out).
+	 *
+	 * @since 1.1.0
+	 * @var Runner
+	 */
+	private $followups;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param RecoveryLink $links Recovery link builder.
+	 * @param RecoveryLink $links     Recovery link builder.
+	 * @param Runner       $followups Follow-up runner.
 	 */
-	public function __construct( RecoveryLink $links ) {
-		$this->links = $links;
+	public function __construct( RecoveryLink $links, Runner $followups ) {
+		$this->links     = $links;
+		$this->followups = $followups;
 	}
 
 	/**
@@ -70,10 +81,15 @@ final class UnsubscribeHandler {
 			$this->render( 'confirm', $token );
 		}
 
-		$row   = CartSession::query()->where( 'recovery_token', '=', $token )->first();
-		$email = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
+		$row     = CartSession::query()->where( 'recovery_token', '=', $token )->first();
+		$email   = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
+		$cart_id = is_array( $row ) ? (int) ( $row['id'] ?? 0 ) : 0;
 
 		if ( '' !== $email && Unsubscribe::suppress( $email ) ) {
+			// Suppression already stops the next step from sending, but the queued
+			// jobs — and whatever an add-on queued beside them — should go too.
+			$this->followups->cancel( $cart_id, 'unsubscribed' );
+
 			$this->render( 'done', $token );
 		}
 
@@ -113,7 +129,10 @@ final class UnsubscribeHandler {
 			header( 'Content-Type: text/html; charset=utf-8' );
 		}
 
-		// Variables consumed by the view.
+		// Variables consumed by the view. $state is resolved here rather than in
+		// the view so the vocabulary lives in one place — and so it reads as the
+		// used value it is, to a reader and to static analysis alike.
+		$state       = in_array( $state, array( 'confirm', 'done', 'invalid' ), true ) ? $state : 'invalid';
 		$form_action = $this->links->unsubscribe_url( $token );
 		$field_flag  = RecoveryLink::QUERY_UNSUBSCRIBE;
 		$field_token = RecoveryLink::QUERY_TOKEN;

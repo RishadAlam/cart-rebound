@@ -156,3 +156,176 @@ export interface CartsQuery {
 	orderby: string;
 	order: SortOrder;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Add-on surface.                                                            */
+/*                                                                            */
+/* The Pro screens ship here, in the free plugin, because an add-on that only  */
+/* supplies a REST API cannot render anything — and a second bundle would be   */
+/* a copy of this design system that drifts a little further with every        */
+/* release. So the screens live here and ask one question of the add-on        */
+/* registry: which of these features is something actually delivering?         */
+/* -------------------------------------------------------------------------- */
+
+/** Feature keys an add-on can claim. Mirrors `CartRebound\Extend\Feature`. */
+export type ProFeature =
+	'sequence' | 'coupons' | 'tracking' | 'analytics' | 'rules';
+
+export interface AddonSummary {
+	slug: string;
+	name: string;
+	version: string;
+	url: string;
+	features: ProFeature[];
+	licensed: boolean;
+}
+
+export interface AddonState {
+	/** At least one add-on is installed and running. */
+	installed: boolean;
+	/** At least one installed add-on holds a valid license. */
+	licensed: boolean;
+	/** Everything currently being delivered. Empty while unlicensed. */
+	features: ProFeature[];
+	addons: AddonSummary[];
+	upgrade_url: string;
+}
+
+export interface SequenceStep {
+	enabled: boolean;
+	/** Minutes after abandonment, not after the previous step. */
+	delay_minutes: number;
+	template_id: string;
+	coupon: boolean;
+}
+
+export interface ProSettings {
+	sequence_steps: SequenceStep[];
+
+	coupon_auto: boolean;
+	coupon_type: 'percent' | 'fixed';
+	coupon_amount: number;
+	coupon_expiry_hours: number;
+	coupon_min_amount: number;
+	coupon_restrict_email: boolean;
+	coupon_free_shipping: boolean;
+	coupon_prefix: string;
+
+	tracking_opens: boolean;
+	tracking_clicks: boolean;
+
+	analytics_retention_days: number;
+
+	min_cart_total: number;
+	excluded_roles: string[];
+	excluded_products: number[];
+	excluded_categories: number[];
+}
+
+export interface ProSettingsResponse {
+	settings: ProSettings;
+	features: ProFeature[];
+}
+
+export interface ProOption {
+	value: string;
+	label: string;
+}
+
+export interface ProOptions {
+	templates: Array<{ id: string; name: string; is_default: boolean }>;
+	roles: ProOption[];
+	categories: ProOption[];
+}
+
+/** One step, as the Sequence screen shows it: config plus live state. */
+export interface SequenceStepStatus {
+	index: number;
+	enabled: boolean;
+	delay_minutes: number;
+	delay_label: string;
+	template_id: string;
+	template_name: string;
+	/** False when the step points at a template that no longer exists. */
+	template_ok: boolean;
+	coupon: boolean;
+	/** Carts currently waiting on this step. */
+	queued: number;
+	sent: number;
+}
+
+export interface SequenceOverview {
+	/** False while the free recovery-email master switch is off. */
+	running: boolean;
+	steps: SequenceStepStatus[];
+	warnings: string[];
+}
+
+export interface AnalyticsSummary {
+	from: string;
+	to: string;
+	abandoned_carts: number;
+	abandoned_value: number;
+	recovered_carts: number;
+	recovered_revenue: number;
+	recovery_rate: number;
+	average_order_value: number;
+	/** Median hours between abandonment and recovery. */
+	time_to_recovery: number;
+	emails_sent: number;
+	emails_opened: number;
+	emails_clicked: number;
+	open_rate: number;
+	click_rate: number;
+	currency: string;
+	/** False when open/click tracking is switched off, so rates read as n/a. */
+	tracking_available: boolean;
+}
+
+export interface AnalyticsPoint {
+	date: string;
+	abandoned: number;
+	abandoned_value: number;
+	recovered: number;
+	recovered_revenue: number;
+}
+
+export interface StepPerformanceRow {
+	step: number;
+	sent: number;
+	opened: number;
+	clicked: number;
+	recovered: number;
+	revenue: number;
+	open_rate: number;
+	click_rate: number;
+	recovery_rate: number;
+}
+
+export interface AnalyticsProductRow {
+	product_id: number;
+	name: string;
+	abandoned: number;
+	recovered: number;
+	lost_value: number;
+}
+
+export interface AnalyticsResponse {
+	summary: AnalyticsSummary;
+	timeseries: AnalyticsPoint[];
+	steps: StepPerformanceRow[];
+	products: AnalyticsProductRow[];
+}
+
+export type LicenseStatus = 'active' | 'expired' | 'invalid' | 'unlicensed';
+
+export interface LicenseState {
+	status: LicenseStatus;
+	/** Whether the add-on's features are unlocked right now. */
+	active: boolean;
+	masked_key: string;
+	message: string;
+	expires_at: string;
+	checked_at: string;
+	site: string;
+}

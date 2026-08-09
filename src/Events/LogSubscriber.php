@@ -12,6 +12,7 @@ namespace CartRebound\Events;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Data\LogRepository;
+use CartRebound\Followup\Step;
 use CartRebound\Models\LogEntry;
 
 /**
@@ -113,9 +114,10 @@ final class LogSubscriber {
 	 * @param int   $cart_id  The cart id.
 	 * @param mixed $row      The cart row (for the recipient).
 	 * @param mixed $template The template that was sent.
+	 * @param mixed $step     The follow-up step, when a plan drove the send.
 	 * @return void
 	 */
-	public function on_email_sent( $cart_id, $row = array(), $template = array() ): void {
+	public function on_email_sent( $cart_id, $row = array(), $template = array(), $step = null ): void {
 		$email     = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
 		$recipient = '' !== $email ? $email : __( 'the shopper', 'cart-rebound' );
 		$name      = is_array( $template ) ? (string) ( $template['name'] ?? '' ) : '';
@@ -133,7 +135,58 @@ final class LogSubscriber {
 				$recipient
 			);
 
-		$this->logs->log( LogEntry::LEVEL_INFO, 'email_sent', $message, (int) $cart_id );
+		$this->logs->log( LogEntry::LEVEL_INFO, 'email_sent', $message . $this->step_suffix( $step ), (int) $cart_id );
+	}
+
+	/**
+	 * Record a follow-up that could not be delivered.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param int   $cart_id The cart id.
+	 * @param mixed $step    The step that failed.
+	 * @param mixed $error   The transport's reason, when it gave one.
+	 * @param mixed $row     The cart row (for the recipient).
+	 * @return void
+	 */
+	public function on_followup_failed( $cart_id, $step = null, $error = '', $row = array() ): void {
+		$email     = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
+		$recipient = '' !== $email ? $email : __( 'the shopper', 'cart-rebound' );
+		$reason    = is_string( $error ) ? trim( $error ) : '';
+
+		$message = sprintf(
+			/* translators: %s: recipient email. */
+			__( 'Recovery email to %s could not be sent.', 'cart-rebound' ),
+			$recipient
+		) . $this->step_suffix( $step );
+
+		if ( '' !== $reason ) {
+			$message .= ' ' . $reason;
+		}
+
+		$this->logs->log( LogEntry::LEVEL_ERROR, 'email_failed', $message, (int) $cart_id );
+	}
+
+	/**
+	 * Render " (step N)" for a step, or nothing for a send outside a plan.
+	 *
+	 * Steps are numbered from zero internally and from one for a human.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param mixed $step The follow-up step.
+	 * @return string
+	 */
+	private function step_suffix( $step ): string {
+		if ( ! $step instanceof Step ) {
+			return '';
+		}
+
+		return sprintf(
+			/* translators: %d: follow-up step number, counting from one. */
+			__( ' (step %d)', 'cart-rebound' ),
+			$step->index() + 1
+		);
 	}
 
 	/**

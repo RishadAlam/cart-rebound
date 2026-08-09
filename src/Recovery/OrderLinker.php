@@ -11,8 +11,8 @@ namespace CartRebound\Recovery;
 
 defined( 'ABSPATH' ) || exit;
 
-use CartRebound\Cron\Scheduler;
 use CartRebound\Events\EventDispatcher;
+use CartRebound\Followup\Runner;
 use CartRebound\Mail\RecoveryMailer;
 use CartRebound\Models\CartSession;
 use CartRebound\Support\Settings;
@@ -61,12 +61,12 @@ final class OrderLinker {
 	private $sessions;
 
 	/**
-	 * Job scheduler (used to cancel a pending recovery email on conversion).
+	 * Follow-up runner (used to drop queued follow-ups once a cart converts).
 	 *
-	 * @since 0.1.0
-	 * @var Scheduler
+	 * @since 1.1.0
+	 * @var Runner
 	 */
-	private $scheduler;
+	private $followups;
 
 	/**
 	 * Recovery mailer (used for the optional admin recovery notification).
@@ -99,14 +99,14 @@ final class OrderLinker {
 	 *
 	 * @param EventDispatcher $events    Event dispatcher.
 	 * @param SessionManager  $sessions  Session key resolver.
-	 * @param Scheduler       $scheduler Job scheduler.
+	 * @param Runner          $followups Follow-up runner.
 	 * @param RecoveryMailer  $mailer    Recovery mailer.
 	 * @param Settings        $settings  Settings store.
 	 */
-	public function __construct( EventDispatcher $events, SessionManager $sessions, Scheduler $scheduler, RecoveryMailer $mailer, Settings $settings ) {
+	public function __construct( EventDispatcher $events, SessionManager $sessions, Runner $followups, RecoveryMailer $mailer, Settings $settings ) {
 		$this->events    = $events;
 		$this->sessions  = $sessions;
-		$this->scheduler = $scheduler;
+		$this->followups = $followups;
 		$this->mailer    = $mailer;
 		$this->settings  = $settings;
 	}
@@ -333,8 +333,8 @@ final class OrderLinker {
 			return;
 		}
 
-		// The cart converted: drop any recovery email still queued for it.
-		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
+		// The cart converted: drop every follow-up still queued for it.
+		$this->followups->cancel( $cart_id, 'converted' );
 
 		// A cart that was ever abandoned (its abandoned_at survives the
 		// pending-payment transition) — or that arrived via a recovery link —
@@ -450,8 +450,8 @@ final class OrderLinker {
 			)
 		);
 
-		// They placed an order — drop any recovery email still queued for this cart.
-		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
+		// They placed an order — drop every follow-up still queued for this cart.
+		$this->followups->cancel( $cart_id, 'order_placed' );
 	}
 
 	/**

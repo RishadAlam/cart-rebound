@@ -12,6 +12,8 @@ namespace CartRebound\Admin;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Admin\Pages\DashboardPage;
+use CartRebound\Extend\Feature;
+use CartRebound\Extend\Registry;
 
 /**
  * Registers the plugin's top-level admin menu page.
@@ -37,6 +39,14 @@ final class Menu {
 	private $dashboard;
 
 	/**
+	 * Add-on registry (decides which entries carry the Pro marker).
+	 *
+	 * @since 1.1.0
+	 * @var Registry
+	 */
+	private $addons;
+
+	/**
 	 * Captured top-level page hook suffix.
 	 *
 	 * @since 0.1.0
@@ -58,9 +68,11 @@ final class Menu {
 	 * @since 0.1.0
 	 *
 	 * @param DashboardPage $dashboard The dashboard page renderer.
+	 * @param Registry      $addons    Add-on registry.
 	 */
-	public function __construct( DashboardPage $dashboard ) {
+	public function __construct( DashboardPage $dashboard, Registry $addons ) {
 		$this->dashboard = $dashboard;
+		$this->addons    = $addons;
 	}
 
 	/**
@@ -95,20 +107,32 @@ final class Menu {
 		 * seeded into the hash router at load (see AssetServiceProvider). The
 		 * first item reuses the parent slug, relabelling the auto-created entry
 		 * from "Cart Rebound" to "Dashboard".
+		 *
+		 * They are ordered the way a store is actually run: what happened, who
+		 * it happened to, what goes out to them, how it performed, who is
+		 * excluded, then diagnostics, configuration, and the licence last.
+		 *
+		 * Add-on screens are listed whether or not an add-on is installed. They
+		 * render their real interface either way — locked over a preview until
+		 * an add-on unlocks them — so a menu entry that vanished would be hiding
+		 * a screen that exists and works.
 		 */
 		$submenus = array(
-			self::SLUG                => array( __( 'Dashboard', 'cart-rebound' ), '/' ),
-			self::SLUG . '-carts'     => array( __( 'Carts', 'cart-rebound' ), '/carts' ),
-			self::SLUG . '-templates' => array( __( 'Templates', 'cart-rebound' ), '/templates' ),
-			self::SLUG . '-logs'      => array( __( 'Log', 'cart-rebound' ), '/logs' ),
-			self::SLUG . '-settings'  => array( __( 'Settings', 'cart-rebound' ), '/settings' ),
+			self::SLUG                => array( __( 'Dashboard', 'cart-rebound' ), '/', '' ),
+			self::SLUG . '-carts'     => array( __( 'Carts', 'cart-rebound' ), '/carts', '' ),
+			self::SLUG . '-templates' => array( __( 'Templates', 'cart-rebound' ), '/templates', '' ),
+			self::SLUG . '-sequence'  => array( __( 'Sequence', 'cart-rebound' ), '/sequence', Feature::SEQUENCE ),
+			self::SLUG . '-analytics' => array( __( 'Analytics', 'cart-rebound' ), '/analytics', Feature::ANALYTICS ),
+			self::SLUG . '-rules'     => array( __( 'Rules', 'cart-rebound' ), '/rules', Feature::RULES ),
+			self::SLUG . '-logs'      => array( __( 'Log', 'cart-rebound' ), '/logs', '' ),
+			self::SLUG . '-settings'  => array( __( 'Settings', 'cart-rebound' ), '/settings', '' ),
 		);
 
 		foreach ( $submenus as $slug => $meta ) {
 			$sub_hook = add_submenu_page(
 				self::SLUG,
 				$meta[0],
-				$meta[0],
+				$this->menu_title( $meta[0], $meta[2] ),
 				$capability,
 				$slug,
 				array( $this->dashboard, 'render' )
@@ -119,12 +143,53 @@ final class Menu {
 			}
 		}
 
+		// The licence screen only exists once there is a licence to manage.
+		if ( $this->addons->has_addons() ) {
+			$licence_hook = add_submenu_page(
+				self::SLUG,
+				__( 'License', 'cart-rebound' ),
+				__( 'License', 'cart-rebound' ),
+				$capability,
+				self::SLUG . '-license',
+				array( $this->dashboard, 'render' )
+			);
+
+			if ( is_string( $licence_hook ) && '' !== $licence_hook ) {
+				$this->page_hooks[ $licence_hook ] = '/license';
+			}
+		}
+
 		/*
 		 * WooCommerce's own menu_order filter pins Products immediately after
 		 * WooCommerce, regardless of numeric menu positions. Run later and
 		 * place Cart Rebound in that exact slot.
 		 */
 		add_filter( 'menu_order', array( $this, 'place_after_woocommerce' ), 20 );
+	}
+
+	/**
+	 * Build a submenu title, marking the ones an add-on has yet to unlock.
+	 *
+	 * The marker is a plain suffix rather than a styled badge: WordPress renders
+	 * submenu titles inside the link text, and a locked screen is already going
+	 * to say so at full size the moment it opens.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param string $label   The screen's label.
+	 * @param string $feature The feature key that unlocks it, or '' when it is free.
+	 * @return string
+	 */
+	private function menu_title( string $label, string $feature ): string {
+		if ( '' === $feature || $this->addons->has( $feature ) ) {
+			return $label;
+		}
+
+		return sprintf(
+			/* translators: %s: admin screen name, e.g. Sequence. */
+			__( '%s — Pro', 'cart-rebound' ),
+			$label
+		);
 	}
 
 	/**
