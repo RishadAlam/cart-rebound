@@ -4,7 +4,7 @@ Tags: woocommerce, abandoned cart, cart abandonment, cart recovery, recovery ema
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -400,6 +400,29 @@ Production packages can be created with `pnpm production-zip`. See the repositor
 Bundled third-party JavaScript libraries are GPL-compatible and distributed under the MIT License. Copyright and license notices are included in `THIRD-PARTY-LICENSES.txt`.
 
 == Changelog ==
+
+= 1.1.0 =
+
+**Release date:** 2026-08-10
+
+**Added**
+
+* Added a follow-up pipeline that owns scheduling, delivery, and cancellation for every recovery email, replacing the one-off job the single email used.
+* Added an add-on registry so a paid extension can register itself and report which features it is delivering.
+* Added Sequence, Analytics, and Rules screens, which render their real interface over a sample store and stay locked until an add-on unlocks them.
+* Added a License screen, shown once an add-on is installed.
+* Added extension points for add-ons: cart_rebound_followup_plan, cart_rebound_track_cart, cart_rebound_should_abandon, cart_rebound_email_tokens, cart_rebound_email_html, cart_rebound_identity_captured, cart_rebound_followups_cancelled, and cart_rebound_followup_failed.
+* Added a failure entry to the activity log when a recovery email cannot be delivered.
+
+**Changed**
+
+* Changed follow-up delays to run from the moment a cart was abandoned, so a step that runs late no longer pushes the rest of the schedule out with it.
+* Changed the recovery-email setting into a true master switch: no follow-up is planned while it is off, whatever is installed.
+* Changed template tokens to be escaped on substitution, so a token value can never inject markup into an email.
+
+**Fixed**
+
+* Fixed queued follow-ups surviving an unsubscribe; they are now dropped the moment a shopper opts out.
 
 = 1.0.0 =
 
