@@ -12,6 +12,7 @@
  */
 import { type ChangeEvent } from 'react';
 import { __ } from '@wordpress/i18n';
+import { Combobox } from './Combobox';
 
 const MINUTES_PER_HOUR = 60;
 const MINUTES_PER_DAY = 1440;
@@ -86,20 +87,19 @@ export const DurationField = ({ id, minutes, onChange, unitLabel }: Props) => {
 					);
 				}}
 			/>
-			<select
-				className="cr-input"
+			<Combobox
+				compact
+				ariaLabel={unitLabel ?? __('Unit', 'cart-rebound')}
 				value={unit}
-				aria-label={unitLabel ?? __('Unit', 'cart-rebound')}
-				onChange={(event: ChangeEvent<HTMLSelectElement>) => {
-					onChange(
-						toMinutes(value, event.target.value as DurationUnit)
-					);
+				options={[
+					{ value: 'minutes', label: __('minutes', 'cart-rebound') },
+					{ value: 'hours', label: __('hours', 'cart-rebound') },
+					{ value: 'days', label: __('days', 'cart-rebound') },
+				]}
+				onChange={(next) => {
+					onChange(toMinutes(value, next as DurationUnit));
 				}}
-			>
-				<option value="minutes">{__('minutes', 'cart-rebound')}</option>
-				<option value="hours">{__('hours', 'cart-rebound')}</option>
-				<option value="days">{__('days', 'cart-rebound')}</option>
-			</select>
+			/>
 		</div>
 	);
 };

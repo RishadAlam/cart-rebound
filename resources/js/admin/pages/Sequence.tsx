@@ -10,6 +10,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Combobox } from '../components/Combobox';
 import { DurationField } from '../components/DurationField';
 import { ProSurface } from '../components/ProSurface';
 import { useProQuery } from '../hooks/useAddons';
@@ -124,25 +125,23 @@ const StepCard = ({
 					>
 						{__('Template', 'cart-rebound')}
 					</label>
-					<select
-						id={`${id}-template`}
-						className="cr-input"
+					<Combobox
+						ariaLabel={__('Template for this step', 'cart-rebound')}
 						value={step.template_id}
-						onChange={(event: ChangeEvent<HTMLSelectElement>) => {
-							onChange(index, {
-								template_id: event.target.value,
-							});
+						options={[
+							{
+								value: '',
+								label: __('Default template', 'cart-rebound'),
+							},
+							...templates.map((template) => ({
+								value: template.id,
+								label: template.name,
+							})),
+						]}
+						onChange={(next) => {
+							onChange(index, { template_id: next });
 						}}
-					>
-						<option value="">
-							{__('Default template', 'cart-rebound')}
-						</option>
-						{templates.map((template) => (
-							<option key={template.id} value={template.id}>
-								{template.name}
-							</option>
-						))}
-					</select>
+					/>
 					{status && !status.template_ok && (
 						<p className="cr-field__hint is-warning">
 							{__(

@@ -44,14 +44,24 @@ const TABS: Tab[] = [
 const tabClass = ({ isActive }: { isActive: boolean }): string =>
 	isActive ? 'cr-tab is-active' : 'cr-tab';
 
-// Reports and tables get the full admin width; the form pages (templates,
-// settings, rules) stay capped so their label/input rows remain scannable.
+/*
+ * Two page shapes, and every screen is one of them.
+ *
+ * Reports and tables take the full admin width, because a chart or a
+ * twelve-column table has something to do with the space. Forms hold a fixed
+ * measure, because a label/input row stretched across a wide monitor is harder
+ * to read, not easier — the eye loses the line on the way back.
+ *
+ * Deciding it here, once, is what stops three settings screens ending up three
+ * different widths.
+ */
 const WIDE_ROUTES = ['/', '/carts', '/logs', '/analytics'];
 
 export const Layout = () => {
 	const { pathname } = useLocation();
 	const { features, addons } = useAddons();
 	const wide = WIDE_ROUTES.includes(pathname);
+	const shell = wide ? 'cr-app is-wide' : 'cr-app is-form';
 
 	// An add-on that is delivering renames the product, because from that point
 	// on it is what the merchant bought. Nothing else about the shell changes.
@@ -59,7 +69,7 @@ export const Layout = () => {
 	const title = addon ? addon.name : __('Cart Rebound', 'cart-rebound');
 
 	return (
-		<div className={wide ? 'cr-app is-wide' : 'cr-app'}>
+		<div className={shell}>
 			<OnboardingWizard />
 
 			<header className="cr-header">

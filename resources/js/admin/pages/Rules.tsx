@@ -6,15 +6,11 @@
  * policy decides what the ones who do are offered. Merging them into one list
  * of "settings" would hide that a coupon is a cost and an exclusion is a saving.
  */
-import {
-	useEffect,
-	useState,
-	type ChangeEvent,
-	type FormEvent,
-	type ReactNode,
-} from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { __ } from '@wordpress/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Combobox } from '../components/Combobox';
+import { Field, ToggleField } from '../components/Field';
 import { ProSurface } from '../components/ProSurface';
 import { useProQuery } from '../hooks/useAddons';
 import {
@@ -24,26 +20,6 @@ import {
 } from '../api/pro';
 import { sampleProOptions, sampleProSettings } from '../lib/sample';
 import type { ProSettings } from '../types/api';
-
-const Field = ({
-	id,
-	label,
-	hint,
-	children,
-}: {
-	id: string;
-	label: string;
-	hint?: string;
-	children: ReactNode;
-}) => (
-	<div className="cr-field">
-		<label htmlFor={id} className="cr-field__label">
-			{label}
-		</label>
-		{children}
-		{hint !== undefined && <p className="cr-field__hint">{hint}</p>}
-	</div>
-);
 
 export const Rules = () => {
 	const queryClient = useQueryClient();
@@ -130,22 +106,6 @@ export const Rules = () => {
 		save.mutate(current);
 	};
 
-	const toggle = (key: keyof ProSettings, id: string) => (
-		<span className="cr-switch">
-			<input
-				id={id}
-				type="checkbox"
-				checked={Boolean(current[key])}
-				onChange={(event: ChangeEvent<HTMLInputElement>) => {
-					setField(key, event.target.checked as never);
-				}}
-			/>
-			<span className="cr-switch__track">
-				<span className="cr-switch__thumb" />
-			</span>
-		</span>
-	);
-
 	return (
 		<ProSurface
 			feature="rules"
@@ -173,11 +133,7 @@ export const Rules = () => {
 				),
 			]}
 		>
-			<form
-				onSubmit={onSubmit}
-				className="cr-card"
-				style={{ maxWidth: 760 }}
-			>
+			<form onSubmit={onSubmit} className="cr-card">
 				<div className="cr-section">
 					<h2 className="cr-section__title">
 						{__('Who enters recovery', 'cart-rebound')}
@@ -286,51 +242,47 @@ export const Rules = () => {
 						)}
 					</p>
 
-					<div className="cr-field--row">
-						<div>
-							<label
-								htmlFor="cr-coupon-auto"
-								className="cr-field__label"
-							>
-								{__('Generate unique coupons', 'cart-rebound')}
-							</label>
-							<p className="cr-field__hint">
-								{__(
-									'Off means coupon steps fall back to the static code on the template.',
-									'cart-rebound'
-								)}
-							</p>
-						</div>
-						{toggle('coupon_auto', 'cr-coupon-auto')}
-					</div>
+					<ToggleField
+						id="cr-coupon-auto"
+						label={__('Generate unique coupons', 'cart-rebound')}
+						hint={__(
+							'Off means coupon steps fall back to the static code on the template.',
+							'cart-rebound'
+						)}
+						checked={current.coupon_auto}
+						onChange={(checked) => {
+							setField('coupon_auto', checked);
+						}}
+					/>
 
 					<div className="cr-field__grid">
 						<Field
 							id="cr-coupon-type"
 							label={__('Discount type', 'cart-rebound')}
 						>
-							<select
-								id="cr-coupon-type"
-								className="cr-input"
+							<Combobox
+								ariaLabel={__('Discount type', 'cart-rebound')}
 								value={current.coupon_type}
-								onChange={(
-									event: ChangeEvent<HTMLSelectElement>
-								) => {
+								options={[
+									{
+										value: 'percent',
+										label: __('Percentage', 'cart-rebound'),
+									},
+									{
+										value: 'fixed',
+										label: __(
+											'Fixed cart discount',
+											'cart-rebound'
+										),
+									},
+								]}
+								onChange={(next) => {
 									setField(
 										'coupon_type',
-										event.target.value === 'fixed'
-											? 'fixed'
-											: 'percent'
+										next === 'fixed' ? 'fixed' : 'percent'
 									);
 								}}
-							>
-								<option value="percent">
-									{__('Percentage', 'cart-rebound')}
-								</option>
-								<option value="fixed">
-									{__('Fixed cart discount', 'cart-rebound')}
-								</option>
-							</select>
+							/>
 						</Field>
 
 						<Field
@@ -410,44 +362,34 @@ export const Rules = () => {
 						</Field>
 					</div>
 
-					<div className="cr-field--row">
-						<div>
-							<label
-								htmlFor="cr-coupon-restrict"
-								className="cr-field__label"
-							>
-								{__(
-									'Lock each code to its recipient',
-									'cart-rebound'
-								)}
-							</label>
-							<p className="cr-field__hint">
-								{__(
-									'The code only works for the address it was emailed to.',
-									'cart-rebound'
-								)}
-							</p>
-						</div>
-						{toggle('coupon_restrict_email', 'cr-coupon-restrict')}
-					</div>
+					<ToggleField
+						id="cr-coupon-restrict"
+						label={__(
+							'Lock each code to its recipient',
+							'cart-rebound'
+						)}
+						hint={__(
+							'The code only works for the address it was emailed to.',
+							'cart-rebound'
+						)}
+						checked={current.coupon_restrict_email}
+						onChange={(checked) => {
+							setField('coupon_restrict_email', checked);
+						}}
+					/>
 
-					<div className="cr-field--row">
-						<div>
-							<label
-								htmlFor="cr-coupon-shipping"
-								className="cr-field__label"
-							>
-								{__('Also grant free shipping', 'cart-rebound')}
-							</label>
-							<p className="cr-field__hint">
-								{__(
-									'Often converts better than a larger discount.',
-									'cart-rebound'
-								)}
-							</p>
-						</div>
-						{toggle('coupon_free_shipping', 'cr-coupon-shipping')}
-					</div>
+					<ToggleField
+						id="cr-coupon-shipping"
+						label={__('Also grant free shipping', 'cart-rebound')}
+						hint={__(
+							'Often converts better than a larger discount.',
+							'cart-rebound'
+						)}
+						checked={current.coupon_free_shipping}
+						onChange={(checked) => {
+							setField('coupon_free_shipping', checked);
+						}}
+					/>
 				</div>
 
 				<div className="cr-section">
@@ -455,41 +397,31 @@ export const Rules = () => {
 						{__('Measurement', 'cart-rebound')}
 					</h2>
 
-					<div className="cr-field--row">
-						<div>
-							<label
-								htmlFor="cr-track-opens"
-								className="cr-field__label"
-							>
-								{__('Track opens', 'cart-rebound')}
-							</label>
-							<p className="cr-field__hint">
-								{__(
-									'Adds a tracking pixel. Opens are always approximate — image proxies and blocked images undercount them.',
-									'cart-rebound'
-								)}
-							</p>
-						</div>
-						{toggle('tracking_opens', 'cr-track-opens')}
-					</div>
+					<ToggleField
+						id="cr-track-opens"
+						label={__('Track opens', 'cart-rebound')}
+						hint={__(
+							'Adds a tracking pixel. Opens are always approximate — image proxies and blocked images undercount them.',
+							'cart-rebound'
+						)}
+						checked={current.tracking_opens}
+						onChange={(checked) => {
+							setField('tracking_opens', checked);
+						}}
+					/>
 
-					<div className="cr-field--row">
-						<div>
-							<label
-								htmlFor="cr-track-clicks"
-								className="cr-field__label"
-							>
-								{__('Track clicks', 'cart-rebound')}
-							</label>
-							<p className="cr-field__hint">
-								{__(
-									'Routes links through a redirect so clicks can be attributed to a step.',
-									'cart-rebound'
-								)}
-							</p>
-						</div>
-						{toggle('tracking_clicks', 'cr-track-clicks')}
-					</div>
+					<ToggleField
+						id="cr-track-clicks"
+						label={__('Track clicks', 'cart-rebound')}
+						hint={__(
+							'Routes links through a redirect so clicks can be attributed to a step.',
+							'cart-rebound'
+						)}
+						checked={current.tracking_clicks}
+						onChange={(checked) => {
+							setField('tracking_clicks', checked);
+						}}
+					/>
 
 					<div className="cr-field__grid">
 						<Field

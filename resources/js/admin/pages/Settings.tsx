@@ -3,15 +3,10 @@
  *
  * Tracking is always on while the plugin is active; there is no master toggle.
  */
-import {
-	useEffect,
-	useState,
-	type ChangeEvent,
-	type FormEvent,
-	type ReactNode,
-} from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { __ } from '@wordpress/i18n';
 import { DurationField } from '../components/DurationField';
+import { Field, ToggleField } from '../components/Field';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
@@ -22,9 +17,6 @@ type NumberKey =
 	| 'converted_cleanup_days'
 	| 'email_delay_minutes';
 
-type ToggleKey =
-	'guest_tracking' | 'recovery_email_enabled' | 'admin_recovery_email';
-
 // WooCommerce order statuses selectable as "counts as recovered". Reversed
 // states (refunded/cancelled/failed) and unpaid pending are intentionally
 // omitted; custom statuses can be added via the cart_rebound_paid_order_statuses
@@ -34,26 +26,6 @@ const PAID_STATUS_OPTIONS: Array<{ key: string; label: string }> = [
 	{ key: 'processing', label: __('Processing', 'cart-rebound') },
 	{ key: 'completed', label: __('Completed', 'cart-rebound') },
 ];
-
-const Field = ({
-	id,
-	label,
-	hint,
-	children,
-}: {
-	id: string;
-	label: string;
-	hint?: string;
-	children: ReactNode;
-}) => (
-	<div className="cr-field">
-		<label htmlFor={id} className="cr-field__label">
-			{label}
-		</label>
-		{children}
-		{hint !== undefined && <p className="cr-field__hint">{hint}</p>}
-	</div>
-);
 
 export const Settings = () => {
 	const { data, isLoading } = useSettings();
@@ -101,11 +73,6 @@ export const Settings = () => {
 			setField(key, Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
 		};
 
-	const onToggle =
-		(key: ToggleKey) => (event: ChangeEvent<HTMLInputElement>) => {
-			setField(key, event.target.checked);
-		};
-
 	const onStatusToggle =
 		(status: string) => (event: ChangeEvent<HTMLInputElement>) => {
 			setForm((previous) => {
@@ -130,22 +97,8 @@ export const Settings = () => {
 		update.mutate(form);
 	};
 
-	const toggle = (key: ToggleKey, id: string) => (
-		<span className="cr-switch">
-			<input
-				id={id}
-				type="checkbox"
-				checked={form[key]}
-				onChange={onToggle(key)}
-			/>
-			<span className="cr-switch__track">
-				<span className="cr-switch__thumb" />
-			</span>
-		</span>
-	);
-
 	return (
-		<form onSubmit={onSubmit} className="cr-card" style={{ maxWidth: 720 }}>
+		<form onSubmit={onSubmit} className="cr-card">
 			<div className="cr-section">
 				<h2 className="cr-section__title">
 					{__('Tracking', 'cart-rebound')}
@@ -156,20 +109,18 @@ export const Settings = () => {
 						'cart-rebound'
 					)}
 				</p>
-				<div className="cr-field--row">
-					<div>
-						<label htmlFor="cr-guest" className="cr-field__label">
-							{__('Track guest carts', 'cart-rebound')}
-						</label>
-						<p className="cr-field__hint">
-							{__(
-								'Capture carts and the email guests type at checkout.',
-								'cart-rebound'
-							)}
-						</p>
-					</div>
-					{toggle('guest_tracking', 'cr-guest')}
-				</div>
+				<ToggleField
+					id="cr-guest"
+					label={__('Track guest carts', 'cart-rebound')}
+					hint={__(
+						'Capture carts and the email guests type at checkout.',
+						'cart-rebound'
+					)}
+					checked={form.guest_tracking}
+					onChange={(checked) => {
+						setField('guest_tracking', checked);
+					}}
+				/>
 			</div>
 
 			<div className="cr-section">
@@ -304,41 +255,31 @@ export const Settings = () => {
 						'cart-rebound'
 					)}
 				</p>
-				<div className="cr-field--row">
-					<div>
-						<label
-							htmlFor="cr-email-enabled"
-							className="cr-field__label"
-						>
-							{__('Send recovery email', 'cart-rebound')}
-						</label>
-						<p className="cr-field__hint">
-							{__(
-								'Schedules a single follow-up email per abandoned cart.',
-								'cart-rebound'
-							)}
-						</p>
-					</div>
-					{toggle('recovery_email_enabled', 'cr-email-enabled')}
-				</div>
+				<ToggleField
+					id="cr-email-enabled"
+					label={__('Send recovery email', 'cart-rebound')}
+					hint={__(
+						'Schedules a single follow-up email per abandoned cart.',
+						'cart-rebound'
+					)}
+					checked={form.recovery_email_enabled}
+					onChange={(checked) => {
+						setField('recovery_email_enabled', checked);
+					}}
+				/>
 
-				<div className="cr-field--row">
-					<div>
-						<label
-							htmlFor="cr-admin-notify"
-							className="cr-field__label"
-						>
-							{__('Notify admin on recovery', 'cart-rebound')}
-						</label>
-						<p className="cr-field__hint">
-							{__(
-								'Send an email whenever a tracked cart is recovered into a paid order.',
-								'cart-rebound'
-							)}
-						</p>
-					</div>
-					{toggle('admin_recovery_email', 'cr-admin-notify')}
-				</div>
+				<ToggleField
+					id="cr-admin-notify"
+					label={__('Notify admin on recovery', 'cart-rebound')}
+					hint={__(
+						'Send an email whenever a tracked cart is recovered into a paid order.',
+						'cart-rebound'
+					)}
+					checked={form.admin_recovery_email}
+					onChange={(checked) => {
+						setField('admin_recovery_email', checked);
+					}}
+				/>
 
 				{form.admin_recovery_email && (
 					<Field
