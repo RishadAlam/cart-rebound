@@ -2844,13 +2844,118 @@ a.cr-linkbtn {
 	gap: 12px;
 }
 
+/* ---- Token picker ----
+   A checkbox per option is fine for three and unusable for fifty. What is
+   chosen stays visible as removable chips; everything else hides behind a
+   filter, so the common case — nothing excluded — is two lines, not forty. */
+.cr-tokens-field {
+	display: grid;
+	gap: 10px;
+	justify-items: start;
+}
+
+.cr-tokens-field__empty {
+	margin: 0;
+	color: var(--cr-muted);
+	font-size: var(--cr-text-base);
+}
+
+.cr-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.cr-chip.is-removable {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 4px 8px 4px 10px;
+	border: 1px solid var(--cr-border);
+	border-radius: 999px;
+	background: var(--cr-panel);
+	color: var(--cr-ink-soft);
+	font-size: var(--cr-text-sm);
+	cursor: pointer;
+	transition:
+		border-color 140ms var(--cr-ease),
+		color 140ms var(--cr-ease);
+}
+
+.cr-chip.is-removable:hover {
+	border-color: var(--cr-danger);
+	color: var(--cr-danger);
+}
+
+.cr-chip.is-removable:focus-visible {
+	outline: none;
+	box-shadow: var(--cr-ring);
+}
+
+.cr-tokens-field__picker {
+	display: grid;
+	gap: 8px;
+	width: min(340px, 100%);
+	padding: 10px;
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-panel);
+}
+
+/* Tall enough to show that scrolling is possible, short enough that the list
+   never pushes the rest of the form off the screen. */
+.cr-tokens-field__list {
+	max-height: 190px;
+	margin: 0;
+	padding: 0;
+	overflow-y: auto;
+	list-style: none;
+}
+
+.cr-tokens-field__option {
+	display: block;
+	width: 100%;
+	padding: 6px 8px;
+	border: 0;
+	border-radius: 5px;
+	background: none;
+	color: var(--cr-ink);
+	font-size: var(--cr-text-base);
+	text-align: left;
+	cursor: pointer;
+}
+
+.cr-tokens-field__option:hover {
+	background: var(--cr-accent-soft);
+	color: var(--cr-accent);
+}
+
+.cr-tokens-field__option:focus-visible {
+	outline: none;
+	box-shadow: var(--cr-ring);
+}
+
+.cr-tokens-field__none {
+	padding: 6px 8px;
+	color: var(--cr-muted);
+	font-size: var(--cr-text-sm);
+}
+
 /* ---- Search ----
    Sits first in the toolbar because finding one shopper is the reason a busy
    store opens this screen at all; the status filter narrows, but only search
    answers "what happened to this customer". */
 .cr-search {
 	display: inline-flex;
+
+	/* Grows into the row and gives it back when it wraps, but never past a
+	   readable field — an email address is ~30 characters, and a search box
+	   stretched across a wide monitor reads as a mistake, not as generosity. */
 	flex: 1 1 200px;
+	max-width: 340px;
 	min-width: 0;
 	align-items: center;
 	gap: 7px;

@@ -44,18 +44,37 @@ const toChartSeries = (points: AnalyticsPoint[]): TimeseriesPoint[] =>
 		recovered: point.recovered,
 	}));
 
+/**
+ * The same tile the dashboard uses.
+ *
+ * This screen had grown its own, built on an older class whose label and value
+ * are inline — so they ran together into "Recovered revenue29.00$". Two tile
+ * implementations is one too many; there is now one, and it stacks.
+ * @param root0       Component props.
+ * @param root0.label What the number measures.
+ * @param root0.value The number.
+ * @param root0.tone  Colours the value when it is money won or money at risk.
+ */
 const Metric = ({
 	label,
 	value,
-	accent = false,
+	tone,
 }: {
 	label: string;
 	value: string;
-	accent?: boolean;
+	tone?: 'risk' | 'won';
 }) => (
-	<div className={accent ? 'cr-stat is-accent' : 'cr-stat'}>
-		<span className="cr-stat__label">{label}</span>
-		<span className="cr-stat__value">{value}</span>
+	<div className="cr-metric">
+		<div className="cr-metric__top">
+			<span className="cr-metric__label">{label}</span>
+		</div>
+		<p
+			className={
+				tone ? `cr-metric__value is-${tone}` : 'cr-metric__value'
+			}
+		>
+			{value}
+		</p>
 	</div>
 );
 
@@ -173,7 +192,7 @@ export const Analytics = () => {
 							summary.recovered_revenue,
 							summary.currency
 						)}
-						accent
+						tone="won"
 					/>
 					<Metric
 						label={__('Recovery rate', 'cart-rebound')}
@@ -189,6 +208,7 @@ export const Analytics = () => {
 							summary.abandoned_value,
 							summary.currency
 						)}
+						tone="risk"
 					/>
 					<Metric
 						label={__('Average recovered order', 'cart-rebound')}

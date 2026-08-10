@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Combobox } from '../components/Combobox';
 import { Field, ToggleField } from '../components/Field';
 import { ProSurface } from '../components/ProSurface';
+import { TokenPicker } from '../components/TokenPicker';
 import { useProQuery } from '../hooks/useAddons';
 import {
 	fetchProOptions,
@@ -72,33 +73,6 @@ export const Rules = () => {
 			const parsed = Number.parseFloat(event.target.value);
 
 			setField(key, Number.isNaN(parsed) ? 0 : Math.max(0, parsed));
-		};
-
-	const toggleRole =
-		(role: string) => (event: ChangeEvent<HTMLInputElement>) => {
-			const next = new Set(current.excluded_roles);
-
-			if (event.target.checked) {
-				next.add(role);
-			} else {
-				next.delete(role);
-			}
-
-			setField('excluded_roles', [...next]);
-		};
-
-	const toggleCategory =
-		(category: string) => (event: ChangeEvent<HTMLInputElement>) => {
-			const id = Number.parseInt(category, 10);
-			const next = new Set(current.excluded_categories);
-
-			if (event.target.checked) {
-				next.add(id);
-			} else {
-				next.delete(id);
-			}
-
-			setField('excluded_categories', [...next]);
 		};
 
 	const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -170,25 +144,22 @@ export const Rules = () => {
 						<span className="cr-field__label">
 							{__('Excluded roles', 'cart-rebound')}
 						</span>
-						<div className="cr-checks">
-							{options.data.roles.map((role) => (
-								<label
-									key={role.value}
-									htmlFor={`cr-role-${role.value}`}
-									className="cr-check"
-								>
-									<input
-										id={`cr-role-${role.value}`}
-										type="checkbox"
-										checked={current.excluded_roles.includes(
-											role.value
-										)}
-										onChange={toggleRole(role.value)}
-									/>
-									<span>{role.label}</span>
-								</label>
-							))}
-						</div>
+						<TokenPicker
+							id="cr-roles"
+							options={options.data.roles}
+							selected={current.excluded_roles}
+							placeholder={__(
+								'Type a role name…',
+								'cart-rebound'
+							)}
+							emptyLabel={__(
+								'No roles excluded — every signed-in shopper is tracked.',
+								'cart-rebound'
+							)}
+							onChange={(next) => {
+								setField('excluded_roles', next);
+							}}
+						/>
 						<p className="cr-field__hint">
 							{__(
 								'Carts from these roles are never tracked at all, so there is nothing stored to export or erase later.',
@@ -201,27 +172,27 @@ export const Rules = () => {
 						<span className="cr-field__label">
 							{__('Excluded categories', 'cart-rebound')}
 						</span>
-						<div className="cr-checks">
-							{options.data.categories.map((category) => (
-								<label
-									key={category.value}
-									htmlFor={`cr-cat-${category.value}`}
-									className="cr-check"
-								>
-									<input
-										id={`cr-cat-${category.value}`}
-										type="checkbox"
-										checked={current.excluded_categories.includes(
-											Number.parseInt(category.value, 10)
-										)}
-										onChange={toggleCategory(
-											category.value
-										)}
-									/>
-									<span>{category.label}</span>
-								</label>
-							))}
-						</div>
+						<TokenPicker
+							id="cr-categories"
+							options={options.data.categories}
+							selected={current.excluded_categories.map(String)}
+							placeholder={__(
+								'Type a category name…',
+								'cart-rebound'
+							)}
+							emptyLabel={__(
+								'No categories excluded — every product is chased.',
+								'cart-rebound'
+							)}
+							onChange={(next) => {
+								setField(
+									'excluded_categories',
+									next.map((value) =>
+										Number.parseInt(value, 10)
+									)
+								);
+							}}
+						/>
 						<p className="cr-field__hint">
 							{__(
 								'A cart containing any of these is left out of recovery.',
