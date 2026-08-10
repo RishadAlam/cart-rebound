@@ -17,7 +17,6 @@ import type {
 	AnalyticsPoint,
 	AnalyticsProductRow,
 	AnalyticsResponse,
-	LicenseState,
 	ProOptions,
 	ProSettings,
 	SequenceOverview,
@@ -336,14 +335,4 @@ export const sampleProOptions = (): ProOptions => ({
 		{ value: '24', label: __('Accessories', 'cart-rebound') },
 		{ value: '31', label: __('Gift cards', 'cart-rebound') },
 	],
-});
-
-export const sampleLicense = (): LicenseState => ({
-	status: 'unlicensed',
-	active: false,
-	masked_key: '',
-	message: '',
-	expires_at: '',
-	checked_at: '',
-	site: '',
 });

@@ -160,11 +160,15 @@ export interface CartsQuery {
 /* -------------------------------------------------------------------------- */
 /* Add-on surface.                                                            */
 /*                                                                            */
-/* The Pro screens ship here, in the free plugin, because an add-on that only  */
-/* supplies a REST API cannot render anything — and a second bundle would be   */
-/* a copy of this design system that drifts a little further with every        */
-/* release. So the screens live here and ask one question of the add-on        */
-/* registry: which of these features is something actually delivering?         */
+/* The feature screens ship here because an add-on that only supplies a REST   */
+/* API cannot render anything, and a second bundle would be a copy of this     */
+/* design system that drifts a little further with every release. So they live */
+/* here and ask the add-on registry one question: which of these features is   */
+/* something actually delivering?                                              */
+/*                                                                            */
+/* Note what is not here: licensing. An add-on owns its own licence screen,    */
+/* its own key, and its own explanation for why it is dormant. This plugin     */
+/* neither stores nor validates anything of the sort.                          */
 /* -------------------------------------------------------------------------- */
 
 /** Feature keys an add-on can claim. Mirrors `CartRebound\Extend\Feature`. */
@@ -176,18 +180,23 @@ export interface AddonSummary {
 	name: string;
 	version: string;
 	url: string;
+	/** What this add-on is delivering right now. */
 	features: ProFeature[];
-	licensed: boolean;
+	/** The add-on's own admin screen. */
+	settings_url: string;
 }
 
 export interface AddonState {
 	/** At least one add-on is installed and running. */
 	installed: boolean;
-	/** At least one installed add-on holds a valid license. */
-	licensed: boolean;
-	/** Everything currently being delivered. Empty while unlicensed. */
+	/**
+	 * Everything currently being delivered. Empty when an installed add-on is
+	 * dormant — this plugin is not told why, and does not need to be.
+	 */
 	features: ProFeature[];
 	addons: AddonSummary[];
+	/** Where to send someone whose add-on is installed but dormant. */
+	settings_url: string;
 	upgrade_url: string;
 }
 
@@ -315,17 +324,4 @@ export interface AnalyticsResponse {
 	timeseries: AnalyticsPoint[];
 	steps: StepPerformanceRow[];
 	products: AnalyticsProductRow[];
-}
-
-export type LicenseStatus = 'active' | 'expired' | 'invalid' | 'unlicensed';
-
-export interface LicenseState {
-	status: LicenseStatus;
-	/** Whether the add-on's features are unlocked right now. */
-	active: boolean;
-	masked_key: string;
-	message: string;
-	expires_at: string;
-	checked_at: string;
-	site: string;
 }

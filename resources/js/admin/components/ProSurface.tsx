@@ -16,7 +16,6 @@
  * legible and the scrim only deepens where the panel needs contrast.
  */
 import { useEffect, useRef, type ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
 import { __ } from '@wordpress/i18n';
 import { useAddons } from '../hooks/useAddons';
 import type { ProFeature } from '../types/api';
@@ -63,8 +62,8 @@ export const ProSurface = ({
 }: Props) => {
 	const {
 		installed,
-		licensed,
 		features,
+		settings_url: settingsUrl,
 		upgrade_url: upgradeUrl,
 	} = useAddons();
 
@@ -75,10 +74,11 @@ export const ProSurface = ({
 		return <>{children}</>;
 	}
 
-	// Installed but not licensed is a different problem from not installed at
-	// all: one needs a key, the other needs the add-on. Saying which is the
-	// only thing that makes the panel actionable.
-	const needsLicense = installed && !licensed;
+	// Installed but delivering nothing is a different problem from not installed
+	// at all, and only one of them is solved by buying something. Which it is
+	// decides where the button goes. Why an installed add-on is delivering
+	// nothing is its own business to explain, on its own screen.
+	const dormant = installed && features.length === 0;
 
 	return (
 		<div className="cr-lock">
@@ -96,15 +96,15 @@ export const ProSurface = ({
 				<span className="cr-tag">{__('Pro', 'cart-rebound')}</span>
 
 				<h2 className="cr-lock__title">
-					{needsLicense
-						? __('Activate your license', 'cart-rebound')
+					{dormant
+						? __('Finish setting up your add-on', 'cart-rebound')
 						: title}
 				</h2>
 
 				<p className="cr-lock__summary">
-					{needsLicense
+					{dormant
 						? __(
-								'Cart Rebound Pro is installed but its license is not active on this site, so none of its features are running yet.',
+								'An add-on is installed but is not running any of its features yet. Open its own screen to finish setting it up.',
 								'cart-rebound'
 							)
 						: summary}
@@ -117,22 +117,25 @@ export const ProSurface = ({
 				</ul>
 
 				<div className="cr-lock__actions">
-					{needsLicense ? (
-						<NavLink className="cr-btn is-primary" to="/license">
-							{__('Enter a license key', 'cart-rebound')}
-						</NavLink>
-					) : (
-						upgradeUrl !== '' && (
-							<a
-								className="cr-btn is-primary"
-								href={upgradeUrl}
-								target="_blank"
-								rel="noreferrer noopener"
-							>
-								{__('Get Cart Rebound Pro', 'cart-rebound')}
-							</a>
-						)
-					)}
+					{dormant
+						? settingsUrl !== '' && (
+								<a
+									className="cr-btn is-primary"
+									href={settingsUrl}
+								>
+									{__('Open add-on settings', 'cart-rebound')}
+								</a>
+							)
+						: upgradeUrl !== '' && (
+								<a
+									className="cr-btn is-primary"
+									href={upgradeUrl}
+									target="_blank"
+									rel="noreferrer noopener"
+								>
+									{__('Get Cart Rebound Pro', 'cart-rebound')}
+								</a>
+							)}
 				</div>
 
 				<p className="cr-lock__note">

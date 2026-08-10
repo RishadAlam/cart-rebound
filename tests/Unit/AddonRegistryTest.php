@@ -32,44 +32,44 @@ final class AddonRegistryTest extends TestCase {
 		$registry = new Registry();
 
 		$this->assertFalse( $registry->has_addons() );
-		$this->assertFalse( $registry->is_licensed() );
+		$this->assertFalse( $registry->is_delivering() );
 		$this->assertSame( array(), $registry->features() );
 		$this->assertFalse( $registry->has( Feature::SEQUENCE ) );
 	}
 
-	public function test_a_licensed_add_on_delivers_the_features_it_claims(): void {
+	public function test_an_add_on_delivers_the_features_it_reports(): void {
 		$registry = $this->registry(
 			array(
 				'slug'     => 'cart-rebound-pro',
 				'name'     => 'Cart Rebound Pro',
 				'version'  => '1.0.0',
 				'features' => array( Feature::SEQUENCE, Feature::COUPONS ),
-				'licensed' => true,
 			)
 		);
 
 		$this->assertTrue( $registry->has_addons() );
-		$this->assertTrue( $registry->is_licensed() );
+		$this->assertTrue( $registry->is_delivering() );
 		$this->assertTrue( $registry->has( Feature::SEQUENCE ) );
 		$this->assertTrue( $registry->has( Feature::COUPONS ) );
 		$this->assertFalse( $registry->has( Feature::ANALYTICS ) );
 	}
 
-	public function test_an_unlicensed_add_on_delivers_nothing_it_claims(): void {
+	public function test_a_dormant_add_on_unlocks_nothing(): void {
 		$registry = $this->registry(
 			array(
-				'slug'     => 'cart-rebound-pro',
-				'features' => array( Feature::SEQUENCE, Feature::ANALYTICS ),
-				'licensed' => false,
+				'slug'         => 'cart-rebound-pro',
+				'features'     => array(),
+				'settings_url' => 'https://shop.test/wp-admin/admin.php?page=addon',
 			)
 		);
 
-		// Installed, so its screens are reachable and its licence screen exists —
-		// but it is delivering nothing until the licence is in good standing.
+		// Installed, so its own screens are reachable and the lock can point at
+		// them. Why it is delivering nothing is the add-on's business — this
+		// plugin has no concept of a licence to ask about.
 		$this->assertTrue( $registry->has_addons() );
-		$this->assertFalse( $registry->is_licensed() );
+		$this->assertFalse( $registry->is_delivering() );
 		$this->assertSame( array(), $registry->features() );
-		$this->assertFalse( $registry->has( Feature::SEQUENCE ) );
+		$this->assertSame( 'https://shop.test/wp-admin/admin.php?page=addon', $registry->settings_url() );
 	}
 
 	public function test_an_unrecognised_feature_key_unlocks_nothing(): void {
@@ -77,7 +77,6 @@ final class AddonRegistryTest extends TestCase {
 			array(
 				'slug'     => 'rogue',
 				'features' => array( 'sequenec', 'everything', '*', Feature::RULES ),
-				'licensed' => true,
 			)
 		);
 
@@ -113,23 +112,26 @@ final class AddonRegistryTest extends TestCase {
 	public function test_state_reports_everything_the_admin_app_gates_on(): void {
 		$registry = $this->registry(
 			array(
-				'slug'     => 'cart-rebound-pro',
-				'name'     => 'Cart Rebound Pro',
-				'version'  => '1.2.3',
-				'url'      => 'https://example.test/pro',
-				'features' => array( Feature::ANALYTICS ),
-				'licensed' => true,
+				'slug'         => 'cart-rebound-pro',
+				'name'         => 'Cart Rebound Pro',
+				'version'      => '1.2.3',
+				'url'          => 'https://example.test/pro',
+				'settings_url' => 'https://shop.test/wp-admin/admin.php?page=addon',
+				'features'     => array( Feature::ANALYTICS ),
 			)
 		);
 
 		$state = $registry->state();
 
 		$this->assertTrue( $state['installed'] );
-		$this->assertTrue( $state['licensed'] );
 		$this->assertSame( array( Feature::ANALYTICS ), $state['features'] );
 		$this->assertSame( 'cart-rebound-pro', $state['addons'][0]['slug'] );
 		$this->assertSame( '1.2.3', $state['addons'][0]['version'] );
 		$this->assertSame( 'https://cart-rebound.test/upgrade', $state['upgrade_url'] );
+
+		// Nothing in the state names a licence: the concept does not exist here.
+		$this->assertArrayNotHasKey( 'licensed', $state );
+		$this->assertArrayNotHasKey( 'licensed', $state['addons'][0] );
 	}
 
 	/**

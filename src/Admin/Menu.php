@@ -112,10 +112,10 @@ final class Menu {
 		 * it happened to, what goes out to them, how it performed, who is
 		 * excluded, then diagnostics, configuration, and the licence last.
 		 *
-		 * Add-on screens are listed whether or not an add-on is installed. They
-		 * render their real interface either way — locked over a preview until
-		 * an add-on unlocks them — so a menu entry that vanished would be hiding
-		 * a screen that exists and works.
+		 * Add-on feature screens are listed whether or not an add-on is
+		 * installed. They render their real interface either way — locked over a
+		 * preview until an add-on unlocks them — so a menu entry that vanished
+		 * would be hiding a screen that exists and works.
 		 */
 		$submenus = array(
 			self::SLUG                => array( __( 'Dashboard', 'cart-rebound' ), '/', '' ),
@@ -143,21 +143,12 @@ final class Menu {
 			}
 		}
 
-		// The licence screen only exists once there is a licence to manage.
-		if ( $this->addons->has_addons() ) {
-			$licence_hook = add_submenu_page(
-				self::SLUG,
-				__( 'License', 'cart-rebound' ),
-				__( 'License', 'cart-rebound' ),
-				$capability,
-				self::SLUG . '-license',
-				array( $this->dashboard, 'render' )
-			);
-
-			if ( is_string( $licence_hook ) && '' !== $licence_hook ) {
-				$this->page_hooks[ $licence_hook ] = '/license';
-			}
-		}
+		/*
+		 * An add-on adds its own entries here, under this parent, and renders
+		 * them itself. Nothing about a paid add-on's own screens — its licence
+		 * above all — belongs in this plugin.
+		 */
+		do_action( 'cart_rebound_admin_menu', self::SLUG, $capability );
 
 		/*
 		 * WooCommerce's own menu_order filter pins Products immediately after

@@ -14,9 +14,11 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Knows which add-ons are present and what they are currently delivering.
  *
- * The free plugin has no dependency on any particular add-on: it opens a
+ * This plugin has no dependency on any particular add-on: it opens a
  * registration action, collects whatever answers, and gates its own Pro screens
- * on the feature keys it got back. Nothing here names a product.
+ * on the feature keys it got back. Nothing here names a product, and nothing
+ * here knows what a licence is — an add-on reports what it is delivering, and
+ * owns whatever screen explains why.
  *
  * Collection is lazy and memoised. Firing on first read rather than on a fixed
  * hook means an add-on can register from wherever it boots — `plugins_loaded`,
@@ -50,12 +52,13 @@ final class Registry {
 	 *
 	 *     add_action( 'cart_rebound_register_addons', function ( $registry ) {
 	 *         $registry->register( array(
-	 *             'slug'     => 'cart-rebound-pro',
-	 *             'name'     => 'Cart Rebound Pro',
-	 *             'version'  => CART_REBOUND_PRO_VERSION,
-	 *             'url'      => 'https://example.com/pro',
-	 *             'features' => array( 'sequence', 'coupons' ),
-	 *             'licensed' => $license->is_valid(),
+	 *             'slug'         => 'cart-rebound-pro',
+	 *             'name'         => 'Cart Rebound Pro',
+	 *             'version'      => CART_REBOUND_PRO_VERSION,
+	 *             'url'          => 'https://example.com/pro',
+	 *             'settings_url' => admin_url( 'admin.php?page=my-addon' ),
+	 *             // Only what it is delivering right now.
+	 *             'features'     => $active ? array( 'sequence', 'coupons' ) : array(),
 	 *         ) );
 	 *     } );
 	 *
@@ -105,20 +108,37 @@ final class Registry {
 	}
 
 	/**
-	 * Whether any installed add-on holds a valid license.
+	 * Whether any installed add-on is delivering anything at all.
 	 *
 	 * @since 1.1.0
 	 *
 	 * @return bool
 	 */
-	public function is_licensed(): bool {
+	public function is_delivering(): bool {
 		foreach ( $this->all() as $addon ) {
-			if ( $addon->is_licensed() ) {
+			if ( $addon->is_delivering() ) {
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Where to send someone whose add-on is installed but delivering nothing.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return string The first add-on's own screen, or '' when none said.
+	 */
+	public function settings_url(): string {
+		foreach ( $this->all() as $addon ) {
+			if ( '' !== $addon->settings_url() ) {
+				return $addon->settings_url();
+			}
+		}
+
+		return '';
 	}
 
 	/**
@@ -132,7 +152,7 @@ final class Registry {
 		$features = array();
 
 		foreach ( $this->all() as $addon ) {
-			foreach ( $addon->active_features() as $feature ) {
+			foreach ( $addon->features() as $feature ) {
 				if ( ! in_array( $feature, $features, true ) ) {
 					$features[] = $feature;
 				}
@@ -146,8 +166,8 @@ final class Registry {
 	 * Whether a named feature is currently being delivered.
 	 *
 	 * The one call the rest of the plugin makes. It answers false for a feature
-	 * nobody registered, and false for one registered by an add-on whose license
-	 * has lapsed — the two cases the caller does not need to tell apart.
+	 * nobody registered and false for one an add-on is not currently delivering
+	 * — two cases the caller does not need to tell apart.
 	 *
 	 * @since 1.1.0
 	 *
@@ -173,11 +193,11 @@ final class Registry {
 		}
 
 		return array(
-			'installed'   => array() !== $addons,
-			'licensed'    => $this->is_licensed(),
-			'features'    => $this->features(),
-			'addons'      => $addons,
-			'upgrade_url' => self::upgrade_url(),
+			'installed'    => array() !== $addons,
+			'features'     => $this->features(),
+			'addons'       => $addons,
+			'settings_url' => $this->settings_url(),
+			'upgrade_url'  => self::upgrade_url(),
 		);
 	}
 

@@ -6,7 +6,6 @@ import { Layout } from './components/Layout';
 import { Analytics } from './pages/Analytics';
 import { Carts } from './pages/Carts';
 import { Dashboard } from './pages/Dashboard';
-import { License } from './pages/License';
 import { Log } from './pages/Log';
 import { Rules } from './pages/Rules';
 import { Sequence } from './pages/Sequence';
@@ -26,7 +25,6 @@ export const router = createHashRouter([
 			{ path: 'rules', element: <Rules /> },
 			{ path: 'logs', element: <Log /> },
 			{ path: 'settings', element: <Settings /> },
-			{ path: 'license', element: <License /> },
 		],
 	},
 ]);

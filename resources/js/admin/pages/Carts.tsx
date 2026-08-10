@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
 import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
-import { formatMoney } from '../lib/format';
+import { formatExact, formatMoney, formatWhen } from '../lib/format';
 import { statusLabel } from '../lib/status';
 import {
 	useBulkCarts,
@@ -490,7 +490,12 @@ const CartRow = ({
 					onChange={onStatusChange}
 				/>
 			</td>
-			<td className="cr-muted cr-nowrap">{cart.last_activity}</td>
+			<td
+				className="cr-muted cr-nowrap"
+				title={formatExact(cart.last_activity)}
+			>
+				{formatWhen(cart.last_activity)}
+			</td>
 			<td style={{ textAlign: 'right' }}>
 				<OrderLink cart={cart} />
 			</td>
@@ -592,19 +597,19 @@ const CartDetail = ({
 	const name = `${cart.first_name} ${cart.last_name}`.trim();
 
 	const timeline: Array<[string, string]> = [
-		[__('Created', 'cart-rebound'), cart.created_at],
+		[__('Created', 'cart-rebound'), formatExact(cart.created_at)],
 	];
 
 	if (cart.abandoned_at !== '') {
 		timeline.push([
 			_x('Abandoned', 'cart status', 'cart-rebound'),
-			cart.abandoned_at,
+			formatExact(cart.abandoned_at),
 		]);
 	}
 	if (cart.recovered_at !== '') {
 		timeline.push([
 			_x('Recovered', 'cart status', 'cart-rebound'),
-			cart.recovered_at,
+			formatExact(cart.recovered_at),
 		]);
 	}
 	if (cart.completed_at !== '') {
@@ -613,7 +618,10 @@ const CartDetail = ({
 			cart.completed_at,
 		]);
 	}
-	timeline.push([__('Last activity', 'cart-rebound'), cart.last_activity]);
+	timeline.push([
+		__('Last activity', 'cart-rebound'),
+		formatExact(cart.last_activity),
+	]);
 
 	const identity = name !== '' ? name : cart.email;
 	const avatar = (identity.trim()[0] ?? '#').toUpperCase();

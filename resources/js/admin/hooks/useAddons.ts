@@ -5,8 +5,8 @@
  *
  * 1. The answer arrives with the page, localised into `window.CartRebound`, so
  *    a screen never renders unlocked and then snaps shut (or the reverse) once
- *    a request lands. The REST call exists only to refresh that answer after a
- *    license is activated, without a page reload.
+ *    a request lands. The REST call exists only to pick up a change an add-on
+ *    made on its own screen, without a page reload.
  *
  * 2. A locked screen fetches nothing. Its endpoints do not exist on a site with
  *    no add-on, so `useProQuery` stays disabled and hands the screen sample data
@@ -19,9 +19,9 @@ import type { AddonState, ProFeature } from '../types/api';
 
 const EMPTY_STATE: AddonState = {
 	installed: false,
-	licensed: false,
 	features: [],
 	addons: [],
+	settings_url: '',
 	upgrade_url: '',
 };
 

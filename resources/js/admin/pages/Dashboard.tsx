@@ -22,7 +22,7 @@ import {
 	useStats,
 	useTimeseries,
 } from '../hooks/useApi';
-import { formatMoney } from '../lib/format';
+import { formatMoney, formatWhen } from '../lib/format';
 import { statusLabel } from '../lib/status';
 import type { Cart, ProductReportRow, Stats } from '../types/api';
 
@@ -325,7 +325,7 @@ const RecentCarts = () => {
 											</span>
 										</td>
 										<td className="cr-muted cr-nowrap">
-											{cart.last_activity}
+											{formatWhen(cart.last_activity)}
 										</td>
 									</tr>
 								))}

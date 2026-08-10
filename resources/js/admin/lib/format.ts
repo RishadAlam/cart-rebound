@@ -3,6 +3,27 @@
  */
 import { __, sprintf, _n } from '@wordpress/i18n';
 
+const HOUR_MS = 3_600_000;
+const DAY_MS = 86_400_000;
+
+/**
+ * Parse a stored `Y-m-d H:i:s` UTC timestamp.
+ *
+ * Safari refuses the space-separated form, so the separator is normalised and
+ * the zone made explicit rather than left to the browser to guess — guessing is
+ * how a timestamp silently shifts by the viewer's offset.
+ * @param utc The stored timestamp.
+ */
+const parseUtc = (utc: string): Date | null => {
+	if (utc === '') {
+		return null;
+	}
+
+	const parsed = new Date(`${utc.replace(' ', 'T')}Z`);
+
+	return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 /**
  * Say a delay the way a merchant would say it.
  *
@@ -201,4 +222,76 @@ export const formatMoney = (amount: number, currency: string): string => {
 	} catch {
 		return `${amount.toFixed(2)} ${currency}`;
 	}
+};
+
+/**
+ * Render a stored timestamp the way a shop owner reads a clock.
+ *
+ * Rows arrive as `Y-m-d H:i:s` in UTC. Printed raw that is a machine's
+ * timestamp in a stranger's timezone — accurate and useless. Recent moments
+ * become "12 minutes ago", because on a screen about carts abandoned in the
+ * last hour the question is always "how long ago", never "at what o'clock";
+ * older ones become a real date, because past a day "3 days ago" stops being
+ * something you can match against an order.
+ * @param utc An ISO-ish `YYYY-MM-DD HH:MM:SS` timestamp in UTC.
+ */
+export const formatWhen = (utc: string): string => {
+	const parsed = parseUtc(utc);
+
+	if (parsed === null) {
+		return utc;
+	}
+
+	const elapsed = Date.now() - parsed.getTime();
+
+	// Clock skew between the server and the browser can put a "just now" row a
+	// few seconds into the future; that is still just now.
+	if (elapsed < 90_000) {
+		return __('Just now', 'cart-rebound');
+	}
+
+	if (elapsed < HOUR_MS) {
+		const minutes = Math.round(elapsed / 60_000);
+
+		return sprintf(
+			/* translators: %d: number of minutes. */
+			_n('%d minute ago', '%d minutes ago', minutes, 'cart-rebound'),
+			minutes
+		);
+	}
+
+	if (elapsed < DAY_MS) {
+		const hours = Math.round(elapsed / HOUR_MS);
+
+		return sprintf(
+			/* translators: %d: number of hours. */
+			_n('%d hour ago', '%d hours ago', hours, 'cart-rebound'),
+			hours
+		);
+	}
+
+	return new Intl.DateTimeFormat(undefined, {
+		dateStyle: 'medium',
+		timeStyle: 'short',
+	}).format(parsed);
+};
+
+/**
+ * Render a stored timestamp as an exact local date and time.
+ *
+ * Used where the precise moment is the point — a cart's timeline, a log entry
+ * being matched against an order — and as the tooltip behind {@link formatWhen}.
+ * @param utc An ISO-ish `YYYY-MM-DD HH:MM:SS` timestamp in UTC.
+ */
+export const formatExact = (utc: string): string => {
+	const parsed = parseUtc(utc);
+
+	if (parsed === null) {
+		return utc;
+	}
+
+	return new Intl.DateTimeFormat(undefined, {
+		dateStyle: 'medium',
+		timeStyle: 'medium',
+	}).format(parsed);
 };

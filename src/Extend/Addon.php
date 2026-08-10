@@ -19,6 +19,11 @@ defined( 'ABSPATH' ) || exit;
  * decide what it unlocks. Unknown feature keys are dropped rather than passed
  * through, so a typo unlocks nothing instead of unlocking everything.
  *
+ * Note what is absent: this plugin has no concept of a licence. An add-on says
+ * which features it is delivering right now and where its own screen lives.
+ * Whether it is delivering nothing because a key expired, a trial ended, or a
+ * setting is off is a question this plugin neither asks nor could answer.
+ *
  * @since 1.1.0
  */
 final class Addon {
@@ -64,12 +69,12 @@ final class Addon {
 	private $features;
 
 	/**
-	 * Whether the add-on's license is currently in good standing.
+	 * Where the add-on's own admin screen lives.
 	 *
 	 * @since 1.1.0
-	 * @var bool
+	 * @var string
 	 */
-	private $licensed;
+	private $settings_url;
 
 	/**
 	 * Constructor.
@@ -79,17 +84,17 @@ final class Addon {
 	 * @param string             $slug     Unique slug.
 	 * @param string             $name     Display name.
 	 * @param string             $version  Version string.
-	 * @param string             $url      Product/renewal URL.
-	 * @param array<int, string> $features Recognised feature keys.
-	 * @param bool               $licensed Whether the license is in good standing.
+	 * @param string             $url          Product URL.
+	 * @param array<int, string> $features     Feature keys it is currently delivering.
+	 * @param string             $settings_url The add-on's own admin screen.
 	 */
-	private function __construct( string $slug, string $name, string $version, string $url, array $features, bool $licensed ) {
-		$this->slug     = $slug;
-		$this->name     = $name;
-		$this->version  = $version;
-		$this->url      = $url;
-		$this->features = $features;
-		$this->licensed = $licensed;
+	private function __construct( string $slug, string $name, string $version, string $url, array $features, string $settings_url ) {
+		$this->slug         = $slug;
+		$this->name         = $name;
+		$this->version      = $version;
+		$this->url          = $url;
+		$this->features     = $features;
+		$this->settings_url = $settings_url;
 	}
 
 	/**
@@ -115,7 +120,7 @@ final class Addon {
 			sanitize_text_field( (string) ( $data['version'] ?? '' ) ),
 			esc_url_raw( (string) ( $data['url'] ?? '' ) ),
 			self::clean_features( $data['features'] ?? array() ),
-			! empty( $data['licensed'] )
+			esc_url_raw( (string) ( $data['settings_url'] ?? '' ) )
 		);
 	}
 
@@ -164,7 +169,12 @@ final class Addon {
 	}
 
 	/**
-	 * Get the feature keys this add-on claims.
+	 * Get the feature keys this add-on is currently delivering.
+	 *
+	 * An add-on that is installed but not currently delivering — however it
+	 * decides that — reports an empty list, and the matching screens stay
+	 * locked. Why it is not delivering is the add-on's business to explain on
+	 * its own screen, which is what {@see settings_url()} points at.
 	 *
 	 * @since 1.1.0
 	 *
@@ -175,28 +185,25 @@ final class Addon {
 	}
 
 	/**
-	 * Whether the license is in good standing.
+	 * Where the add-on's own admin screen lives.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return string
+	 */
+	public function settings_url(): string {
+		return $this->settings_url;
+	}
+
+	/**
+	 * Whether the add-on is delivering anything at all right now.
 	 *
 	 * @since 1.1.0
 	 *
 	 * @return bool
 	 */
-	public function is_licensed(): bool {
-		return $this->licensed;
-	}
-
-	/**
-	 * The feature keys this add-on is actually delivering right now.
-	 *
-	 * An unlicensed add-on delivers nothing, whatever it claims — which is what
-	 * keeps the screens honest when a license lapses.
-	 *
-	 * @since 1.1.0
-	 *
-	 * @return array<int, string>
-	 */
-	public function active_features(): array {
-		return $this->licensed ? $this->features : array();
+	public function is_delivering(): bool {
+		return array() !== $this->features;
 	}
 
 	/**
@@ -208,12 +215,12 @@ final class Addon {
 	 */
 	public function to_array(): array {
 		return array(
-			'slug'     => $this->slug,
-			'name'     => $this->name,
-			'version'  => $this->version,
-			'url'      => $this->url,
-			'features' => $this->features,
-			'licensed' => $this->licensed,
+			'slug'         => $this->slug,
+			'name'         => $this->name,
+			'version'      => $this->version,
+			'url'          => $this->url,
+			'features'     => $this->features,
+			'settings_url' => $this->settings_url,
 		);
 	}
 

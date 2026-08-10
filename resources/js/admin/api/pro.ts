@@ -10,7 +10,6 @@ import { apiClient } from './client';
 import type {
 	AddonState,
 	AnalyticsResponse,
-	LicenseState,
 	ProOptions,
 	ProSettings,
 	ProSettingsResponse,
@@ -73,35 +72,6 @@ export const fetchAnalyticsCsv = async (
 		responseType: 'text',
 		transformResponse: [(value: string) => value],
 	});
-
-	return data;
-};
-
-export const fetchLicense = async (): Promise<LicenseState> => {
-	const { data } = await apiClient.get<LicenseState>('pro/license');
-
-	return data;
-};
-
-export const activateLicense = async (key: string): Promise<LicenseState> => {
-	const { data } = await apiClient.post<LicenseState>('pro/license', {
-		license_key: key,
-	});
-
-	return data;
-};
-
-export const refreshLicense = async (): Promise<LicenseState> => {
-	const { data } = await apiClient.post<LicenseState>(
-		'pro/license/refresh',
-		{}
-	);
-
-	return data;
-};
-
-export const deactivateLicense = async (): Promise<LicenseState> => {
-	const { data } = await apiClient.delete<LicenseState>('pro/license');
 
 	return data;
 };

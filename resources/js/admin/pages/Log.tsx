@@ -6,6 +6,7 @@ import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
 import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
 import { useClearLog, useLogs } from '../hooks/useApi';
+import { formatExact, formatWhen } from '../lib/format';
 import type { LogEntry } from '../types/api';
 
 const LEVELS = ['', 'info', 'success', 'warning', 'error'];
@@ -50,7 +51,12 @@ const Dash = () => <span className="cr-muted">—</span>;
 
 const LogRow = ({ entry }: { entry: LogEntry }) => (
 	<tr>
-		<td className="cr-muted cr-nowrap">{entry.created_at}</td>
+		<td
+			className="cr-muted cr-nowrap"
+			title={formatExact(entry.created_at)}
+		>
+			{formatWhen(entry.created_at)}
+		</td>
 		<td>
 			<LevelBadge level={entry.level} />
 		</td>

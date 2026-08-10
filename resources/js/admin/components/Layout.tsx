@@ -13,8 +13,6 @@ interface Tab {
 	end: boolean;
 	/** Present on tabs an add-on unlocks; absent on the free ones. */
 	feature?: ProFeature;
-	/** Shown only once an add-on is installed. */
-	requiresAddon?: boolean;
 }
 
 const TABS: Tab[] = [
@@ -41,12 +39,6 @@ const TABS: Tab[] = [
 	},
 	{ to: '/logs', label: __('Log', 'cart-rebound'), end: false },
 	{ to: '/settings', label: __('Settings', 'cart-rebound'), end: false },
-	{
-		to: '/license',
-		label: __('License', 'cart-rebound'),
-		end: false,
-		requiresAddon: true,
-	},
 ];
 
 const tabClass = ({ isActive }: { isActive: boolean }): string =>
@@ -58,16 +50,12 @@ const WIDE_ROUTES = ['/', '/carts', '/logs', '/analytics'];
 
 export const Layout = () => {
 	const { pathname } = useLocation();
-	const { installed, features, addons } = useAddons();
+	const { features, addons } = useAddons();
 	const wide = WIDE_ROUTES.includes(pathname);
 
-	const visible = TABS.filter(
-		(tab) => tab.requiresAddon !== true || installed
-	);
-
-	// A licensed add-on renames the product, because from that point on it is
-	// what the merchant bought. Nothing else about the shell changes.
-	const addon = addons.find((candidate) => candidate.licensed);
+	// An add-on that is delivering renames the product, because from that point
+	// on it is what the merchant bought. Nothing else about the shell changes.
+	const addon = addons.find((candidate) => candidate.features.length > 0);
 	const title = addon ? addon.name : __('Cart Rebound', 'cart-rebound');
 
 	return (
@@ -85,7 +73,7 @@ export const Layout = () => {
 			</header>
 
 			<nav className="cr-tabs">
-				{visible.map((tab) => (
+				{TABS.map((tab) => (
 					<NavLink
 						key={tab.to}
 						to={tab.to}
