@@ -2773,6 +2773,66 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
+/* A notice that carries its own fix. The action sits on the same line on a
+   wide screen and drops below the text when there is no room for both. */
+.cr-notice--action {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+/* ---- Search ----
+   Sits first in the toolbar because finding one shopper is the reason a busy
+   store opens this screen at all; the status filter narrows, but only search
+   answers "what happened to this customer". */
+.cr-search {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 0 10px;
+	border: 1px solid var(--cr-border);
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-surface);
+	color: var(--cr-muted);
+	transition:
+		border-color 140ms var(--cr-ease),
+		box-shadow 140ms var(--cr-ease);
+}
+
+.cr-search:focus-within {
+	border-color: var(--cr-accent);
+	box-shadow: var(--cr-ring);
+}
+
+.cr-search svg {
+	flex: none;
+	width: 14px;
+	height: 14px;
+}
+
+.cr-search__input {
+	width: 220px;
+	max-width: 100%;
+	padding: 7px 0;
+	border: 0;
+	background: none;
+	color: var(--cr-ink);
+	font-size: 13px;
+	outline: none;
+}
+
+.cr-search__input::placeholder {
+	color: var(--cr-muted);
+}
+
+/* Safari draws its own clear affordance that does not match anything else on
+   the page; the field is clearable by selecting and deleting like any other. */
+.cr-search__input::-webkit-search-cancel-button {
+	appearance: none;
+}
+
 /* ---- Pro markers on the tab bar ----
    Small enough to read as metadata rather than a second label, and only ever
    present on a tab whose feature is genuinely not running. */
@@ -2794,6 +2854,23 @@ a.cr-linkbtn {
 	border-color: var(--cr-accent-soft);
 	background: var(--cr-accent-soft);
 	color: var(--cr-accent);
+}
+
+/* A number and its unit are one value, so they sit in one control rather than
+   as two fields a reader has to associate for themselves. */
+.cr-duration {
+	display: flex;
+	gap: 8px;
+}
+
+.cr-duration input {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.cr-duration select {
+	flex: 0 0 auto;
+	width: auto;
 }
 
 /* ---- Sequence steps ----

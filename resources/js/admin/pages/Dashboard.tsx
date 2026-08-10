@@ -19,6 +19,7 @@ import { RevenueChart } from '../components/RevenueChart';
 import {
 	useCarts,
 	useProductReport,
+	useSettings,
 	useStats,
 	useTimeseries,
 } from '../hooks/useApi';
@@ -340,11 +341,13 @@ const RecentCarts = () => {
 const ProductReport = ({
 	days,
 	rows,
+	currency,
 	isLoading,
 	isError,
 }: {
 	days: number;
 	rows: ProductReportRow[];
+	currency: string;
 	isLoading: boolean;
 	isError: boolean;
 }) => (
@@ -380,14 +383,17 @@ const ProductReport = ({
 							<th style={{ textAlign: 'right' }}>
 								{__('Recovered', 'cart-rebound')}
 							</th>
+							<th style={{ textAlign: 'right' }}>
+								{__('Value lost', 'cart-rebound')}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
-						{isLoading && <TableSkeleton columns={3} />}
+						{isLoading && <TableSkeleton columns={4} />}
 
 						{!isLoading && rows.length === 0 && (
 							<tr>
-								<td colSpan={3} className="cr-report__empty">
+								<td colSpan={4} className="cr-report__empty">
 									{__(
 										'No products abandoned in this period.',
 										'cart-rebound'
@@ -400,22 +406,16 @@ const ProductReport = ({
 							rows.map((row) => (
 								<tr key={row.product_id}>
 									<td className="cr-cell-email">
-										{row.name !== ''
-											? row.name
-											: sprintf(
-													/* translators: %d: product id. */
-													__(
-														'Product #%d',
-														'cart-rebound'
-													),
-													row.product_id
-												)}
+										<ProductName row={row} />
 									</td>
 									<td style={{ textAlign: 'right' }}>
 										{row.abandoned}
 									</td>
 									<td style={{ textAlign: 'right' }}>
 										{row.recovered}
+									</td>
+									<td style={{ textAlign: 'right' }}>
+										{formatMoney(row.lost_value, currency)}
 									</td>
 								</tr>
 							))}
@@ -426,8 +426,61 @@ const ProductReport = ({
 	</section>
 );
 
+/**
+ * A product's name, linked to its editor when the viewer can open it.
+ *
+ * The report exists to be acted on — "this product leaks the most money" is a
+ * prompt to go and look at it — so the row carries you there instead of making
+ * you search the catalogue for the name you just read.
+ * @param root0     Component props.
+ * @param root0.row The report row.
+ */
+const ProductName = ({ row }: { row: ProductReportRow }) => {
+	const label =
+		row.name !== ''
+			? row.name
+			: sprintf(
+					/* translators: %d: product id. */
+					__('Product #%d', 'cart-rebound'),
+					row.product_id
+				);
+
+	if (row.edit_url === '') {
+		return <>{label}</>;
+	}
+
+	return <a href={row.edit_url}>{label}</a>;
+};
+
+/**
+ * The one thing a new store gets wrong, said plainly on the screen they land on.
+ *
+ * Cart Rebound tracks carts the moment it is activated, so the dashboard fills
+ * with abandoned carts and recoverable revenue whether or not a single email is
+ * configured to go out. A merchant reads those numbers as "it is working". This
+ * says so when it is not, and links to the switch — a warning that does not
+ * carry you to the fix is just an accusation.
+ */
+const NotSendingNotice = () => (
+	<div className="cr-notice is-warning cr-notice--action">
+		<div>
+			<strong>
+				{__('No recovery emails are going out.', 'cart-rebound')}
+			</strong>{' '}
+			{__(
+				'Carts are being tracked and counted here, but nothing is being sent to bring shoppers back.',
+				'cart-rebound'
+			)}
+		</div>
+		<Link className="cr-btn is-primary is-sm" to="/settings">
+			{__('Turn on recovery email', 'cart-rebound')}
+		</Link>
+	</div>
+);
+
 export const Dashboard = () => {
 	const [days, setDays] = useState(30);
+	const settings = useSettings();
 	const stats = useStats();
 	const series = useTimeseries(days);
 	const products = useProductReport(days, REPORT_ROWS);
@@ -450,6 +503,10 @@ export const Dashboard = () => {
 
 	return (
 		<div className="cr-dash">
+			{settings.data?.recovery_email_enabled === false && (
+				<NotSendingNotice />
+			)}
+
 			<section className="cr-card cr-overview">
 				<header className="cr-overview__head">
 					<div>
@@ -506,6 +563,7 @@ export const Dashboard = () => {
 				<ProductReport
 					days={days}
 					rows={products.data ?? []}
+					currency={stats.data?.currency ?? ''}
 					isLoading={products.isLoading}
 					isError={products.isError}
 				/>

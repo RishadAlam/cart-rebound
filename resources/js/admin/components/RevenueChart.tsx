@@ -21,6 +21,14 @@ const TICKS = 4;
 const TENSION = 0.18;
 const MAX_LABELS = 8;
 
+/**
+ * Narrowest gap two date labels may sit at, in pixels.
+ *
+ * A little wider than "Aug 09" renders, so the check rejects a collision
+ * before it is visible rather than once the glyphs already touch.
+ */
+const MIN_LABEL_GAP = 62;
+
 interface Pt {
 	x: number;
 	y: number;
@@ -238,6 +246,48 @@ export const RevenueChart = ({
 	};
 
 	const labelEvery = Math.max(1, Math.ceil(points.length / MAX_LABELS));
+
+	/*
+	 * Which dates get a label.
+	 *
+	 * Evenly thinning the axis is not enough on its own: the last point always
+	 * earns a label — it is the range's end, the one date a reader looks for —
+	 * but it only lands on the even stride when the series divides cleanly.
+	 * When it does not, it appears a pixel or two from its neighbour and the
+	 * two collide, which is what "Aug 09 Aug 10" was.
+	 *
+	 * So the walk runs from the end backwards, keeping the last label and then
+	 * only those far enough from the one already kept. Dropping the neighbour
+	 * rather than the end keeps the meaningful date and loses the arbitrary one.
+	 */
+	const labelIndexes = useMemo(() => {
+		const last = points.length - 1;
+
+		if (last < 0 || innerW <= 0) {
+			return [];
+		}
+
+		const candidates = [last];
+
+		for (let index = last - labelEvery; index >= 0; index -= labelEvery) {
+			candidates.push(index);
+		}
+
+		const kept: number[] = [];
+		let previous: number | null = null;
+
+		for (const index of candidates) {
+			const x = PAD.left + (last === 0 ? 0 : (index / last) * innerW);
+
+			if (previous === null || previous - x >= MIN_LABEL_GAP) {
+				kept.push(index);
+				previous = x;
+			}
+		}
+
+		return kept.reverse();
+	}, [points.length, labelEvery, innerW]);
+
 	const activePoint = active === null ? undefined : points[active];
 
 	const onMove = (event: ReactPointerEvent<SVGRectElement>) => {
@@ -382,11 +432,10 @@ export const RevenueChart = ({
 						</g>
 
 						{/* Date axis — thinned so labels never collide. */}
-						{points.map((point, index) => {
-							if (
-								index % labelEvery !== 0 &&
-								index !== points.length - 1
-							) {
+						{labelIndexes.map((index) => {
+							const point = points[index];
+
+							if (!point) {
 								return null;
 							}
 

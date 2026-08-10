@@ -190,6 +190,18 @@ const templateLabel = (template: EmailTemplate): string => {
 	);
 };
 
+const SearchIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<circle cx="7" cy="7" r="4.3" stroke="currentColor" strokeWidth="1.3" />
+		<path
+			d="m10.4 10.4 3 3"
+			stroke="currentColor"
+			strokeWidth="1.3"
+			strokeLinecap="round"
+		/>
+	</svg>
+);
+
 const EyeIcon = () => (
 	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
 		<path
@@ -1129,6 +1141,11 @@ export const Carts = () => {
 		by: 'last_activity',
 		order: 'desc',
 	});
+	const [search, setSearch] = useState('');
+	// The value the query actually uses, settled a beat after typing stops. A
+	// request per keystroke would put eight in flight for one email address, and
+	// the answers can arrive out of order.
+	const [searchQuery, setSearchQuery] = useState('');
 	const [selected, setSelected] = useState<Set<number>>(new Set());
 	const [bulkStatus, setBulkStatus] = useState('');
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -1136,9 +1153,20 @@ export const Carts = () => {
 	const [sendCart, setSendCart] = useState<Cart | null>(null);
 	const [detailCart, setDetailCart] = useState<Cart | null>(null);
 
+	useEffect(() => {
+		const timer = window.setTimeout(() => {
+			setSearchQuery(search.trim());
+			setPage(1);
+		}, 300);
+
+		return () => {
+			window.clearTimeout(timer);
+		};
+	}, [search]);
+
 	const { data, isLoading, isFetching, isError } = useCarts({
 		status,
-		email: '',
+		email: searchQuery,
 		page,
 		per_page: perPage,
 		orderby: sort.by,
@@ -1291,6 +1319,26 @@ export const Carts = () => {
 	return (
 		<div>
 			<div className="cr-toolbar">
+				<div className="cr-search">
+					<label
+						className="screen-reader-text"
+						htmlFor="cr-cart-search"
+					>
+						{__('Search carts by email', 'cart-rebound')}
+					</label>
+					<SearchIcon />
+					<input
+						id="cr-cart-search"
+						type="search"
+						className="cr-search__input"
+						value={search}
+						placeholder={__('Search by email…', 'cart-rebound')}
+						onChange={(event) => {
+							setSearch(event.target.value);
+						}}
+					/>
+				</div>
+
 				<span className="cr-toolbar__label">
 					{__('Status', 'cart-rebound')}
 				</span>

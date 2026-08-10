@@ -309,6 +309,7 @@ final class CartRepository {
 						'name'       => (string) ( $product['name'] ?? '' ),
 						'abandoned'  => 0,
 						'recovered'  => 0,
+						'lost_value' => 0.0,
 					);
 				}
 
@@ -318,20 +319,49 @@ final class CartRepository {
 
 				if ( $was_recovered ) {
 					++$tally[ $id ]['recovered'];
+				} elseif ( $was_abandoned ) {
+					/*
+					 * Counts alone rank a £4 sticker above a £400 coat that was
+					 * abandoned half as often, which is the opposite of what the
+					 * merchant should act on. Only carts that were not recovered
+					 * count as value lost — a recovered cart cost nothing.
+					 */
+					$tally[ $id ]['lost_value'] += (float) ( $product['total'] ?? 0 );
 				}
 			}
 		}
 
 		$products = array_values( $tally );
 
+		/*
+		 * Ranked by the money still on the table, not by how often a product
+		 * appears. A cheap item abandoned constantly is a smaller problem than
+		 * one expensive item abandoned twice, and the merchant can only act on
+		 * the second.
+		 */
 		usort(
 			$products,
 			static function ( array $a, array $b ): int {
+				$value = (float) $b['lost_value'] <=> (float) $a['lost_value'];
+
+				if ( 0 !== $value ) {
+					return $value;
+				}
+
 				return ( (int) $b['abandoned'] + (int) $b['recovered'] ) <=> ( (int) $a['abandoned'] + (int) $a['recovered'] );
 			}
 		);
 
-		return array_slice( $products, 0, $limit );
+		$products = array_slice( $products, 0, $limit );
+
+		foreach ( $products as $index => $product ) {
+			$products[ $index ]['lost_value'] = round( (float) $product['lost_value'], 2 );
+			$products[ $index ]['edit_url']   = current_user_can( 'edit_post', (int) $product['product_id'] )
+				? (string) get_edit_post_link( (int) $product['product_id'], 'raw' )
+				: '';
+		}
+
+		return $products;
 	}
 
 	/**

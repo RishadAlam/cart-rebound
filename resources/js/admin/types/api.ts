@@ -71,6 +71,10 @@ export interface ProductReportRow {
 	name: string;
 	abandoned: number;
 	recovered: number;
+	/** Value in carts that were abandoned and never recovered. */
+	lost_value: number;
+	/** wp-admin edit URL; empty when the viewer cannot edit the product. */
+	edit_url: string;
 }
 
 export interface Settings {
