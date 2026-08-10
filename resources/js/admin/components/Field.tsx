@@ -46,6 +46,45 @@ export const Field = ({ id, label, hint, error, children }: Props) => (
 );
 
 /**
+ * The switch itself, without a layout around it.
+ *
+ * Separate from ToggleField because not every switch sits in a label/hint row —
+ * a sequence step puts one beside a heading. Both reach for the same markup, so
+ * both get it from here rather than each writing the three nested spans out.
+ * @param root0          Component props.
+ * @param root0.id       Control id.
+ * @param root0.checked  Current value.
+ * @param root0.onChange Receives the new value.
+ * @param root0.label    Accessible name, when no visible label points at it.
+ */
+export const Switch = ({
+	id,
+	checked,
+	onChange,
+	label,
+}: {
+	id: string;
+	checked: boolean;
+	onChange: (checked: boolean) => void;
+	label?: string;
+}) => (
+	<span className="cr-switch">
+		<input
+			id={id}
+			type="checkbox"
+			checked={checked}
+			{...(label === undefined ? {} : { 'aria-label': label })}
+			onChange={(event) => {
+				onChange(event.target.checked);
+			}}
+		/>
+		<span className="cr-switch__track">
+			<span className="cr-switch__thumb" />
+		</span>
+	</span>
+);
+
+/**
  * A field whose control is a switch, laid out label-left / switch-right.
  *
  * A toggle answers a yes/no question, so the question belongs beside the answer
@@ -79,18 +118,6 @@ export const ToggleField = ({
 			{hint !== undefined && <p className="cr-field__hint">{hint}</p>}
 		</div>
 
-		<span className="cr-switch">
-			<input
-				id={id}
-				type="checkbox"
-				checked={checked}
-				onChange={(event) => {
-					onChange(event.target.checked);
-				}}
-			/>
-			<span className="cr-switch__track">
-				<span className="cr-switch__thumb" />
-			</span>
-		</span>
+		<Switch id={id} checked={checked} onChange={onChange} />
 	</div>
 );

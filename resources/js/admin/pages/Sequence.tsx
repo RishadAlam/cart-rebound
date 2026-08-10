@@ -12,6 +12,7 @@ import { __, sprintf } from '@wordpress/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Combobox } from '../components/Combobox';
 import { DurationField } from '../components/DurationField';
+import { Switch } from '../components/Field';
 import { ProSurface } from '../components/ProSurface';
 import { useProQuery } from '../hooks/useAddons';
 import {
@@ -81,20 +82,14 @@ const StepCard = ({
 					)}
 				</div>
 
-				<span className="cr-switch">
-					<input
-						id={`${id}-enabled`}
-						type="checkbox"
-						checked={step.enabled}
-						aria-label={__('Enable this step', 'cart-rebound')}
-						onChange={(event: ChangeEvent<HTMLInputElement>) => {
-							onChange(index, { enabled: event.target.checked });
-						}}
-					/>
-					<span className="cr-switch__track">
-						<span className="cr-switch__thumb" />
-					</span>
-				</span>
+				<Switch
+					id={`${id}-enabled`}
+					checked={step.enabled}
+					label={__('Enable this step', 'cart-rebound')}
+					onChange={(enabled) => {
+						onChange(index, { enabled });
+					}}
+				/>
 			</div>
 
 			<div className="cr-step__grid">

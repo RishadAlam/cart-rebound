@@ -2828,6 +2828,12 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
+/* A notice sitting inside a card or dialog rather than above one, so it needs
+   its own inset instead of the margin the surrounding stack would give it. */
+.cr-notice--inset {
+	margin: 16px;
+}
+
 /* A notice that carries its own fix. The action sits on the same line on a
    wide screen and drops below the text when there is no room for both. */
 .cr-notice--action {

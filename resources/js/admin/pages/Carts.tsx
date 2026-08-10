@@ -1385,9 +1385,8 @@ export const Carts = () => {
 
 			{feedback && (
 				<div
-					className={`cr-notice is-${feedback.type}`}
+					className={`cr-notice is-${feedback.type} cr-notice--inset`}
 					role="status"
-					style={{ marginBottom: 12 }}
 				>
 					{feedback.message}
 				</div>
@@ -1455,9 +1454,8 @@ export const Carts = () => {
 			<div className="cr-card">
 				{isError && (
 					<div
-						className="cr-notice is-error"
+						className="cr-notice is-error cr-notice--inset"
 						role="alert"
-						style={{ margin: 16 }}
 					>
 						{__('Could not load carts.', 'cart-rebound')}
 					</div>
