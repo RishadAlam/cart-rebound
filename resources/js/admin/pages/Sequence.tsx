@@ -10,6 +10,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { DurationField } from '../components/DurationField';
 import { ProSurface } from '../components/ProSurface';
 import { useProQuery } from '../hooks/useAddons';
 import {
@@ -27,54 +28,6 @@ import { formatCount, formatDelay } from '../lib/format';
 import type { SequenceStep, SequenceStepStatus } from '../types/api';
 
 const MAX_STEPS = 20;
-
-const MINUTES_PER_HOUR = 60;
-const MINUTES_PER_DAY = 1440;
-
-type DelayUnit = 'minutes' | 'hours' | 'days';
-
-/**
- * Split a stored delay into the largest unit that divides it cleanly.
- *
- * Delays are stored in minutes because that is what the scheduler needs, but
- * nobody types 4320 meaning "three days" without doing arithmetic first — and
- * arithmetic in a form field is where the typo that mails everyone at the wrong
- * hour comes from. Only exact divisions are promoted, so 90 minutes stays 90
- * minutes rather than becoming a misleading "1 hour".
- * @param minutes The stored delay.
- */
-const splitDelay = (minutes: number): { value: number; unit: DelayUnit } => {
-	const safe = Math.max(1, Math.round(minutes));
-
-	if (safe % MINUTES_PER_DAY === 0) {
-		return { value: safe / MINUTES_PER_DAY, unit: 'days' };
-	}
-
-	if (safe % MINUTES_PER_HOUR === 0) {
-		return { value: safe / MINUTES_PER_HOUR, unit: 'hours' };
-	}
-
-	return { value: safe, unit: 'minutes' };
-};
-
-/**
- * Put a value and unit back together as minutes.
- * @param value The entered number.
- * @param unit  The chosen unit.
- */
-const toMinutes = (value: number, unit: DelayUnit): number => {
-	const safe = Math.max(1, Math.round(value));
-
-	if (unit === 'days') {
-		return safe * MINUTES_PER_DAY;
-	}
-
-	if (unit === 'hours') {
-		return safe * MINUTES_PER_HOUR;
-	}
-
-	return safe;
-};
 
 /**
  * A new step lands a day after the one before it, which is the usual shape.
@@ -105,7 +58,6 @@ const StepCard = ({
 	removable: boolean;
 }) => {
 	const id = `cr-step-${index}`;
-	const delay = splitDelay(step.delay_minutes);
 
 	return (
 		<li className={step.enabled ? 'cr-step' : 'cr-step is-off'}>
@@ -149,55 +101,14 @@ const StepCard = ({
 					<label htmlFor={`${id}-delay`} className="cr-field__label">
 						{__('Send after', 'cart-rebound')}
 					</label>
-					<div className="cr-duration">
-						<input
-							id={`${id}-delay`}
-							className="cr-input"
-							type="number"
-							min={1}
-							value={delay.value}
-							onChange={(
-								event: ChangeEvent<HTMLInputElement>
-							) => {
-								const parsed = Number.parseInt(
-									event.target.value,
-									10
-								);
-
-								onChange(index, {
-									delay_minutes: toMinutes(
-										Number.isNaN(parsed) ? 1 : parsed,
-										delay.unit
-									),
-								});
-							}}
-						/>
-						<select
-							className="cr-input"
-							value={delay.unit}
-							aria-label={__('Delay unit', 'cart-rebound')}
-							onChange={(
-								event: ChangeEvent<HTMLSelectElement>
-							) => {
-								onChange(index, {
-									delay_minutes: toMinutes(
-										delay.value,
-										event.target.value as DelayUnit
-									),
-								});
-							}}
-						>
-							<option value="minutes">
-								{__('minutes', 'cart-rebound')}
-							</option>
-							<option value="hours">
-								{__('hours', 'cart-rebound')}
-							</option>
-							<option value="days">
-								{__('days', 'cart-rebound')}
-							</option>
-						</select>
-					</div>
+					<DurationField
+						id={`${id}-delay`}
+						minutes={step.delay_minutes}
+						unitLabel={__('Delay unit', 'cart-rebound')}
+						onChange={(minutes) => {
+							onChange(index, { delay_minutes: minutes });
+						}}
+					/>
 					<p className="cr-field__hint">
 						{__(
 							'Counted from abandonment, not from the previous email.',

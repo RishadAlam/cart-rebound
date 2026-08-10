@@ -11,6 +11,7 @@ import {
 	type ReactNode,
 } from 'react';
 import { __ } from '@wordpress/i18n';
+import { DurationField } from '../components/DurationField';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
@@ -184,22 +185,22 @@ export const Settings = () => {
 				<div className="cr-field__grid">
 					<Field
 						id="cr-threshold"
-						label={__(
-							'Abandonment threshold (minutes)',
-							'cart-rebound'
-						)}
+						label={__('Abandonment threshold', 'cart-rebound')}
 						hint={__(
 							'Idle time before a cart is abandoned.',
 							'cart-rebound'
 						)}
 					>
-						<input
+						<DurationField
 							id="cr-threshold"
-							className="cr-input"
-							type="number"
-							min={1}
-							value={form.abandonment_threshold}
-							onChange={onNumber('abandonment_threshold')}
+							minutes={form.abandonment_threshold}
+							unitLabel={__(
+								'Abandonment threshold unit',
+								'cart-rebound'
+							)}
+							onChange={(minutes) => {
+								setField('abandonment_threshold', minutes);
+							}}
 						/>
 					</Field>
 					<Field
@@ -370,19 +371,19 @@ export const Settings = () => {
 				<div className="cr-field__grid">
 					<Field
 						id="cr-delay"
-						label={__('Send delay (minutes)', 'cart-rebound')}
+						label={__('Send delay', 'cart-rebound')}
 						hint={__(
 							'Wait time after abandonment before sending.',
 							'cart-rebound'
 						)}
 					>
-						<input
+						<DurationField
 							id="cr-delay"
-							className="cr-input"
-							type="number"
-							min={1}
-							value={form.email_delay_minutes}
-							onChange={onNumber('email_delay_minutes')}
+							minutes={form.email_delay_minutes}
+							unitLabel={__('Send delay unit', 'cart-rebound')}
+							onChange={(minutes) => {
+								setField('email_delay_minutes', minutes);
+							}}
 						/>
 					</Field>
 				</div>

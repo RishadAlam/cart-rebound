@@ -14,7 +14,17 @@
 defined( 'ABSPATH' ) || exit;
 
 ?>
-<div style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a; line-height: 1.5;">
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+	<meta charset="<?php bloginfo( 'charset' ); ?>" />
+	<?php /* Outlook renders at 96dpi and silently enlarges everything without this. */ ?>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="x-apple-disable-message-reformatting" content="" />
+	<title><?php echo esc_html__( 'Your cart is waiting', 'cart-rebound' ); ?></title>
+</head>
+<body style="margin: 0; padding: 0; background: #f4f4f5;">
+<div style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; color: #1a1a1a; line-height: 1.5;">
 	<div style="padding: 24px;">
 		<?php echo wp_kses_post( wpautop( $content ) ); ?>
 		<p style="margin: 32px 0;">
@@ -32,3 +42,5 @@ defined( 'ABSPATH' ) || exit;
 		</p>
 	</div>
 </div>
+</body>
+</html>

@@ -85,13 +85,28 @@
 	gap: 2px;
 	margin: 18px 0 28px;
 	border-bottom: 1px solid var(--cr-border);
+
+	/* Nine tabs do not fit a phone. Without this the bar widens the document
+	   and every screen scrolls sideways as a whole, which moves the content out
+	   from under the reader instead of moving the tabs. Scrolling the strip on
+	   its own keeps the page still. */
+	overflow-x: auto;
+	scrollbar-width: none;
 }
 
+.cr-tabs::-webkit-scrollbar {
+	display: none;
+}
+
+/* Tabs never compress into unreadable slivers as the strip fills up; the strip
+   scrolls instead. */
 .cr-tab {
+	flex: none;
 	margin-bottom: -1px;
 	padding: 10px 14px;
 	border: 0;
 	border-bottom: 2px solid transparent;
+	white-space: nowrap;
 	background: none;
 	color: var(--cr-muted);
 	font-size: 14px;
@@ -1648,6 +1663,11 @@ a.cr-linkbtn {
 /* ---- Pagination ---- */
 .cr-pagination {
 	display: flex;
+
+	/* Rows-per-page, the running count, and the page controls do not fit one
+	   line on a phone. Wrapping keeps them all reachable; without it the row
+	   widened the card and every table screen scrolled sideways as a whole. */
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 14px;
 	padding: 14px 16px;
@@ -2789,6 +2809,8 @@ a.cr-linkbtn {
    answers "what happened to this customer". */
 .cr-search {
 	display: inline-flex;
+	flex: 1 1 200px;
+	min-width: 0;
 	align-items: center;
 	gap: 7px;
 	padding: 0 10px;
@@ -2812,8 +2834,13 @@ a.cr-linkbtn {
 	height: 14px;
 }
 
+/* The field grows into the space available and gives it back when the row has
+   to wrap — a fixed width here is what pushed the toolbar past a phone's
+   screen. */
 .cr-search__input {
+	flex: 1 1 160px;
 	width: 220px;
+	min-width: 0;
 	max-width: 100%;
 	padding: 7px 0;
 	border: 0;
@@ -2976,6 +3003,12 @@ a.cr-linkbtn {
 /* ---- Analytics ---- */
 .cr-analytics {
 	display: grid;
+
+	/* An implicit grid column sizes to its widest child, so one wide table
+	   stretched the column past the screen and took every sibling with it.
+	   minmax(0, 1fr) lets the column shrink and the table scroll in its own
+	   wrapper, which is where the sideways movement belongs. */
+	grid-template-columns: minmax(0, 1fr);
 	gap: 14px;
 }
 
