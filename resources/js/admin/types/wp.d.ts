@@ -21,6 +21,11 @@ declare global {
 			thousandSeparator: string;
 			decimals: number;
 		};
+		// The store's own calendar date and zone. Ranges are built from these
+		// rather than the browser's clock, which is a different day either side
+		// of UTC and made a "last 30 days" window that was never the store's.
+		today?: string;
+		timezone?: string;
 		currentUser: {
 			id: number;
 			caps: string[];

@@ -10,7 +10,7 @@
  * reads as "1 day" while 90 stays "90 minutes" rather than becoming a
  * misleading "1 hour".
  */
-import { type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { __ } from '@wordpress/i18n';
 import { Combobox } from './Combobox';
 
@@ -66,10 +66,29 @@ interface Props {
 	onChange: (minutes: number) => void;
 	/** Names the unit select for assistive tech. */
 	unitLabel?: string;
+	/** Field injects this so the hint below is announced with the control. */
+	'aria-describedby'?: string;
 }
 
-export const DurationField = ({ id, minutes, onChange, unitLabel }: Props) => {
+export const DurationField = ({
+	id,
+	minutes,
+	onChange,
+	unitLabel,
+	'aria-describedby': describedBy,
+}: Props) => {
 	const { value, unit } = splitDuration(minutes);
+
+	/*
+	 * The box has to be allowed to be empty for a moment.
+	 *
+	 * Coercing every keystroke to a valid number meant the field could never be
+	 * cleared: backspacing "30" put a "1" in the box as the last digit went, and
+	 * a number input gives no caret control, so the merchant ended up typing
+	 * around a digit they never asked for. The draft holds whatever is being
+	 * typed; the committed value is only touched when it parses.
+	 */
+	const [draft, setDraft] = useState<string | null>(null);
 
 	return (
 		<div className="cr-duration">
@@ -78,13 +97,23 @@ export const DurationField = ({ id, minutes, onChange, unitLabel }: Props) => {
 				className="cr-input"
 				type="number"
 				min={1}
-				value={value}
+				{...(describedBy === undefined
+					? {}
+					: { 'aria-describedby': describedBy })}
+				value={draft ?? value}
 				onChange={(event: ChangeEvent<HTMLInputElement>) => {
-					const parsed = Number.parseInt(event.target.value, 10);
+					const raw = event.target.value;
 
-					onChange(
-						toMinutes(Number.isNaN(parsed) ? 1 : parsed, unit)
-					);
+					setDraft(raw);
+
+					const parsed = Number.parseInt(raw, 10);
+
+					if (!Number.isNaN(parsed) && parsed >= 1) {
+						onChange(toMinutes(parsed, unit));
+					}
+				}}
+				onBlur={() => {
+					setDraft(null);
 				}}
 			/>
 			<Combobox

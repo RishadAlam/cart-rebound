@@ -260,13 +260,69 @@ export const RichTextEditor = ({
 		refresh();
 	};
 
+	/**
+	 * Turn what was typed into a link the email can actually carry.
+	 *
+	 * Whatever came back from the prompt used to go straight into
+	 * `createLink`. Three things went wrong with that. A scheme-less entry —
+	 * "example.com", which is what most people type — became a *relative* href
+	 * that resolves against the shop's own domain once the mail client opens it,
+	 * so the link silently pointed at the wrong site. A `javascript:` or `data:`
+	 * entry was accepted here even though `wp_kses_post` strips it later, so the
+	 * editor showed a working link that the sent email did not have. And a
+	 * rejected value produced no message at all.
+	 * @param raw The address as typed.
+	 */
+	const normaliseUrl = (raw: string): string | null => {
+		const url = raw.trim();
+
+		if (url === '') {
+			return null;
+		}
+
+		// Merge tags are resolved at send time and are legitimate hrefs.
+		if (/^\{[a-z_]+\}$/i.test(url)) {
+			return url;
+		}
+
+		if (/^(https?:|mailto:|tel:)/i.test(url)) {
+			return url;
+		}
+
+		// Anything else carrying a scheme is refused rather than quietly mangled.
+		if (/^[a-z][a-z0-9+.-]*:/i.test(url)) {
+			return null;
+		}
+
+		// A bare host or path is what people actually type; assume the safe scheme.
+		return `https://${url}`;
+	};
+
 	const addLink = () => {
 		// eslint-disable-next-line no-alert
-		const url = window.prompt(__('Link URL (https://…)', 'cart-rebound'));
+		const typed = window.prompt(__('Link URL (https://…)', 'cart-rebound'));
 
-		if (url) {
-			run('createLink', url);
+		if (typed === null) {
+			return;
 		}
+
+		const url = normaliseUrl(typed);
+
+		if (url === null) {
+			if (typed.trim() !== '') {
+				// eslint-disable-next-line no-alert
+				window.alert(
+					__(
+						'That link was not added. Use a web address (https://example.com), an email link (mailto:…), or a phone link (tel:…).',
+						'cart-rebound'
+					)
+				);
+			}
+
+			return;
+		}
+
+		run('createLink', url);
 	};
 
 	const insertImage = (url: string, alt: string) => {

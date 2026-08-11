@@ -149,6 +149,7 @@ export const OnboardingWizard = () => {
 	const update = useUpdateSettings();
 	const [step, setStep] = useState(0);
 	const [dismissed, setDismissed] = useState(false);
+	const [error, setError] = useState('');
 	const [form, setForm] = useState<WizardForm | null>(null);
 	const ref = useRef<HTMLDialogElement>(null);
 
@@ -193,13 +194,39 @@ export const OnboardingWizard = () => {
 			setField(key, Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
 		};
 
+	/*
+	 * Closing on the way out, not on the way in.
+	 *
+	 * This used to dismiss the wizard and then fire the save. When the save
+	 * failed, the merchant's answers went with the dialog and nothing said so —
+	 * and because `onboarding_complete` never persisted, the wizard reappeared on
+	 * the next page load, empty. Now the dialog stays until the write lands, and
+	 * says so if it does not.
+	 */
 	const finish = (apply: boolean) => {
-		setDismissed(true);
-		update.mutate({
-			...settings,
-			...(apply ? form : {}),
-			onboarding_complete: true,
-		});
+		setError('');
+		update.mutate(
+			{
+				...settings,
+				...(apply ? form : {}),
+				onboarding_complete: true,
+			},
+			{
+				onSuccess: () => {
+					setDismissed(true);
+				},
+				onError: (reason: unknown) => {
+					setError(
+						reason instanceof Error
+							? reason.message
+							: __(
+									'Those settings could not be saved. Please try again.',
+									'cart-rebound'
+								)
+					);
+				},
+			}
+		);
 	};
 
 	const stepLabels = [
@@ -428,11 +455,22 @@ export const OnboardingWizard = () => {
 						<div className="cr-onb__fields">{current.body}</div>
 					</div>
 
+					{error !== '' && (
+						<div
+							className="cr-notice is-error"
+							role="alert"
+							style={{ marginBottom: 12 }}
+						>
+							{error}
+						</div>
+					)}
+
 					<div className="cr-onb__footer">
 						<button
 							type="button"
 							className="cr-btn is-ghost is-sm"
 							onClick={() => finish(false)}
+							disabled={update.isPending}
 						>
 							{__('Skip', 'cart-rebound')}
 						</button>
@@ -451,8 +489,11 @@ export const OnboardingWizard = () => {
 								type="button"
 								className="cr-btn is-primary"
 								onClick={() => finish(true)}
+								disabled={update.isPending}
 							>
-								{__('Finish setup', 'cart-rebound')}
+								{update.isPending
+									? __('Saving…', 'cart-rebound')
+									: __('Finish setup', 'cart-rebound')}
 							</button>
 						) : (
 							<button

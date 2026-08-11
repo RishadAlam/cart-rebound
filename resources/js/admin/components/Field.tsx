@@ -6,7 +6,7 @@
  * weight in the other, and nobody notices until they are side by side. One
  * definition means a change to how a field reads happens once.
  */
-import { type ReactNode } from 'react';
+import { cloneElement, isValidElement, type ReactNode } from 'react';
 
 interface Props {
 	/** Must match the control's own id, or the label clicks nothing. */
@@ -19,13 +19,46 @@ interface Props {
 	children: ReactNode;
 }
 
+/**
+ * Which element describes this control right now.
+ *
+ * An error replaces the hint on screen, so it replaces it here too — announcing
+ * both would read the guidance and then contradict it.
+ * @param id    The control's id.
+ * @param hint  The hint text, when there is one.
+ * @param error The error text, when there is one.
+ */
+const describedBy = (
+	id: string,
+	hint?: string,
+	error?: string
+): string | undefined => {
+	if (error !== undefined && error !== '') {
+		return `${id}-error`;
+	}
+
+	return hint !== undefined && hint !== '' ? `${id}-hint` : undefined;
+};
+
 export const Field = ({ id, label, hint, error, children }: Props) => (
 	<div className="cr-field">
 		<label htmlFor={id} className="cr-field__label">
 			{label}
 		</label>
 
-		{children}
+		{/*
+		 * The hint is pointed at the control rather than merely sitting near it.
+		 * Both ids were already being generated and neither was ever referenced,
+		 * so a screen reader announced "Minimum spend, edit text" and stopped —
+		 * the sentence explaining what the number does was on screen and out of
+		 * reach. The association is made here rather than at fifty call sites,
+		 * each of which would have had to remember it.
+		 */}
+		{isValidElement(children)
+			? cloneElement(children as never, {
+					'aria-describedby': describedBy(id, hint, error),
+				})
+			: children}
 
 		{error !== undefined && error !== '' && (
 			<p

@@ -262,9 +262,11 @@ export interface SequenceStepStatus {
 	/** False when the step points at a template that no longer exists. */
 	template_ok: boolean;
 	coupon: boolean;
-	/** Carts currently waiting on this step. */
+	/** Carts currently waiting on this step. Zero while the step is disabled. */
 	queued: number;
 	sent: number;
+	/** False when the step is switched off, so the runner never planned it. */
+	in_plan?: boolean;
 }
 
 export interface SequenceOverview {
@@ -291,8 +293,12 @@ export interface AnalyticsSummary {
 	open_rate: number;
 	click_rate: number;
 	currency: string;
-	/** False when open/click tracking is switched off, so rates read as n/a. */
+	/** False when neither open nor click tracking is on. */
 	tracking_available: boolean;
+	/** Whether the open pixel is running; opens read as n/a when it is not. */
+	tracking_opens?: boolean;
+	/** Whether click redirects are running; clicks read as n/a when they are not. */
+	tracking_clicks?: boolean;
 }
 
 export interface AnalyticsPoint {

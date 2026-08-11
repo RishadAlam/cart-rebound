@@ -72,6 +72,7 @@ export const useCarts = (query: CartsQuery) =>
 	useQuery<CartList>({
 		queryKey: ['carts', query],
 		queryFn: () => fetchCarts(query),
+		placeholderData: (previous) => previous,
 	});
 
 export const useOrders = () =>
@@ -217,10 +218,18 @@ export const usePreviewTemplate = () =>
 
 export const useTestTemplate = () => useMutation({ mutationFn: testTemplate });
 
+/*
+ * Every filter change and every keystroke in the cart box mints a new query key.
+ * Without `placeholderData` the table emptied to a skeleton between each one, so
+ * changing a filter made the screen flash rather than update — and the Carts
+ * screen, which does the same thing, already keeps its rows and shows a quiet
+ * "Updating…" instead.
+ */
 export const useLogs = (query: LogsQuery) =>
 	useQuery<LogList>({
 		queryKey: ['logs', query],
 		queryFn: () => fetchLogs(query),
+		placeholderData: (previous) => previous,
 	});
 
 export const useClearLog = () => {

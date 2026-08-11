@@ -20,6 +20,8 @@ import {
 	useTemplates,
 	useUpdateTemplate,
 } from '../hooks/useApi';
+import { useUnsavedGuard } from '../hooks/useUnsavedGuard';
+import { errorMessage } from '../lib/errors';
 import type { EmailTemplate } from '../types/api';
 
 type Feedback = { type: 'success' | 'error'; message: string };
@@ -59,24 +61,59 @@ const TOKEN_DOCS = [
 	},
 	{
 		token: '{recovery_url}',
+		// The mailer substitutes a bare URL, not an anchor — writing the token on
+		// its own line produced a line of naked link text, not a link.
 		description: __(
-			'A one-click link that restores the cart and reopens checkout.',
+			'The one-click address that restores the cart. It is inserted as plain text, so use the Link button and paste this token as the target to make it clickable.',
 			'cart-rebound'
 		),
 	},
 	{
 		token: '{coupon_code}',
+		// "below" pointed at a Coupon field that sits above the body, which is
+		// the sort of instruction a merchant follows once and then distrusts.
 		description: __(
-			'The coupon code selected below (blank if none is chosen).',
+			'The coupon code chosen in the Coupon field above — or, with the Pro sequence running, the unique code minted for that cart.',
+			'cart-rebound'
+		),
+	},
+	// Two more the mailer substitutes that this screen never mentioned. A
+	// merchant cannot use a token they have not been told exists, and the
+	// unsubscribe link in particular is one many stores are obliged to include.
+	{
+		token: '{last_name}',
+		description: __(
+			"The shopper's last name (blank if it wasn't captured).",
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{unsubscribe_url}',
+		description: __(
+			'An address that stops all further recovery email to this shopper.',
 			'cart-rebound'
 		),
 	},
 ];
 
+/*
+ * The mailer only sets a From header when it has an address, and WordPress
+ * supplies its own sender otherwise — so a From name on its own does nothing at
+ * all. The screen used to present the two as independent fields and the preview
+ * actively contradicted the runtime by showing the name regardless.
+ * @param address The address as typed.
+ */
+const looksLikeEmail = (address: string): boolean =>
+	/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.trim());
+
+/*
+ * Axios sets `error.message` to "Request failed with status code 400", so
+ * surfacing it threw away the server's own explanation — which for this screen
+ * is the field-level validation the REST layer already writes in the merchant's
+ * language. The shared reader prefers the response body.
+ */
 const messageOf = (error: unknown): string =>
-	error instanceof Error
-		? error.message
-		: __('Something went wrong.', 'cart-rebound');
+	errorMessage(error, __('Something went wrong.', 'cart-rebound'));
 
 const EyeIcon = () => (
 	<svg
@@ -97,7 +134,7 @@ const EyeIcon = () => (
 );
 
 export const Templates = () => {
-	const { data: templates, isLoading } = useTemplates();
+	const { data: templates, isLoading, isError } = useTemplates();
 	const { data: coupons } = useCoupons();
 	const create = useCreateTemplate();
 	const update = useUpdateTemplate();
@@ -118,6 +155,23 @@ export const Templates = () => {
 
 	const isNew = selectedId === 'new';
 	const busy = create.isPending || update.isPending;
+
+	/*
+	 * Unsaved body edits are the expensive ones on this screen — a rewritten
+	 * email is minutes of work, and clicking another template in the list used to
+	 * discard it without a word.
+	 */
+	const savedVersion = (templates ?? []).find(
+		(template) => template.id === selectedId
+	);
+	const dirty = isNew
+		? form.name.trim() !== '' ||
+			form.subject.trim() !== '' ||
+			form.body.trim() !== ''
+		: savedVersion !== undefined &&
+			JSON.stringify(form) !== JSON.stringify(savedVersion);
+
+	useUnsavedGuard(dirty);
 
 	const load = (template: EmailTemplate, id: string) => {
 		setSelectedId(id);
@@ -149,8 +203,13 @@ export const Templates = () => {
 		}
 	}, [templates, selectedId]);
 
+	/*
+	 * A confirmation can expire; a failure cannot. Both used to clear after four
+	 * seconds, so a merchant who looked away lost the only account of why their
+	 * template did not save.
+	 */
 	useEffect(() => {
-		if (!feedback) {
+		if (!feedback || feedback.type === 'error') {
 			return;
 		}
 
@@ -257,6 +316,41 @@ export const Templates = () => {
 			return;
 		}
 
+		/*
+		 * An unparseable From address is worse than an empty one: empty falls back
+		 * to the site sender, while a malformed one is dropped silently by the
+		 * mailer and the merchant keeps believing their template sends as them.
+		 */
+		/*
+		 * An empty body saves happily and can be set as the default, at which
+		 * point every automatic recovery email is a subject line and a button.
+		 * The name and subject were validated; the thing the shopper actually
+		 * reads was not.
+		 */
+		if (form.body.replace(/<[^>]*>/g, '').trim() === '') {
+			setFeedback({
+				type: 'error',
+				message: __(
+					'The email body is empty. Write something for the shopper to read before saving.',
+					'cart-rebound'
+				),
+			});
+
+			return;
+		}
+
+		if (form.from_email.trim() !== '' && !looksLikeEmail(form.from_email)) {
+			setFeedback({
+				type: 'error',
+				message: __(
+					'That From email is not a valid address. Correct it, or clear it to send from the site address.',
+					'cart-rebound'
+				),
+			});
+
+			return;
+		}
+
 		const done = (saved: EmailTemplate, message: string) => {
 			load(saved, saved.id);
 			setFeedback({ type: 'success', message });
@@ -324,11 +418,19 @@ export const Templates = () => {
 			return;
 		}
 
+		/*
+		 * A sequence step that points at this template does not break — it falls
+		 * back to the default — but it stops sending what the merchant wrote, and
+		 * nothing said so at the moment of deleting.
+		 */
 		// eslint-disable-next-line no-alert
 		const confirmed = window.confirm(
 			sprintf(
 				/* translators: %s: template name. */
-				__('Delete the "%s" template?', 'cart-rebound'),
+				__(
+					'Delete the "%s" template? Any sequence step using it will fall back to the default template.',
+					'cart-rebound'
+				),
 				form.name
 			)
 		);
@@ -350,6 +452,23 @@ export const Templates = () => {
 			},
 		});
 	};
+
+	/*
+	 * A failed list load used to render as a store with no templates: an empty
+	 * sidebar, a blank editor, and a "+ New" button — so the honest reading was
+	 * "someone deleted my templates", and creating a replacement was the natural
+	 * next move.
+	 */
+	if (isError) {
+		return (
+			<div className="cr-notice is-error" role="alert">
+				{__(
+					'Could not load your templates. Reload the page to try again — nothing has been changed.',
+					'cart-rebound'
+				)}
+			</div>
+		);
+	}
 
 	if (isLoading) {
 		return (
@@ -378,16 +497,6 @@ export const Templates = () => {
 
 	return (
 		<div>
-			{feedback && (
-				<div
-					className={`cr-notice is-${feedback.type}`}
-					role="status"
-					style={{ marginBottom: 12 }}
-				>
-					{feedback.message}
-				</div>
-			)}
-
 			<div className="cr-templates">
 				<aside className="cr-templates__list cr-card">
 					<div className="cr-templates__listhead">
@@ -404,6 +513,9 @@ export const Templates = () => {
 						<button
 							key={template.id}
 							type="button"
+							aria-current={
+								selectedId === template.id ? 'true' : undefined
+							}
 							className={`cr-templates__item${
 								selectedId === template.id ? ' is-active' : ''
 							}`}
@@ -607,6 +719,25 @@ export const Templates = () => {
 									value={form.from_name}
 									onChange={onText('from_name')}
 								/>
+								<p
+									className={
+										form.from_name.trim() !== '' &&
+										!looksLikeEmail(form.from_email)
+											? 'cr-field__hint is-warning'
+											: 'cr-field__hint'
+									}
+								>
+									{form.from_name.trim() !== '' &&
+									!looksLikeEmail(form.from_email)
+										? __(
+												'Only used when a From email is set below — without one, WordPress sends as the site instead.',
+												'cart-rebound'
+											)
+										: __(
+												'The name the shopper sees in their inbox.',
+												'cart-rebound'
+											)}
+								</p>
 							</div>
 							<div className="cr-field">
 								<label
@@ -625,6 +756,24 @@ export const Templates = () => {
 							</div>
 						</div>
 					</div>
+
+					{/*
+					 * Every result on this screen is produced by a button in this bar —
+					 * Save, Send test, Set as default, Delete — and every one of them
+					 * reported into a notice pinned to the top of a page roughly 1,400px
+					 * tall. On the phone layout the merchant never saw it at all. The
+					 * answer now appears where the question was asked.
+					 */}
+					{feedback && (
+						<div
+							className={`cr-notice is-${feedback.type} cr-notice--inset`}
+							role={
+								feedback.type === 'error' ? 'alert' : 'status'
+							}
+						>
+							{feedback.message}
+						</div>
+					)}
 
 					<div className="cr-savebar">
 						<button
@@ -660,6 +809,14 @@ export const Templates = () => {
 								: __('Send test', 'cart-rebound')}
 						</button>
 						<span className="cr-savebar__spacer" />
+						{!isNew && form.is_default && (
+							<span className="cr-savebar__note">
+								{__(
+									'Set another template as default before deleting this one.',
+									'cart-rebound'
+								)}
+							</span>
+						)}
 						<button
 							type="button"
 							className="cr-btn is-danger"
@@ -716,7 +873,14 @@ export const Templates = () => {
 							</span>
 							<div className="cr-preview__meta">
 								<p className="cr-preview__from">
-									{form.from_name.trim() !== ''
+									{/*
+									 * Gated on the same condition the address is:
+									 * a name without a valid address never reaches
+									 * the shopper, so previewing it was a promise
+									 * the send could not keep.
+									 */}
+									{form.from_name.trim() !== '' &&
+									looksLikeEmail(form.from_email)
 										? form.from_name
 										: __('Your store', 'cart-rebound')}
 									{form.from_email.trim() !== '' && (

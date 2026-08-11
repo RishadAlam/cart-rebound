@@ -15,7 +15,9 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { __, _n, sprintf } from '@wordpress/i18n';
+import { Hint } from '../components/Hint';
 import { RevenueChart } from '../components/RevenueChart';
+import { MetricSkeleton, TableSkeleton } from '../components/Skeletons';
 import {
 	useCarts,
 	useProductReport,
@@ -23,25 +25,17 @@ import {
 	useStats,
 	useTimeseries,
 } from '../hooks/useApi';
-import { formatMoney, formatWhen } from '../lib/format';
+import {
+	formatCount,
+	formatExact,
+	formatMoney,
+	formatWhen,
+} from '../lib/format';
 import { statusLabel } from '../lib/status';
 import type { Cart, ProductReportRow, Stats } from '../types/api';
 
 const RANGES = [7, 30, 90];
 const REPORT_ROWS = 6;
-
-const InfoIcon = () => (
-	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-		<circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
-		<path
-			d="M8 7.3v3.3"
-			stroke="currentColor"
-			strokeWidth="1.4"
-			strokeLinecap="round"
-		/>
-		<circle cx="8" cy="5.2" r="0.85" fill="currentColor" />
-	</svg>
-);
 
 const ArrowIcon = () => (
 	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -53,22 +47,6 @@ const ArrowIcon = () => (
 			strokeLinejoin="round"
 		/>
 	</svg>
-);
-
-/**
- * Metric label helper — the ⓘ carries the explanation for screen readers.
- * @param root0
- * @param root0.text
- */
-const Hint = ({ text }: { text: string }) => (
-	<span className="cr-hint">
-		<button type="button" className="cr-hint__btn" aria-label={text}>
-			<InfoIcon />
-		</button>
-		<span className="cr-hint__bubble" aria-hidden="true">
-			{text}
-		</span>
-	</span>
 );
 
 const Metric = ({
@@ -97,51 +75,32 @@ const Metric = ({
 	</div>
 );
 
-const MetricSkeleton = () => (
-	<div className="cr-metrics">
-		{Array.from({ length: 6 }, (_unused, index) => (
-			<div key={index} className="cr-metric">
-				<div className="cr-metric__top">
-					<div
-						className="cr-skeleton"
-						style={{ height: 11, width: '64%' }}
-					/>
-				</div>
-				<div
-					className="cr-skeleton"
-					style={{ height: 24, width: '52%', marginTop: 14 }}
-				/>
-			</div>
-		))}
-	</div>
-);
-
 const Overview = ({ stats }: { stats: Stats }) => {
 	const count = (key: string): number => stats.counts[key] ?? 0;
 
 	return (
 		<div className="cr-metrics">
 			<Metric
-				label={__('Recoverable orders', 'cart-rebound')}
-				value={count('abandoned')}
+				label={__('Recoverable carts', 'cart-rebound')}
+				value={formatCount(count('abandoned'))}
 				hint={__(
 					'Abandoned carts that are still open to recovery.',
 					'cart-rebound'
 				)}
 			/>
 			<Metric
-				label={__('Recovered orders', 'cart-rebound')}
-				value={count('recovered')}
+				label={__('Recovered carts', 'cart-rebound')}
+				value={formatCount(count('recovered'))}
 				hint={__(
 					'Abandoned carts that came back and paid.',
 					'cart-rebound'
 				)}
 			/>
 			<Metric
-				label={__('Lost orders', 'cart-rebound')}
-				value={count('lost')}
+				label={__('Lost carts', 'cart-rebound')}
+				value={formatCount(count('lost'))}
 				hint={__(
-					'Abandoned carts cleaned up without converting, plus paid orders later refunded or cancelled.',
+					'Paid orders later refunded or cancelled, plus carts you marked lost by hand. Carts that were never recovered are deleted at the end of the retention window, not counted here.',
 					'cart-rebound'
 				)}
 			/>
@@ -218,26 +177,6 @@ const ViewAll = ({ to }: { to: string }) => (
 	</Link>
 );
 
-const TableSkeleton = ({ columns }: { columns: number }) => (
-	<>
-		{Array.from({ length: 4 }, (_unusedRow, row) => (
-			<tr key={row}>
-				{Array.from({ length: columns }, (_unusedCol, col) => (
-					<td key={col}>
-						<div
-							className="cr-skeleton"
-							style={{
-								height: 12,
-								width: col === 0 ? '75%' : '45%',
-							}}
-						/>
-					</td>
-				))}
-			</tr>
-		))}
-	</>
-);
-
 const customerOf = (cart: Cart): string => {
 	const name = `${cart.first_name} ${cart.last_name}`.trim();
 
@@ -279,7 +218,7 @@ const RecentCarts = () => {
 						<thead>
 							<tr>
 								<th>{__('Customer', 'cart-rebound')}</th>
-								<th style={{ textAlign: 'right' }}>
+								<th className="cr-num">
 									{__('Cart total', 'cart-rebound')}
 								</th>
 								<th>{__('Status', 'cart-rebound')}</th>
@@ -309,10 +248,7 @@ const RecentCarts = () => {
 										<td className="cr-cell-email">
 											{customerOf(cart)}
 										</td>
-										<td
-											className="cr-money"
-											style={{ textAlign: 'right' }}
-										>
+										<td className="cr-money cr-num">
 											{formatMoney(
 												cart.cart_total,
 												data?.currency ?? ''
@@ -325,7 +261,12 @@ const RecentCarts = () => {
 												{statusLabel(cart.status)}
 											</span>
 										</td>
-										<td className="cr-muted cr-nowrap">
+										<td
+											className="cr-muted cr-nowrap"
+											title={formatExact(
+												cart.last_activity
+											)}
+										>
 											{formatWhen(cart.last_activity)}
 										</td>
 									</tr>
@@ -357,10 +298,19 @@ const ProductReport = ({
 				<h2 className="cr-report__title">
 					{__('Product report', 'cart-rebound')}
 				</h2>
+				{/* The rows are the six worst by value lost, not every product
+				    abandoned in the window — which is what "Last 30 days" alone
+				    implied. */}
 				<p className="cr-report__sub">
 					{sprintf(
-						/* translators: %d: number of days. */
-						_n('Last %d day', 'Last %d days', days, 'cart-rebound'),
+						/* translators: 1: number of rows shown, 2: number of days. */
+						_n(
+							'Top %1$d by value lost · last %2$d day',
+							'Top %1$d by value lost · last %2$d days',
+							days,
+							'cart-rebound'
+						),
+						REPORT_ROWS,
 						days
 					)}
 				</p>
@@ -377,13 +327,13 @@ const ProductReport = ({
 					<thead>
 						<tr>
 							<th>{__('Product', 'cart-rebound')}</th>
-							<th style={{ textAlign: 'right' }}>
+							<th className="cr-num">
 								{__('Abandoned', 'cart-rebound')}
 							</th>
-							<th style={{ textAlign: 'right' }}>
+							<th className="cr-num">
 								{__('Recovered', 'cart-rebound')}
 							</th>
-							<th style={{ textAlign: 'right' }}>
+							<th className="cr-num">
 								{__('Value lost', 'cart-rebound')}
 							</th>
 						</tr>
@@ -408,13 +358,13 @@ const ProductReport = ({
 									<td className="cr-cell-email">
 										<ProductName row={row} />
 									</td>
-									<td style={{ textAlign: 'right' }}>
-										{row.abandoned}
+									<td className="cr-num">
+										{formatCount(row.abandoned)}
 									</td>
-									<td style={{ textAlign: 'right' }}>
-										{row.recovered}
+									<td className="cr-num">
+										{formatCount(row.recovered)}
 									</td>
-									<td style={{ textAlign: 'right' }}>
+									<td className="cr-num">
 										{formatMoney(row.lost_value, currency)}
 									</td>
 								</tr>
@@ -515,7 +465,7 @@ export const Dashboard = () => {
 						</h2>
 						<p className="cr-overview__sub">
 							{__(
-								'Lifetime recovery performance across every tracked cart.',
+								'Where your tracked carts stand right now. The recovery rate is measured over the plugin’s lifetime, so cleanup cannot inflate it.',
 								'cart-rebound'
 							)}
 						</p>

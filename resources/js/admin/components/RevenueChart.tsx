@@ -10,7 +10,10 @@
  * rect instead of letting the fill bleed into the axis.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
+import type {
+	KeyboardEvent as ReactKeyboardEvent,
+	PointerEvent as ReactPointerEvent,
+} from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { formatMoney } from '../lib/format';
 import type { TimeseriesPoint } from '../types/api';
@@ -73,7 +76,14 @@ const compact = (value: number): string => {
 		return `${Math.round(value / 100) / 10}K`;
 	}
 
-	return String(Math.round(value));
+	/*
+	 * A quiet store's axis steps in fractions — niceStep happily returns 0.5 —
+	 * and rounding those to whole numbers printed "0, 0, 1, 1, 2" up the side.
+	 * One decimal is kept only when the value actually has one.
+	 */
+	return value % 1 === 0
+		? String(value)
+		: String(Math.round(value * 10) / 10);
 };
 
 /**
@@ -135,6 +145,26 @@ const smoothPath = (pts: Pt[]): string => {
 	return d;
 };
 
+/**
+ * Where a date label hangs from its point.
+ *
+ * The last point sits on the right edge of the plot, so a centred label ran past
+ * it — the range's end date, of all of them, arrived half cut off. The outermost
+ * labels anchor to their own edge; everything between stays centred.
+ * @param index The point's position.
+ * @param last  The final point's position.
+ */
+const edgeAnchor = (
+	index: number,
+	last: number
+): 'start' | 'middle' | 'end' => {
+	if (index === last) {
+		return 'end';
+	}
+
+	return index === 0 ? 'start' : 'middle';
+};
+
 /** Track the container width so the SVG can be drawn at real pixel size. */
 const useWidth = () => {
 	const ref = useRef<HTMLDivElement>(null);
@@ -163,15 +193,31 @@ const useWidth = () => {
 	return { ref, width };
 };
 
-const Legend = () => (
+/*
+ * The key has to look like the line it stands for, and say what the screen calls
+ * it. The two series were separated by hue alone at matching lightness — no
+ * distinction to a red-green colour-blind reader — and the labels were
+ * hardcoded, so Analytics called one quantity "Abandoned value" in its tile and
+ * "Recoverable revenue" in the legend two rows below.
+ */
+const Legend = ({
+	riskLabel,
+	wonLabel,
+}: {
+	riskLabel: string;
+	wonLabel: string;
+}) => (
 	<div className="cr-chart__legend">
 		<span className="cr-chart__key">
 			<span className="cr-chart__swatch is-risk" aria-hidden="true" />
-			{__('Recoverable revenue', 'cart-rebound')}
+			{riskLabel}
 		</span>
 		<span className="cr-chart__key">
-			<span className="cr-chart__swatch is-won" aria-hidden="true" />
-			{__('Recovered revenue', 'cart-rebound')}
+			<span
+				className="cr-chart__swatch is-won is-dashed"
+				aria-hidden="true"
+			/>
+			{wonLabel}
 		</span>
 	</div>
 );
@@ -179,9 +225,14 @@ const Legend = () => (
 export const RevenueChart = ({
 	points,
 	currency,
+	riskLabel = __('Recoverable revenue', 'cart-rebound'),
+	wonLabel = __('Recovered revenue', 'cart-rebound'),
 }: {
 	points: TimeseriesPoint[];
 	currency: string;
+	/** Named by the screen that owns the series; see Legend above. */
+	riskLabel?: string;
+	wonLabel?: string;
 }) => {
 	const { ref, width } = useWidth();
 	const [active, setActive] = useState<number | null>(null);
@@ -290,6 +341,38 @@ export const RevenueChart = ({
 
 	const activePoint = active === null ? undefined : points[active];
 
+	const onKeyDown = (event: ReactKeyboardEvent<SVGRectElement>) => {
+		if (points.length === 0) {
+			return;
+		}
+
+		const last = points.length - 1;
+		// `step` is the axis interval in this file; this walks the series.
+		const moveBy = (delta: number) => {
+			event.preventDefault();
+			setActive((current) => {
+				const from = current === null ? last : current;
+
+				return Math.max(0, Math.min(last, from + delta));
+			});
+		};
+
+		if (event.key === 'ArrowRight') {
+			moveBy(1);
+		} else if (event.key === 'ArrowLeft') {
+			moveBy(-1);
+		} else if (event.key === 'Home') {
+			event.preventDefault();
+			setActive(0);
+		} else if (event.key === 'End') {
+			event.preventDefault();
+			setActive(last);
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			setActive(null);
+		}
+	};
+
 	const onMove = (event: ReactPointerEvent<SVGRectElement>) => {
 		if (points.length === 0 || innerW <= 0) {
 			return;
@@ -305,7 +388,7 @@ export const RevenueChart = ({
 	if (points.length === 0 || max <= 0) {
 		return (
 			<div className="cr-chart">
-				<Legend />
+				<Legend riskLabel={riskLabel} wonLabel={wonLabel} />
 				<div className="cr-chart__blank" style={{ height: HEIGHT }}>
 					<p className="cr-chart__blanktitle">
 						{__('No revenue activity yet', 'cart-rebound')}
@@ -328,7 +411,19 @@ export const RevenueChart = ({
 
 	return (
 		<div className="cr-chart">
-			<Legend />
+			<Legend riskLabel={riskLabel} wonLabel={wonLabel} />
+
+			{/* The value axis read 0 / 5K / 10K with no unit anywhere on the
+			    card, so the scale could as easily have been carts. */}
+			<p className="cr-chart__axisnote">
+				{sprintf(
+					/* translators: %s: an example amount in the store's currency. */
+					__('Values in %s', 'cart-rebound'),
+					formatMoney(0, currency)
+						.replace(/[\d.,]/g, '')
+						.trim() || currency
+				)}
+			</p>
 
 			<div className="cr-chart__plot" ref={ref}>
 				{width > 0 && (
@@ -439,13 +534,21 @@ export const RevenueChart = ({
 								return null;
 							}
 
+							/*
+							 * The last point sits at the right edge of the plot,
+							 * where a centred label runs past it — the range's end
+							 * date, of all of them, arrived half cut off. The
+							 * outermost labels anchor to their own edge instead.
+							 */
+							const anchor = edgeAnchor(index, points.length - 1);
+
 							return (
 								<text
 									key={point.date}
 									className="cr-chart__axis"
 									x={xAt(index)}
 									y={HEIGHT - 10}
-									textAnchor="middle"
+									textAnchor={anchor}
 								>
 									{shortDate(point.date)}
 								</text>
@@ -476,19 +579,66 @@ export const RevenueChart = ({
 							</g>
 						)}
 
+						{/*
+						 * The per-day amounts lived behind a hover, which is no
+						 * amount at all to a keyboard or a touch screen. The plot
+						 * is focusable, the arrows walk the series, and the active
+						 * day is announced below.
+						 */}
 						<rect
 							x={PAD.left}
 							y={PAD.top}
 							width={innerW}
 							height={innerH}
 							fill="transparent"
+							tabIndex={0}
+							role="button"
+							aria-label={__(
+								'Read the daily figures. Use the left and right arrow keys.',
+								'cart-rebound'
+							)}
 							onPointerMove={onMove}
+							onPointerDown={onMove}
 							onPointerLeave={() => {
 								setActive(null);
 							}}
+							onFocus={() => {
+								setActive((current) =>
+									current === null
+										? points.length - 1
+										: current
+								);
+							}}
+							onBlur={() => {
+								setActive(null);
+							}}
+							onKeyDown={onKeyDown}
 						/>
 					</svg>
 				)}
+
+				<span className="screen-reader-text" role="status">
+					{activePoint
+						? sprintf(
+								/* translators: 1: date, 2: risk series label, 3: amount at risk, 4: recovered series label, 5: recovered amount. */
+								__(
+									'%1$s. %2$s %3$s. %4$s %5$s.',
+									'cart-rebound'
+								),
+								shortDate(activePoint.date),
+								riskLabel,
+								formatMoney(
+									activePoint.recoverable_revenue,
+									currency
+								),
+								wonLabel,
+								formatMoney(
+									activePoint.recovered_revenue,
+									currency
+								)
+							)
+						: ''}
+				</span>
 
 				{activePoint && (
 					<div
@@ -501,13 +651,19 @@ export const RevenueChart = ({
 						</p>
 						<p className="cr-chart__tiprow">
 							<span className="cr-chart__swatch is-risk" />
+							<span className="cr-chart__tipname">
+								{__('At risk', 'cart-rebound')}
+							</span>
 							{formatMoney(
 								activePoint.recoverable_revenue,
 								currency
 							)}
 						</p>
 						<p className="cr-chart__tiprow">
-							<span className="cr-chart__swatch is-won" />
+							<span className="cr-chart__swatch is-won is-dashed" />
+							<span className="cr-chart__tipname">
+								{__('Recovered', 'cart-rebound')}
+							</span>
 							{formatMoney(
 								activePoint.recovered_revenue,
 								currency

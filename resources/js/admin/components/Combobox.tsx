@@ -35,17 +35,31 @@ interface Position {
 const SEARCH_THRESHOLD = 7;
 
 export const Combobox = ({
+	id,
 	options,
 	value,
 	onChange,
 	placeholder = __('Select…', 'cart-rebound'),
 	ariaLabel,
+	describedBy,
+	'aria-describedby': injectedDescribedBy,
 	disabled = false,
 	compact = false,
 	searchable,
 	tone,
 	pill = false,
 }: {
+	/*
+	 * Given to the trigger, so a sibling `<label htmlFor>` finally points at
+	 * something. Several screens rendered a label whose target did not exist —
+	 * the trigger is a button and carried no id — which meant clicking the label
+	 * did nothing and assistive tech read the control as unnamed.
+	 */
+	id?: string;
+	/** Points the control at its hint, which was rendered but never referenced. */
+	describedBy?: string;
+	/** The same association, under the name Field injects it with. */
+	'aria-describedby'?: string;
 	options: ComboOption[];
 	value: string;
 	onChange: (value: string) => void;
@@ -209,6 +223,13 @@ export const Combobox = ({
 		>
 			<button
 				ref={triggerRef}
+				{...(id === undefined ? {} : { id })}
+				{...((describedBy ?? injectedDescribedBy)
+					? {
+							'aria-describedby':
+								describedBy ?? injectedDescribedBy,
+						}
+					: {})}
 				type="button"
 				className={`cr-combo__trigger${pill ? ' is-pill' : ''}${
 					tone ? ` cr-combo__trigger--${tone}` : ''

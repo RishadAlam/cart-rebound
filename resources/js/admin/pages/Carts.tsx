@@ -149,13 +149,15 @@ const StatusGuide = () => (
 const orderLabel = (order: Order, currency: string): string => {
 	const who = order.email !== '' ? order.email : __('guest', 'cart-rebound');
 
+	// The rest of the screen prints money through formatMoney, which follows the
+	// store's own WooCommerce display settings; this line was rolling its own
+	// "12.00 USD" beside cells reading "$12.00".
 	return sprintf(
-		/* translators: 1: order number, 2: customer, 3: total, 4: currency code. */
-		__('#%1$s · %2$s · %3$s %4$s', 'cart-rebound'),
+		/* translators: 1: order number, 2: customer, 3: order total. */
+		__('#%1$s · %2$s · %3$s', 'cart-rebound'),
 		order.number,
 		who,
-		order.total.toFixed(2),
-		currency
+		formatMoney(order.total, currency)
 	);
 };
 
@@ -187,6 +189,45 @@ const templateLabel = (template: EmailTemplate): string => {
 		/* translators: %s: template name. */
 		__('%s (default)', 'cart-rebound'),
 		name
+	);
+};
+
+/**
+ * Why this list is empty, in the merchant's terms.
+ *
+ * Three situations shared one sentence: a store with no carts at all, a status
+ * filter that matches none, and a search with no hits. Only the first is about
+ * the plugin — telling the other two "no carts yet" sends someone looking for a
+ * tracking bug that is not there.
+ * @param search The settled search term.
+ * @param status The selected status filter.
+ */
+const emptyExplanation = (search: string, status: string): string => {
+	if (search !== '') {
+		return sprintf(
+			/* translators: %s: the searched email address. */
+			__(
+				'Nothing matches “%s”. Clear the search to see every cart.',
+				'cart-rebound'
+			),
+			search
+		);
+	}
+
+	if (status !== '') {
+		return sprintf(
+			/* translators: %s: the selected status, e.g. Abandoned. */
+			__(
+				'No cart is currently %s. Choose “All statuses” to see the rest.',
+				'cart-rebound'
+			),
+			statusLabel(status)
+		);
+	}
+
+	return __(
+		'Tracked carts appear here as shoppers add items and reach checkout.',
+		'cart-rebound'
 	);
 };
 
@@ -433,6 +474,43 @@ const CartRow = ({
 	const status = useUpdateStatus();
 
 	const onStatusChange = (next: string) => {
+		/*
+		 * Two ways to make a cart Recovered wrote different data: this pill set
+		 * only the status, while the order picker also attributed the money. A
+		 * cart flipped here therefore raised the recovered *count* and left
+		 * recovered revenue untouched, quietly dragging the average order value
+		 * down. So the pill hands over to the picker that gets it right, unless
+		 * the cart already has an order to attribute to.
+		 */
+		if ('recovered' === next && cart.order_id === 0) {
+			onRecover(cart);
+
+			return;
+		}
+
+		/*
+		 * Abandoned is not a label — the server routes it through the abandonment
+		 * detector, which opens a follow-up plan and can put a real email in
+		 * front of a real shopper. That deserves a question first.
+		 */
+		if ('abandoned' === next) {
+			// eslint-disable-next-line no-alert
+			const confirmed = window.confirm(
+				sprintf(
+					/* translators: %d: cart ID. */
+					__(
+						'Mark cart #%d abandoned? Cart Rebound will schedule a recovery email for it and restart its follow-up sequence.',
+						'cart-rebound'
+					),
+					cart.id
+				)
+			);
+
+			if (!confirmed) {
+				return;
+			}
+		}
+
 		status.mutate(
 			{ id: cart.id, status: next },
 			{
@@ -453,7 +531,39 @@ const CartRow = ({
 		);
 	};
 
+	/*
+	 * Deleting one cart asks first, exactly as deleting a selection does. The row
+	 * button sits beside three harmless ones and takes a single click, which is
+	 * the shape of an accident; and a deleted cart takes its recovery history
+	 * with it — there is nothing to undo it with.
+	 */
 	const onDelete = () => {
+		// eslint-disable-next-line no-alert
+		const confirmed = window.confirm(
+			cart.email !== ''
+				? sprintf(
+						/* translators: 1: cart ID, 2: shopper email address. */
+						__(
+							'Delete cart #%1$d (%2$s)? This cannot be undone.',
+							'cart-rebound'
+						),
+						cart.id,
+						cart.email
+					)
+				: sprintf(
+						/* translators: %d: cart ID. */
+						__(
+							'Delete cart #%d? This cannot be undone.',
+							'cart-rebound'
+						),
+						cart.id
+					)
+		);
+
+		if (!confirmed) {
+			return;
+		}
+
 		remove.mutate(cart.id, {
 			onError: (error: unknown) => {
 				notify({ type: 'error', message: messageOf(error) });
@@ -476,7 +586,7 @@ const CartRow = ({
 					}}
 				/>
 			</td>
-			<td className="cr-nowrap">
+			<td className="cr-nowrap" data-label={__('Cart', 'cart-rebound')}>
 				<button
 					type="button"
 					className="cr-linkbtn"
@@ -488,14 +598,24 @@ const CartRow = ({
 					#{cart.id}
 				</button>
 			</td>
-			<td className="cr-cell-email">
+			{/* The column truncates at 220px, and a long address is exactly the
+			    one a merchant needs to read in full, so the untruncated value
+			    stays available on hover. */}
+			<td
+				className="cr-cell-email"
+				title={cart.email}
+				data-label={__('Email', 'cart-rebound')}
+			>
 				{cart.email !== '' ? cart.email : <Dash />}
 			</td>
-			<td>{cart.items_count}</td>
-			<td className="cr-money" style={{ textAlign: 'right' }}>
+			<td data-label={__('Items', 'cart-rebound')}>{cart.items_count}</td>
+			<td
+				className="cr-money cr-num"
+				data-label={__('Total', 'cart-rebound')}
+			>
 				{formatMoney(cart.cart_total, currency)}
 			</td>
-			<td>
+			<td data-label={__('Status', 'cart-rebound')}>
 				<StatusSelect
 					cart={cart}
 					pending={status.isPending}
@@ -505,13 +625,14 @@ const CartRow = ({
 			<td
 				className="cr-muted cr-nowrap"
 				title={formatExact(cart.last_activity)}
+				data-label={__('Last activity', 'cart-rebound')}
 			>
 				{formatWhen(cart.last_activity)}
 			</td>
-			<td style={{ textAlign: 'right' }}>
+			<td className="cr-num" data-label={__('Order', 'cart-rebound')}>
 				<OrderLink cart={cart} />
 			</td>
-			<td>
+			<td data-label={__('Actions', 'cart-rebound')}>
 				<div className="cr-row-actions">
 					<button
 						type="button"
@@ -544,22 +665,30 @@ const CartRow = ({
 							<RecoverIcon />
 						</button>
 					)}
-					<button
-						type="button"
-						className="cr-iconbtn"
-						onClick={() => {
-							onSendEmail(cart);
-						}}
-						disabled={
-							cart.email === '' ||
-							cart.items_count <= 0 ||
-							cart.order_id > 0
-						}
-						title={emailButtonTitle(cart)}
-						aria-label={__('Send recovery email', 'cart-rebound')}
-					>
-						<MailIcon />
-					</button>
+					{/* The title sits on the wrapper: a disabled button swallows
+					    pointer events in several browsers, so the three reasons
+					    this control can be dead never appeared at all. */}
+					<span title={emailButtonTitle(cart)}>
+						<button
+							type="button"
+							className="cr-iconbtn"
+							onClick={() => {
+								onSendEmail(cart);
+							}}
+							disabled={
+								cart.email === '' ||
+								cart.items_count <= 0 ||
+								cart.order_id > 0
+							}
+							aria-label={sprintf(
+								/* translators: %s: why the action is unavailable, or what it does. */
+								__('Send recovery email — %s', 'cart-rebound'),
+								emailButtonTitle(cart)
+							)}
+						>
+							<MailIcon />
+						</button>
+					</span>
 					<button
 						type="button"
 						className="cr-iconbtn is-danger"
@@ -627,7 +756,7 @@ const CartDetail = ({
 	if (cart.completed_at !== '') {
 		timeline.push([
 			_x('Completed', 'cart status', 'cart-rebound'),
-			cart.completed_at,
+			formatExact(cart.completed_at),
 		]);
 	}
 	timeline.push([
@@ -640,11 +769,19 @@ const CartDetail = ({
 	const hasItems = cart.products.length > 0;
 
 	return (
+		// Backdrop click-to-close, as the other two dialogs on this screen have;
+		// Esc is handled natively.
+		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
 		<dialog
 			ref={ref}
 			className="cr-dialog is-wide cr-detail"
 			aria-labelledby="cr-detail-title"
 			onClose={onClose}
+			onClick={(event) => {
+				if (event.target === ref.current) {
+					onClose();
+				}
+			}}
 		>
 			<header className="cr-detail__head">
 				<span className="cr-detail__avatar" aria-hidden="true">
@@ -693,6 +830,18 @@ const CartDetail = ({
 							<OrderLink cart={cart} />
 						</dd>
 					</div>
+					{/* The figure the Dashboard and Analytics count as recovered
+					    revenue was nowhere on the cart it belongs to, so a cart
+					    marked recovered by hand — which records no amount — looked
+					    identical to one carrying its order's value. */}
+					{cart.recovered_amount > 0 && (
+						<div>
+							<dt>{__('Recovered value', 'cart-rebound')}</dt>
+							<dd className="cr-money">
+								{money(cart.recovered_amount)}
+							</dd>
+						</div>
+					)}
 				</dl>
 
 				<section className="cr-detail__block">
@@ -860,9 +1009,12 @@ const RecoverDialog = ({
 					});
 					onClose();
 				},
-				onError: (error: unknown) => {
-					notify({ type: 'error', message: messageOf(error) });
-				},
+				/*
+				 * The failure stays in the dialog. Sent to the page-level notice it
+				 * rendered behind this modal's own backdrop — and auto-dismissed
+				 * four seconds later, so by the time the merchant closed the dialog
+				 * to look for it, it was gone.
+				 */
 			}
 		);
 	};
@@ -908,7 +1060,10 @@ const RecoverDialog = ({
 						ariaLabel={__('Recent order', 'cart-rebound')}
 						placeholder={__('Select an order…', 'cart-rebound')}
 						value={picked}
-						onChange={setPicked}
+						onChange={(next) => {
+							setPicked(next);
+							setCustom('');
+						}}
 						options={[
 							{
 								value: '',
@@ -938,9 +1093,35 @@ const RecoverDialog = ({
 						placeholder={__('e.g. 1024', 'cart-rebound')}
 						onChange={(event) => {
 							setCustom(event.target.value);
+							setPicked('');
 						}}
 					/>
 				</div>
+
+				{/*
+				 * Two controls choose one value and the typed one silently won, with
+				 * nothing on screen naming the order about to be linked. Each control
+				 * now clears the other, and the resolved choice is stated in words —
+				 * a disabled button was the only previous signal that nothing was set.
+				 */}
+				<p className="cr-dialog__resolved">
+					{orderId > 0
+						? sprintf(
+								/* translators: %d: WooCommerce order ID. */
+								__('Will link order #%d.', 'cart-rebound'),
+								orderId
+							)
+						: __(
+								'Pick a recent order, or type an order ID, to continue.',
+								'cart-rebound'
+							)}
+				</p>
+
+				{mark.isError && (
+					<div className="cr-notice is-error" role="alert">
+						{messageOf(mark.error)}
+					</div>
+				)}
 
 				<div className="cr-dialog__actions">
 					<button
@@ -1023,9 +1204,11 @@ const SendDialog = ({
 					});
 					onClose();
 				},
-				onError: (error: unknown) => {
-					notify({ type: 'error', message: messageOf(error) });
-				},
+				/*
+				 * The failure stays in the dialog — see RecoverDialog. A page-level
+				 * notice renders behind this modal's backdrop and expires before the
+				 * merchant can close the dialog to read it.
+				 */
 			}
 		);
 	};
@@ -1075,6 +1258,21 @@ const SendDialog = ({
 						}))}
 					/>
 				</div>
+
+				{templates.length === 0 && (
+					<div className="cr-notice is-warning">
+						{__(
+							'No templates exist yet, so this send would use the built-in default wording. Create a template first to control what the shopper reads.',
+							'cart-rebound'
+						)}
+					</div>
+				)}
+
+				{send.isError && (
+					<div className="cr-notice is-error" role="alert">
+						{messageOf(send.error)}
+					</div>
+				)}
 
 				<div className="cr-dialog__actions">
 					<button
@@ -1200,6 +1398,23 @@ export const Carts = () => {
 		}
 	}, [selected]);
 
+	/*
+	 * Keep the cursor inside the list.
+	 *
+	 * Deleting the rows on the last page left `page` pointing past the end: the
+	 * query came back empty, the empty state replaced the table — and took the
+	 * pagination bar, and therefore the Previous button, with it. The merchant was
+	 * stranded on a page that no longer existed with no way back except a filter
+	 * change.
+	 */
+	useEffect(() => {
+		const pages = Math.max(1, Math.ceil((data?.total ?? 0) / perPage));
+
+		if (page > pages) {
+			setPage(pages);
+		}
+	}, [data?.total, perPage, page]);
+
 	useEffect(() => {
 		if (!feedback) {
 			return;
@@ -1237,7 +1452,20 @@ export const Carts = () => {
 		});
 	};
 
+	/*
+	 * A fresh column opens at the end a merchant actually wants: newest activity,
+	 * biggest basket, highest order. Ascending-first meant the first click on
+	 * "Total" showed the smallest carts in the store — a list nobody asked for —
+	 * and every one of those columns needed a second click to be useful.
+	 */
 	const onSort = (column: string) => {
+		const descendingFirst =
+			column === SORTABLE.activity ||
+			column === SORTABLE.total ||
+			column === SORTABLE.items ||
+			column === SORTABLE.id ||
+			column === SORTABLE.order;
+
 		setPage(1);
 		setSort((current) =>
 			current.by === column
@@ -1245,7 +1473,7 @@ export const Carts = () => {
 						by: column,
 						order: current.order === 'asc' ? 'desc' : 'asc',
 					}
-				: { by: column, order: 'asc' }
+				: { by: column, order: descendingFirst ? 'desc' : 'asc' }
 		);
 	};
 
@@ -1253,6 +1481,30 @@ export const Carts = () => {
 		payload: { action: 'delete' } | { action: 'status'; status: string }
 	) => {
 		const ids = Array.from(selected);
+
+		// Same reasoning as the row pill: a bulk move to Abandoned schedules a
+		// recovery email for every cart in the selection.
+		if (payload.action === 'status' && payload.status === 'abandoned') {
+			// eslint-disable-next-line no-alert
+			const confirmed = window.confirm(
+				sprintf(
+					/* translators: %d: number of selected carts. */
+					_n(
+						'Mark %d cart abandoned? Cart Rebound will schedule a recovery email for it and restart its follow-up sequence.',
+						'Mark %d carts abandoned? Cart Rebound will schedule a recovery email for each one and restart their follow-up sequences.',
+						ids.length,
+						'cart-rebound'
+					),
+					ids.length
+				)
+			);
+
+			if (!confirmed) {
+				setBulkStatus('');
+
+				return;
+			}
+		}
 
 		bulk.mutate(
 			{ ...payload, ids },
@@ -1397,7 +1649,12 @@ export const Carts = () => {
 					<span className="cr-bulkbar__count">
 						{sprintf(
 							/* translators: %d: number of selected carts. */
-							__('%d selected', 'cart-rebound'),
+							_n(
+								'%d cart selected',
+								'%d carts selected',
+								selected.size,
+								'cart-rebound'
+							),
 							selected.size
 						)}
 					</span>
@@ -1461,24 +1718,26 @@ export const Carts = () => {
 					</div>
 				)}
 
+				{/* Three situations used to share one sentence: a store with no
+				    carts at all, a status filter that matches none, and a search
+				    with no hits. Only the first is about the plugin, and telling
+				    the other two "no carts yet" sends a merchant looking for a
+				    tracking bug that is not there. */}
 				{isEmpty && (
 					<div className="cr-empty">
 						<p className="cr-empty__title">
-							{__('No carts yet', 'cart-rebound')}
+							{searchQuery !== '' || status !== ''
+								? __('No carts match', 'cart-rebound')
+								: __('No carts yet', 'cart-rebound')}
 						</p>
-						<p>
-							{__(
-								'Tracked carts appear here as shoppers add items and reach checkout.',
-								'cart-rebound'
-							)}
-						</p>
+						<p>{emptyExplanation(searchQuery, status)}</p>
 					</div>
 				)}
 
 				{!isError && !isEmpty && (
 					<>
 						<div className="cr-table-wrap">
-							<table className="cr-table">
+							<table className="cr-table cr-table--carts">
 								<thead>
 									<tr>
 										<th className="cr-check">

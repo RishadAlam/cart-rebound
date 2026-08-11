@@ -548,6 +548,15 @@ select.cr-select:disabled {
 	margin-bottom: var(--cr-field-gap);
 }
 
+/* A grid holding one field used to stretch that field the full width of the
+   card, so the same control — a delay, a minimum total — was 230px wide in a row
+   of three and 625px wide on its own. `auto-fit` collapses to a single track
+   when there is one child; pinning the track width keeps a field the size its
+   siblings are elsewhere on the screen. */
+.cr-field__grid:has(> .cr-field:only-child) {
+	grid-template-columns: minmax(220px, 300px);
+}
+
 /* Fields inside the grid already carry the row rhythm; a row gap on the grid as
    well would double it on every wrap. */
 .cr-field__grid > .cr-field:last-child {
@@ -569,13 +578,54 @@ select.cr-select:disabled {
 	font-weight: 500;
 }
 
+.cr-toolbar__label.is-error {
+	color: var(--cr-danger);
+}
+
+/* The dates the numbers on this screen actually cover. */
+.cr-toolbar__range {
+	color: var(--cr-muted);
+	font-size: var(--cr-text-base);
+	font-variant-numeric: tabular-nums;
+}
+
 .cr-toolbar__spacer {
 	flex: 1;
 }
 
-/* ---- Table ---- */
+/* ---- Table ----
+   A nine-column table cannot fit a phone, so it scrolls inside its own wrapper.
+   Nothing said so, though: the table simply ended at the screen edge, mid-column,
+   looking like a table with fewer columns. The gradients appear only while there
+   is something to scroll to — they are painted on the scroll container itself and
+   pinned to its edges, so the shadow at each end fades out as that end is
+   reached. */
 .cr-table-wrap {
 	overflow-x: auto;
+	background:
+		linear-gradient(to right, var(--cr-surface) 30%, transparent) left
+			center,
+		linear-gradient(to left, var(--cr-surface) 30%, transparent) right
+			center,
+		radial-gradient(
+				farthest-side at 0 50%,
+				oklch(0.27 0.02 264 / 0.14),
+				transparent
+			)
+			left center,
+		radial-gradient(
+				farthest-side at 100% 50%,
+				oklch(0.27 0.02 264 / 0.14),
+				transparent
+			)
+			right center;
+	background-repeat: no-repeat;
+	background-size:
+		36px 100%,
+		36px 100%,
+		12px 100%,
+		12px 100%;
+	background-attachment: local, local, scroll, scroll;
 }
 
 .cr-table {
@@ -620,6 +670,15 @@ select.cr-select:disabled {
 }
 
 .cr-money {
+	font-variant-numeric: tabular-nums;
+}
+
+/* A number column reads down its last digit, so it is right-aligned and its
+   figures share a width. This was inline `style` on the Dashboard and absent on
+   Analytics, which is how the same quantity ended up aligned two ways on two
+   screens; one class means the decision is made once. */
+.cr-num {
+	text-align: right;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -1022,6 +1081,14 @@ select.cr-select:disabled {
 	margin-top: 22px;
 }
 
+/* What the dialog is about to do, in words, above the button that does it. */
+.cr-dialog__resolved {
+	margin: 14px 0 0;
+	color: var(--cr-ink-soft);
+	font-size: var(--cr-text-base);
+	font-weight: 500;
+}
+
 .cr-dialog.is-wide {
 	width: min(760px, calc(100vw - 32px));
 }
@@ -1207,7 +1274,9 @@ a.cr-linkbtn {
 	padding: 3px 10px;
 	border-radius: 999px;
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
+
+	/* Same reasoning as .cr-tag: one step darker clears 4.5:1 at this size. */
+	color: var(--cr-accent-hover);
 	font-size: var(--cr-text-sm);
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
@@ -1718,12 +1787,50 @@ a.cr-linkbtn {
 /* ---- Save bar ---- */
 .cr-savebar {
 	display: flex;
+
+	/* The Templates bar carries a text field between its buttons. Without wrapping
+	   the flex row squeezed that field to about 28px on a phone — wide enough for
+	   one character of an email address — so the row breaks instead. */
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 14px;
 	padding: 16px 24px;
 	border-top: 1px solid var(--cr-border);
 	background: var(--cr-panel);
 	border-radius: 0 0 var(--cr-radius) var(--cr-radius);
+}
+
+/* Inputs in a save bar keep a usable width and take the leftover space rather
+   than giving it up. */
+.cr-savebar .cr-input {
+	flex: 1 1 180px;
+	min-width: 180px;
+}
+
+/* A reason a control is disabled, said on the screen rather than in a `title`
+   nobody can reach from a keyboard or a phone. */
+.cr-savebar__note {
+	color: var(--cr-muted);
+	font-size: var(--cr-text-sm);
+}
+
+/* A save that failed says so beside the button that failed it, in the colour the
+   rest of the admin uses for a failure. */
+.cr-savebar__error {
+	color: var(--cr-danger);
+	font-size: var(--cr-text-base);
+	font-weight: 500;
+}
+
+@media (max-width: 782px) {
+	.cr-savebar {
+		padding: 14px 16px;
+	}
+
+	/* A spacer that still consumes a whole row is just a gap. */
+	.cr-savebar__spacer {
+		display: none;
+	}
 }
 
 .cr-saved {
@@ -1779,14 +1886,17 @@ a.cr-linkbtn {
 	background: var(--cr-danger-soft);
 }
 
-/* ---- Tags ---- */
+/* ---- Tags ----
+   Accent on accent-soft measures 4.37:1 — under the 4.5:1 that 11–12px text
+   needs. The hover shade of the same hue measures 5.6:1 on the same background,
+   so the label darkens by one step and nothing else about the tag changes. */
 .cr-tag {
 	display: inline-flex;
 	align-items: center;
 	padding: 1px 8px;
 	border-radius: 999px;
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
+	color: var(--cr-accent-hover);
 	font-size: var(--cr-text-xs);
 	font-weight: 600;
 	white-space: nowrap;
@@ -2441,6 +2551,15 @@ a.cr-linkbtn {
 	}
 }
 
+/* On a phone two tiles per row leaves about 140px for a six-figure sum. One per
+   row costs a little scrolling and buys a number that can be read at a glance,
+   which is the only reason the strip exists. */
+@media (max-width: 480px) {
+	.cr-metrics {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
 .cr-metric {
 	display: flex;
 	flex-direction: column;
@@ -2449,6 +2568,12 @@ a.cr-linkbtn {
 	background: var(--cr-surface);
 	border: 1px solid var(--cr-border);
 	border-radius: var(--cr-radius-sm);
+
+	/* The tile measures itself so the figure inside can size to the space it
+	   actually has, and so a hint bubble can be anchored to the tile rather than
+	   to the 13px icon that opens it. */
+	container-type: inline-size;
+	position: relative;
 }
 
 .cr-metric__top {
@@ -2470,11 +2595,18 @@ a.cr-linkbtn {
 	margin: 8px 0 0;
 	color: var(--cr-ink);
 	font-size: var(--cr-text-2xl);
+
+	/* A price is one word. `overflow-wrap: anywhere` broke it wherever it ran
+	   out of room, so "20,620.00$" arrived as "20,620.00" on one line and "$" on
+	   the next — which reads as two facts, not one amount. The figure now scales
+	   to the tile it is in instead of being cut in half; the plain size above is
+	   the fallback where container units are unsupported. */
+	font-size: clamp(17px, 13cqw, 23px);
 	font-weight: 600;
 	line-height: 1.1;
 	letter-spacing: -0.02em;
 	font-variant-numeric: tabular-nums;
-	overflow-wrap: anywhere;
+	overflow-wrap: normal;
 }
 
 .cr-metric__value.is-risk {
@@ -2520,13 +2652,18 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
+/* Not merely transparent: an absolutely positioned box still contributes to the
+   scrollable area, so a 210px bubble hanging off the last tile made the whole
+   page scroll sideways on a phone — 420px of document in a 390px window. So it
+   stays out of the layout until it is wanted. */
 .cr-hint__bubble {
+	display: none;
 	position: absolute;
 	bottom: calc(100% + 8px);
 	left: 50%;
 	z-index: 20;
 	width: max-content;
-	max-width: 210px;
+	max-width: min(210px, calc(100vw - 32px));
 	padding: 8px 10px;
 	background: var(--cr-ink);
 	color: var(--cr-accent-ink);
@@ -2541,13 +2678,58 @@ a.cr-linkbtn {
 	pointer-events: none;
 	transition:
 		opacity 140ms var(--cr-ease),
-		transform 140ms var(--cr-ease);
+		transform 140ms var(--cr-ease),
+		display 140ms allow-discrete;
 }
 
 .cr-hint:hover .cr-hint__bubble,
 .cr-hint:focus-within .cr-hint__bubble {
+	display: block;
 	opacity: 1;
 	transform: translate(-50%, 0);
+}
+
+/* Where support exists the fade survives the display switch; where it does not,
+   the bubble simply appears, which is what a tooltip did for twenty years. */
+@starting-style {
+	.cr-hint:hover .cr-hint__bubble,
+	.cr-hint:focus-within .cr-hint__bubble {
+		opacity: 0;
+		transform: translate(-50%, 4px);
+	}
+}
+
+/* Narrow screens: anchor the bubble to the tile rather than to the 13px icon, so
+   it cannot hang off the side of the screen no matter which tile it belongs to.
+   It overlays the figure while open, which is the right trade for a transient
+   explanation the reader asked for. */
+@media (max-width: 782px) {
+	.cr-hint {
+		position: static;
+	}
+
+	.cr-hint__bubble {
+		top: 30px;
+		right: 12px;
+		bottom: auto;
+		left: 12px;
+		width: auto;
+		max-width: none;
+		transform: translateY(4px);
+	}
+
+	.cr-hint:hover .cr-hint__bubble,
+	.cr-hint:focus-within .cr-hint__bubble {
+		transform: translateY(0);
+	}
+
+	@starting-style {
+		.cr-hint:hover .cr-hint__bubble,
+		.cr-hint:focus-within .cr-hint__bubble {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+	}
 }
 
 /* ---- Range selector ---- */
@@ -2662,8 +2844,12 @@ a.cr-linkbtn {
 	stroke: var(--cr-warning);
 }
 
+/* Dashed as well as green: hue at matching lightness is the one distinction a
+   red-green colour-blind reader cannot make, and this chart's whole job is
+   telling two quantities apart. */
 .cr-chart__line.is-won {
 	stroke: var(--cr-success);
+	stroke-dasharray: 5 3;
 }
 
 .cr-chart__stop-risk {
@@ -2672,6 +2858,29 @@ a.cr-linkbtn {
 
 .cr-chart__stop-won {
 	stop-color: var(--cr-success);
+}
+
+/* What the value axis counts. It read 0 / 5K / 10K with no unit on the card. */
+.cr-chart__axisnote {
+	margin: -4px 0 8px;
+	color: var(--cr-muted);
+	font-size: var(--cr-text-sm);
+}
+
+/* The key has to look like the line it stands for. */
+.cr-chart__swatch.is-dashed {
+	background: repeating-linear-gradient(
+		90deg,
+		var(--cr-success) 0 5px,
+		transparent 5px 8px
+	);
+	border-radius: 0;
+}
+
+.cr-chart__tipname {
+	margin-right: 8px;
+	color: oklch(0.85 0.01 256);
+	font-weight: 500;
 }
 
 .cr-chart__crosshair {
@@ -2830,7 +3039,14 @@ a.cr-linkbtn {
 
 /* A notice sitting inside a card or dialog rather than above one, so it needs
    its own inset instead of the margin the surrounding stack would give it. */
+
+/* A result from a row action is reported here, and the table below it can be
+   twenty rows long — so the notice stays in view rather than scrolling away from
+   the row that produced it. */
 .cr-notice--inset {
+	position: sticky;
+	top: 32px;
+	z-index: 4;
 	margin: 16px;
 }
 
@@ -2869,28 +3085,55 @@ a.cr-linkbtn {
 	list-style: none;
 }
 
+/* The chip is a label; only the × removes anything. The whole 113×23px surface
+   used to be the delete button, with its one warning — a hover colour — invisible
+   to every touch screen. */
 .cr-chip.is-removable {
 	display: inline-flex;
 	align-items: center;
-	gap: 7px;
-	padding: 4px 8px 4px 10px;
+	gap: 4px;
+	padding: 2px 2px 2px 10px;
 	border: 1px solid var(--cr-border);
 	border-radius: 999px;
 	background: var(--cr-panel);
 	color: var(--cr-ink-soft);
 	font-size: var(--cr-text-sm);
+}
+
+/* A saved value the options list no longer resolves. It is still filtering
+   carts, so it is shown rather than hidden — and marked, so it can be told apart
+   from a working one. */
+.cr-chip.is-missing {
+	border-style: dashed;
+	border-color: var(--cr-warning);
+	color: var(--cr-warning);
+}
+
+.cr-chip__remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: none;
+	color: var(--cr-muted);
+	font-size: var(--cr-text-md);
+	line-height: 1;
 	cursor: pointer;
 	transition:
-		border-color 140ms var(--cr-ease),
+		background-color 140ms var(--cr-ease),
 		color 140ms var(--cr-ease);
 }
 
-.cr-chip.is-removable:hover {
-	border-color: var(--cr-danger);
+.cr-chip__remove:hover {
+	background: var(--cr-danger-soft);
 	color: var(--cr-danger);
 }
 
-.cr-chip.is-removable:focus-visible {
+.cr-chip__remove:focus-visible {
 	outline: none;
 	box-shadow: var(--cr-ring);
 }
@@ -3046,6 +3289,13 @@ a.cr-linkbtn {
 	width: auto;
 }
 
+/* The two halves of one control were different heights — a 38px number input
+   beside a 30px compact select — which reads as two controls that happen to be
+   adjacent rather than one duration. */
+.cr-duration .cr-combo__trigger {
+	min-height: 38px;
+}
+
 /* ---- Sequence steps ----
    A step is a card rather than a table row because it holds three unrelated
    decisions — when, which template, and whether to discount — and a row would
@@ -3124,7 +3374,7 @@ a.cr-linkbtn {
 
 .cr-step__foot {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
 	gap: 12px;
 	margin-top: 12px;
@@ -3132,8 +3382,41 @@ a.cr-linkbtn {
 	border-top: 1px solid var(--cr-border);
 }
 
+/* The checkbox and the terms it commits to, as one block. Aligned to the top of
+   the row so a two-line policy grows downwards instead of pushing "Remove step"
+   out of its own line. */
+.cr-step__coupon {
+	min-width: 0;
+}
+
+/* The coupon policy, said where the coupon is chosen. A ticked step spends real
+   money; the amount, the expiry and the minimum spend belong at the control, not
+   one screen away on Rules. */
+.cr-step__policy {
+	margin: 5px 0 0 24px;
+	color: var(--cr-muted);
+	font-size: var(--cr-text-sm);
+	line-height: 1.45;
+}
+
+.cr-step__policy.is-warning {
+	color: var(--cr-warning);
+}
+
+/* The same statement at section level, set apart from the prose above it. */
+.cr-section__desc--policy {
+	margin-top: 10px;
+	padding: 10px 12px;
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-panel);
+}
+
 .cr-field__hint.is-warning {
 	color: var(--cr-warning);
+}
+
+.cr-field__hint.is-error {
+	color: var(--cr-danger);
 }
 
 .cr-notice.is-warning {
@@ -3144,6 +3427,39 @@ a.cr-linkbtn {
 
 .cr-linkbtn.is-danger {
 	color: var(--cr-danger);
+}
+
+/* A group of settings that the switch above them has turned off. Native
+   `disabled` on the fieldset does the behaviour; this says it in the design, so
+   the state is visible rather than only discoverable by clicking. */
+.cr-fieldset {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.cr-fieldset:disabled {
+	opacity: 0.55;
+}
+
+/* The row the arrow keys are on. */
+.cr-tokens-field__option.is-active {
+	background: var(--cr-accent-soft);
+	color: var(--cr-accent-hover);
+}
+
+/* The switch on a step card, with its state in words. Colour alone was the only
+   cue that a follow-up was running. */
+.cr-step__toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cr-step__togglelabel {
+	color: var(--cr-muted);
+	font-size: var(--cr-text-sm);
+	font-weight: 500;
 }
 
 /* ---- Analytics ---- */
@@ -3280,6 +3596,145 @@ a.cr-linkbtn {
 	.cr-lock__panel {
 		width: calc(100% - 32px);
 		padding: 18px 18px 20px;
+	}
+
+	/* The search field takes its own row rather than leaving 40px for the words
+	   beside it. On a phone the Carts toolbar was putting "Status" half off the
+	   screen with its select on the line below. */
+	.cr-search {
+		flex: 1 1 100%;
+		max-width: none;
+	}
+
+	/* Of the log's five columns the message is the one worth reading, and it was
+	   the one pushed off the screen. The event key is a machine label that the
+	   message repeats in words, so it stands down at this width. */
+	.cr-table--log th:nth-child(3),
+	.cr-table--log td:nth-child(3) {
+		display: none;
+	}
+
+	/* Touch targets.
+	   wp-admin grows its own checkboxes to 25px below 782px; this file was
+	   forcing them back to 15px with a stronger selector, so the plugin's rows
+	   were *harder* to tap than they would have been with no styling at all.
+	   The icon actions and the status pill were in the same territory — a 28px
+	   button is a coin-toss under a fingertip. */
+	.cr-check input[type="checkbox"] {
+		width: 25px;
+		height: 25px;
+	}
+
+	.cr-table th.cr-check,
+	.cr-table td.cr-check {
+		width: 44px;
+	}
+
+	.cr-iconbtn {
+		width: 40px;
+		height: 40px;
+	}
+
+	.cr-row-actions {
+		gap: 10px;
+	}
+
+	.cr-combo__trigger.is-pill {
+		padding: 8px 26px 8px 12px;
+	}
+
+	/* The compact variants compute to about 30px, which is below any published
+	   touch minimum. Every toolbar on the admin uses them. */
+	.cr-combo.is-compact .cr-combo__trigger,
+	.cr-input.is-compact,
+	.cr-btn.is-sm,
+	.cr-range__btn {
+		min-height: 40px;
+	}
+
+	/* A settings card can run past 2,000px on a phone, and the only Save button
+	   sat at the very bottom of it. */
+	.cr-savebar {
+		position: sticky;
+		bottom: 0;
+		z-index: 5;
+		box-shadow: 0 -1px 0 var(--cr-border);
+	}
+
+	/* The carts table stops being a table.
+	   Nine columns need about 1,100px; hiding the three least useful still left
+	   726px of table in a 313px window, so Status and every row action sat off
+	   the right-hand edge behind a scroll nobody announced. Measured, not
+	   guessed: no arrangement of columns fits a phone, so each row stacks into a
+	   card instead — the email leading, every other value labelled by the header
+	   it lost. Desktop is untouched; all of this lives inside the media query. */
+	.cr-table--carts,
+	.cr-table--carts tbody,
+	.cr-table--carts tr,
+	.cr-table--carts td {
+		display: block;
+		width: auto;
+	}
+
+	.cr-table--carts thead {
+		display: none;
+	}
+
+	.cr-table--carts tr {
+		position: relative;
+		padding: 12px 14px 12px 46px;
+		border-bottom: 1px solid var(--cr-border);
+	}
+
+	.cr-table--carts td {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 3px 0;
+		border: 0;
+		text-align: left;
+	}
+
+	/* The header the cell lost, restored beside its value. */
+	.cr-table--carts td::before {
+		content: attr(data-label);
+		flex: none;
+		color: var(--cr-muted);
+		font-size: var(--cr-text-sm);
+		font-weight: 500;
+	}
+
+	/* The selection checkbox keeps the corner rather than earning a row. */
+	.cr-table--carts td.cr-check {
+		position: absolute;
+		top: 12px;
+		left: 10px;
+		width: auto;
+		padding: 0;
+	}
+
+	.cr-table--carts td.cr-check::before {
+		content: none;
+	}
+
+	/* The email leads the card, so it reads as the row's name. */
+	.cr-table--carts td.cr-cell-email {
+		max-width: none;
+		color: var(--cr-ink);
+		font-weight: 600;
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+
+	.cr-table--carts .cr-row-actions {
+		justify-content: flex-end;
+	}
+
+	/* Nothing scrolls sideways any more, so the edge shadows would be lying. */
+	.cr-table--carts + .cr-pagination,
+	.cr-card .cr-table-wrap:has(.cr-table--carts) {
+		background: none;
 	}
 }
 

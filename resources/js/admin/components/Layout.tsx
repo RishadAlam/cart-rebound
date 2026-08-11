@@ -1,6 +1,7 @@
 /**
  * App shell: heading + tab navigation + routed content.
  */
+import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { __ } from '@wordpress/i18n';
 import { OnboardingWizard } from './OnboardingWizard';
@@ -62,6 +63,62 @@ export const Layout = () => {
 	const { features, addons } = useAddons();
 	const wide = WIDE_ROUTES.includes(pathname);
 	const shell = wide ? 'cr-app is-wide' : 'cr-app is-form';
+	const tabsRef = useRef<HTMLElement>(null);
+
+	/*
+	 * Bring the current tab into view.
+	 *
+	 * Eight tabs do not fit a phone, so the strip scrolls — but it opened at the
+	 * far left whatever screen you were on. Arriving on Settings from the
+	 * WordPress menu, a merchant saw a strip that ended at Analytics and no
+	 * indication of where they were: the one tab that answers "where am I" was
+	 * the one off-screen. Scrolling is skipped when the strip fits, so nothing
+	 * moves on a desktop.
+	 */
+	useEffect(() => {
+		const strip = tabsRef.current;
+
+		if (!strip || strip.scrollWidth <= strip.clientWidth) {
+			return;
+		}
+
+		/*
+		 * Measured after paint and centred by hand rather than with
+		 * scrollIntoView: called during layout the browser settled fifteen pixels
+		 * short and clipped the end of the label, which is the whole failure this
+		 * is here to prevent. The browser clamps the assignment to the scrollable
+		 * range, so the first and last tabs simply sit against their edge.
+		 */
+		const centre = () => {
+			const active = strip.querySelector('.is-active');
+
+			if (!active) {
+				return;
+			}
+
+			const stripBox = strip.getBoundingClientRect();
+			const tabBox = active.getBoundingClientRect();
+
+			strip.scrollLeft +=
+				tabBox.left -
+				stripBox.left -
+				(stripBox.width - tabBox.width) / 2;
+		};
+
+		// Twice: the first pass runs before the admin stylesheet has finished
+		// settling tab widths and lands short, which clips the end of the very
+		// label it is trying to reveal. The second lands on the real geometry.
+		let second = 0;
+		const first = window.requestAnimationFrame(() => {
+			centre();
+			second = window.requestAnimationFrame(centre);
+		});
+
+		return () => {
+			window.cancelAnimationFrame(first);
+			window.cancelAnimationFrame(second);
+		};
+	}, [pathname]);
 
 	// An add-on that is delivering renames the product, because from that point
 	// on it is what the merchant bought. Nothing else about the shell changes.
@@ -82,7 +139,7 @@ export const Layout = () => {
 				</p>
 			</header>
 
-			<nav className="cr-tabs">
+			<nav className="cr-tabs" ref={tabsRef}>
 				{TABS.map((tab) => (
 					<NavLink
 						key={tab.to}

@@ -210,6 +210,18 @@ final class AssetServiceProvider extends ServiceProvider {
 				'thousandSeparator' => function_exists( 'wc_get_price_thousand_separator' ) ? wc_get_price_thousand_separator() : ',',
 				'decimals'          => function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2,
 			),
+
+			/*
+			 * The store's own idea of today.
+			 *
+			 * Analytics built its date range from the browser's clock via
+			 * toISOString(), i.e. UTC calendar days, while the server groups on
+			 * UTC-stored timestamps. For a shop east or west of UTC the window was
+			 * never its own last thirty days: this morning's carts could be
+			 * missing and last night's counted against the wrong day.
+			 */
+			'today'        => function_exists( 'wp_date' ) ? (string) wp_date( 'Y-m-d' ) : gmdate( 'Y-m-d' ),
+			'timezone'     => function_exists( 'wp_timezone' ) ? wp_timezone()->getName() : 'UTC',
 			'currentUser'  => array(
 				'id'   => get_current_user_id(),
 				'caps' => $this->current_user_caps(),
