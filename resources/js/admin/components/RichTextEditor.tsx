@@ -23,6 +23,7 @@ import {
 } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { Combobox } from './Combobox';
+import { formatHtml, wrapLooseNodes } from '../lib/html';
 
 export interface MergeTag {
 	label: string;
@@ -128,70 +129,6 @@ const ALIGN_LABELS = {
 const widthLabel = (width: string): string =>
 	/* translators: %s: an image width percentage, for example 50%. */
 	sprintf(__('Width %s', 'cart-rebound'), width);
-
-// Block-level tags that already give a line its own container. Anything else at
-// the root is inline (bare text, <span>, <a>, <img>) and gets wrapped in a <p>:
-// without a block wrapper, execCommand list/align commands apply to the whole
-// editable instead of the current line, which is how an entire email body ends
-// up as one bulleted list.
-const BLOCK_TAGS = new Set([
-	'P',
-	'DIV',
-	'H1',
-	'H2',
-	'H3',
-	'H4',
-	'H5',
-	'H6',
-	'UL',
-	'OL',
-	'LI',
-	'BLOCKQUOTE',
-	'PRE',
-	'HR',
-	'TABLE',
-	'FIGURE',
-]);
-
-const wrapLooseNodes = (root: HTMLElement) => {
-	const doc = root.ownerDocument;
-	let buffer: ChildNode[] = [];
-
-	const flush = () => {
-		const first = buffer[0];
-
-		if (!first) {
-			return;
-		}
-
-		const paragraph = doc.createElement('p');
-		first.before(paragraph);
-		buffer.forEach((node) => paragraph.append(node));
-		buffer = [];
-	};
-
-	Array.from(root.childNodes).forEach((node) => {
-		const isBlock =
-			node instanceof HTMLElement && BLOCK_TAGS.has(node.tagName);
-
-		if (isBlock) {
-			flush();
-
-			return;
-		}
-
-		if (
-			node.nodeType === Node.TEXT_NODE &&
-			node.textContent?.trim() === ''
-		) {
-			return;
-		}
-
-		buffer.push(node);
-	});
-
-	flush();
-};
 
 type EditorMode = 'visual' | 'html';
 
@@ -385,6 +322,19 @@ export const RichTextEditor = ({
 		refresh();
 	};
 
+	// Re-indent whatever is in the HTML view now. Formatting only moves
+	// whitespace between blocks, so the emitted markup renders identically.
+	const formatCode = () => {
+		const next = formatHtml(code);
+
+		if (next === code) {
+			return;
+		}
+
+		setCode(next);
+		onChange(next);
+	};
+
 	// Switching views hands the current markup to the other one: the visual view
 	// is the source of truth in visual mode, the textarea in HTML mode.
 	const switchMode = (next: EditorMode) => {
@@ -393,7 +343,9 @@ export const RichTextEditor = ({
 		}
 
 		if (next === 'html') {
-			setCode(ref.current?.innerHTML ?? value);
+			// The contentEditable emits one unbroken line; indent it so the
+			// markup is readable before anyone has to edit it.
+			setCode(formatHtml(ref.current?.innerHTML ?? value));
 		} else {
 			pendingSeed.current = code;
 			seedEmits.current = true;
@@ -621,12 +573,18 @@ export const RichTextEditor = ({
 
 			{mode === 'html' ? (
 				<>
-					{tagPicker && (
-						<div className="cr-rte__bar">
-							<span className="cr-rte__spacer" />
-							{tagPicker}
+					<div className="cr-rte__bar">
+						<div className="cr-rte__group">
+							{button(
+								'format',
+								__('Format HTML', 'cart-rebound'),
+								formatCode,
+								__('Format', 'cart-rebound')
+							)}
 						</div>
-					)}
+						<span className="cr-rte__spacer" />
+						{tagPicker}
+					</div>
 					<div
 						id={`${baseId}-panel-html`}
 						role="tabpanel"
