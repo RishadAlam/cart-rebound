@@ -38,6 +38,13 @@ abstract class TestCase extends PolyfillTestCase {
 				'__',
 			)
 		);
+
+		// Key sanitisation is used by option shapes, so mirror core's behaviour.
+		Functions\when( 'sanitize_key' )->alias(
+			static function ( $key ) {
+				return (string) preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) );
+			}
+		);
 	}
 
 	/**

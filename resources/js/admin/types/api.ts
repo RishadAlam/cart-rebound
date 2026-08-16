@@ -109,6 +109,22 @@ export interface Coupon {
 	type: string;
 }
 
+export type ProductColumn =
+	'image' | 'name' | 'sku' | 'quantity' | 'price' | 'subtotal';
+
+export interface ProductTableConfig {
+	enabled: boolean;
+	style: 'lined' | 'boxed' | 'plain';
+	columns: ProductColumn[];
+	image_size: number;
+	show_header: boolean;
+	with_tax: boolean;
+	link_items: boolean;
+	show_variations: boolean;
+	show_total_row: boolean;
+	max_items: number;
+}
+
 export interface EmailTemplate {
 	id: string;
 	name: string;
@@ -118,6 +134,7 @@ export interface EmailTemplate {
 	from_email: string;
 	coupon: string;
 	is_default: boolean;
+	table: ProductTableConfig;
 }
 
 export interface LogEntry {

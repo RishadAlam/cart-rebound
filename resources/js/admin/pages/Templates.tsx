@@ -7,6 +7,7 @@
  */
 import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
+import { ChipSelect } from '../components/ChipSelect';
 import { Combobox } from '../components/Combobox';
 import { RichTextEditor, type MergeTag } from '../components/RichTextEditor';
 import type { TemplatePreview } from '../api/endpoints';
@@ -20,7 +21,11 @@ import {
 	useTemplates,
 	useUpdateTemplate,
 } from '../hooks/useApi';
-import type { EmailTemplate } from '../types/api';
+import type {
+	EmailTemplate,
+	ProductColumn,
+	ProductTableConfig,
+} from '../types/api';
 
 type Feedback = { type: 'success' | 'error'; message: string };
 
@@ -33,7 +38,40 @@ const BLANK: EmailTemplate = {
 	from_email: '',
 	coupon: '',
 	is_default: false,
+	table: {
+		enabled: false,
+		style: 'lined',
+		columns: ['name', 'quantity', 'subtotal'],
+		image_size: 48,
+		show_header: true,
+		with_tax: false,
+		link_items: true,
+		show_variations: true,
+		show_total_row: false,
+		max_items: 0,
+	},
 };
+
+const COLUMN_OPTIONS: { value: ProductColumn; label: string }[] = [
+	{ value: 'image', label: __('Thumbnail', 'cart-rebound') },
+	{ value: 'name', label: __('Product', 'cart-rebound') },
+	{ value: 'sku', label: __('SKU', 'cart-rebound') },
+	{ value: 'quantity', label: __('Quantity', 'cart-rebound') },
+	{ value: 'price', label: __('Unit price', 'cart-rebound') },
+	{ value: 'subtotal', label: __('Line total', 'cart-rebound') },
+];
+
+const STYLE_OPTIONS = [
+	{ value: 'lined', label: __('Ruled rows', 'cart-rebound') },
+	{ value: 'boxed', label: __('Boxed grid', 'cart-rebound') },
+	{ value: 'plain', label: __('No rules', 'cart-rebound') },
+];
+
+const IMAGE_SIZE_OPTIONS = [
+	{ value: '32', label: __('Compact — 32px', 'cart-rebound') },
+	{ value: '48', label: __('Standard — 48px', 'cart-rebound') },
+	{ value: '64', label: __('Roomy — 64px', 'cart-rebound') },
+];
 
 // Merge tags, grouped shopper → cart → store, in the order the picker lists
 // them. TAGS drives the picker; TOKEN_DOCS explains each one under the editor.
@@ -291,7 +329,12 @@ export const Templates = () => {
 
 	const onPreview = () => {
 		preview.mutate(
-			{ subject: form.subject, body: form.body, coupon: form.coupon },
+			{
+				subject: form.subject,
+				body: form.body,
+				coupon: form.coupon,
+				table: form.table,
+			},
 			{
 				onSuccess: (data) => {
 					setPreviewData(data);
@@ -316,6 +359,40 @@ export const Templates = () => {
 			setField(key, event.target.value);
 		};
 
+	const setTable = <K extends keyof ProductTableConfig>(
+		key: K,
+		value: ProductTableConfig[K]
+	) => {
+		setForm((previous) => ({
+			...previous,
+			table: { ...previous.table, [key]: value },
+		}));
+	};
+
+	// Product-table booleans all render the same switch row.
+	const tableToggle = (
+		key: {
+			[
+				K in keyof ProductTableConfig
+			]: ProductTableConfig[K] extends boolean ? K : never;
+		}[keyof ProductTableConfig],
+		id: string
+	) => (
+		<span className="cr-switch">
+			<input
+				id={id}
+				type="checkbox"
+				checked={form.table[key]}
+				onChange={(event) => {
+					setTable(key, event.target.checked);
+				}}
+			/>
+			<span className="cr-switch__track">
+				<span className="cr-switch__thumb" />
+			</span>
+		</span>
+	);
+
 	const startNew = () => {
 		load({ ...BLANK, name: __('New template', 'cart-rebound') }, 'new');
 	};
@@ -329,6 +406,7 @@ export const Templates = () => {
 				coupon: form.coupon,
 				from_name: form.from_name,
 				from_email: form.from_email,
+				table: form.table,
 			},
 			{
 				onSuccess: (data) => {
@@ -388,6 +466,7 @@ export const Templates = () => {
 					from_email: form.from_email,
 					coupon: form.coupon,
 					is_default: form.is_default,
+					table: form.table,
 				},
 				{
 					onSuccess: (saved) => {
@@ -702,6 +781,286 @@ export const Templates = () => {
 									)}
 								</p>
 							</div>
+						</div>
+
+						<div className="cr-section">
+							<h3 className="cr-section__title">
+								{__('Product table', 'cart-rebound')}
+							</h3>
+							<p className="cr-section__desc">
+								{__(
+									'Controls the {products_table} merge tag. Leave this off and the tag renders product, quantity and line total on ruled rows.',
+									'cart-rebound'
+								)}
+							</p>
+
+							<div className="cr-field--row">
+								<div>
+									<label
+										htmlFor="cr-tbl-enabled"
+										className="cr-field__label"
+									>
+										{__(
+											'Lay the table out myself',
+											'cart-rebound'
+										)}
+									</label>
+									<p className="cr-field__hint">
+										{__(
+											'Choose the columns, thumbnail size and totals shown in this template.',
+											'cart-rebound'
+										)}
+									</p>
+								</div>
+								{tableToggle('enabled', 'cr-tbl-enabled')}
+							</div>
+
+							{form.table.enabled && (
+								<>
+									<div className="cr-field">
+										<span className="cr-field__label">
+											{__('Columns', 'cart-rebound')}
+										</span>
+										<p className="cr-field__hint">
+											{__(
+												'Left to right, in the order you add them.',
+												'cart-rebound'
+											)}
+										</p>
+										<ChipSelect
+											ariaLabel={__(
+												'Product table columns',
+												'cart-rebound'
+											)}
+											addLabel={__(
+												'Add column…',
+												'cart-rebound'
+											)}
+											emptyLabel={__(
+												'No columns yet — the default three are used.',
+												'cart-rebound'
+											)}
+											options={COLUMN_OPTIONS}
+											value={form.table.columns}
+											onChange={(next) => {
+												setTable(
+													'columns',
+													next as ProductColumn[]
+												);
+											}}
+										/>
+									</div>
+
+									<div className="cr-field__grid">
+										<div className="cr-field">
+											<span className="cr-field__label">
+												{__(
+													'Table style',
+													'cart-rebound'
+												)}
+											</span>
+											<Combobox
+												ariaLabel={__(
+													'Table style',
+													'cart-rebound'
+												)}
+												options={STYLE_OPTIONS}
+												value={form.table.style}
+												onChange={(next) => {
+													setTable(
+														'style',
+														next as ProductTableConfig['style']
+													);
+												}}
+											/>
+										</div>
+										<div className="cr-field">
+											<span className="cr-field__label">
+												{__(
+													'Thumbnail size',
+													'cart-rebound'
+												)}
+											</span>
+											<Combobox
+												ariaLabel={__(
+													'Thumbnail size',
+													'cart-rebound'
+												)}
+												disabled={
+													!form.table.columns.includes(
+														'image'
+													)
+												}
+												options={IMAGE_SIZE_OPTIONS}
+												value={String(
+													form.table.image_size
+												)}
+												onChange={(next) => {
+													setTable(
+														'image_size',
+														Number(next)
+													);
+												}}
+											/>
+										</div>
+									</div>
+
+									<div className="cr-field--row">
+										<div>
+											<label
+												htmlFor="cr-tbl-header"
+												className="cr-field__label"
+											>
+												{__(
+													'Show column headings',
+													'cart-rebound'
+												)}
+											</label>
+											<p className="cr-field__hint">
+												{__(
+													'Turn off for a bare list of rows.',
+													'cart-rebound'
+												)}
+											</p>
+										</div>
+										{tableToggle(
+											'show_header',
+											'cr-tbl-header'
+										)}
+									</div>
+
+									<div className="cr-field--row">
+										<div>
+											<label
+												htmlFor="cr-tbl-tax"
+												className="cr-field__label"
+											>
+												{__(
+													'Prices include tax',
+													'cart-rebound'
+												)}
+											</label>
+											<p className="cr-field__hint">
+												{__(
+													'Recalculated per product at send time, so it matches the storefront.',
+													'cart-rebound'
+												)}
+											</p>
+										</div>
+										{tableToggle('with_tax', 'cr-tbl-tax')}
+									</div>
+
+									<div className="cr-field--row">
+										<div>
+											<label
+												htmlFor="cr-tbl-link"
+												className="cr-field__label"
+											>
+												{__(
+													'Link rows to the product',
+													'cart-rebound'
+												)}
+											</label>
+											<p className="cr-field__hint">
+												{__(
+													'The thumbnail and name open the product page.',
+													'cart-rebound'
+												)}
+											</p>
+										</div>
+										{tableToggle(
+											'link_items',
+											'cr-tbl-link'
+										)}
+									</div>
+
+									<div className="cr-field--row">
+										<div>
+											<label
+												htmlFor="cr-tbl-variations"
+												className="cr-field__label"
+											>
+												{__(
+													'Show the chosen variation',
+													'cart-rebound'
+												)}
+											</label>
+											<p className="cr-field__hint">
+												{__(
+													'Adds a small line such as “Size: Large” under the name.',
+													'cart-rebound'
+												)}
+											</p>
+										</div>
+										{tableToggle(
+											'show_variations',
+											'cr-tbl-variations'
+										)}
+									</div>
+
+									<div className="cr-field--row">
+										<div>
+											<label
+												htmlFor="cr-tbl-total"
+												className="cr-field__label"
+											>
+												{__(
+													'Close with a cart total row',
+													'cart-rebound'
+												)}
+											</label>
+											<p className="cr-field__hint">
+												{__(
+													'Repeats the cart value at the foot of the table.',
+													'cart-rebound'
+												)}
+											</p>
+										</div>
+										{tableToggle(
+											'show_total_row',
+											'cr-tbl-total'
+										)}
+									</div>
+
+									<div className="cr-field">
+										<label
+											htmlFor="cr-tbl-max"
+											className="cr-field__label"
+										>
+											{__(
+												'Rows before “and N more”',
+												'cart-rebound'
+											)}
+										</label>
+										<p className="cr-field__hint">
+											{__(
+												'Keeps a 30-item cart from becoming a 30-row email. 0 lists everything.',
+												'cart-rebound'
+											)}
+										</p>
+										<input
+											id="cr-tbl-max"
+											className="cr-input"
+											type="number"
+											min={0}
+											value={form.table.max_items}
+											onChange={(event) => {
+												const parsed = parseInt(
+													event.target.value,
+													10
+												);
+
+												setTable(
+													'max_items',
+													Number.isNaN(parsed)
+														? 0
+														: Math.max(0, parsed)
+												);
+											}}
+										/>
+									</div>
+								</>
+							)}
 						</div>
 
 						<div className="cr-field__grid">

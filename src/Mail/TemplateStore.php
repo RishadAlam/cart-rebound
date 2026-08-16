@@ -32,6 +32,27 @@ final class TemplateStore {
 	public const OPTION = 'cart_rebound_email_templates';
 
 	/**
+	 * Columns the {products_table} tag can render, in canonical order.
+	 *
+	 * @var array<int, string>
+	 */
+	public const TABLE_COLUMNS = array( 'image', 'name', 'sku', 'quantity', 'price', 'subtotal' );
+
+	/**
+	 * Table skins the {products_table} tag can render with.
+	 *
+	 * @var array<int, string>
+	 */
+	public const TABLE_STYLES = array( 'lined', 'boxed', 'plain' );
+
+	/**
+	 * Product thumbnail sizes, in pixels.
+	 *
+	 * @var array<int, int>
+	 */
+	public const TABLE_IMAGE_SIZES = array( 32, 48, 64 );
+
+	/**
 	 * Settings store (source of the seeded default template).
 	 *
 	 * @since 0.1.0
@@ -274,6 +295,79 @@ final class TemplateStore {
 			'from_email' => sanitize_email( (string) ( $data['from_email'] ?? '' ) ),
 			'coupon'     => sanitize_text_field( (string) ( $data['coupon'] ?? '' ) ),
 			'is_default' => ! empty( $data['is_default'] ),
+			'table'      => self::table_config( $data['table'] ?? array() ),
+		);
+	}
+
+	/**
+	 * Default {products_table} rendering options.
+	 *
+	 * These describe the table as it renders when a template has not opted into
+	 * customising it, so a stored template written before this option existed
+	 * keeps the layout it already had.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function table_defaults(): array {
+		return array(
+			'enabled'         => false,
+			'style'           => 'lined',
+			'columns'         => array( 'name', 'quantity', 'subtotal' ),
+			'image_size'      => 48,
+			'show_header'     => true,
+			'with_tax'        => false,
+			'link_items'      => true,
+			'show_variations' => true,
+			'show_total_row'  => false,
+			'max_items'       => 0,
+		);
+	}
+
+	/**
+	 * Sanitise raw {products_table} options against the defaults.
+	 *
+	 * Unknown columns are dropped and the order the merchant chose is kept, so
+	 * the chip order in the editor is the column order in the email. An empty
+	 * selection falls back to the default columns rather than an empty table.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param mixed $raw Raw option data.
+	 * @return array<string, mixed>
+	 */
+	public static function table_config( $raw ): array {
+		$defaults = self::table_defaults();
+		$data     = is_array( $raw ) ? $raw : array();
+
+		$columns = array();
+
+		if ( isset( $data['columns'] ) && is_array( $data['columns'] ) ) {
+			foreach ( $data['columns'] as $column ) {
+				$column = sanitize_key( (string) $column );
+
+				if ( in_array( $column, self::TABLE_COLUMNS, true ) && ! in_array( $column, $columns, true ) ) {
+					$columns[] = $column;
+				}
+			}
+		}
+
+		$style      = sanitize_key( (string) ( $data['style'] ?? $defaults['style'] ) );
+		$image_size = (int) ( $data['image_size'] ?? $defaults['image_size'] );
+		$max_items  = isset( $data['max_items'] ) ? max( 0, (int) $data['max_items'] ) : 0;
+
+		return array(
+			'enabled'         => ! empty( $data['enabled'] ),
+			'style'           => in_array( $style, self::TABLE_STYLES, true ) ? $style : $defaults['style'],
+			'columns'         => array() !== $columns ? $columns : $defaults['columns'],
+			'image_size'      => in_array( $image_size, self::TABLE_IMAGE_SIZES, true ) ? $image_size : $defaults['image_size'],
+			'show_header'     => ! isset( $data['show_header'] ) ? $defaults['show_header'] : ! empty( $data['show_header'] ),
+			'with_tax'        => ! empty( $data['with_tax'] ),
+			'link_items'      => ! isset( $data['link_items'] ) ? $defaults['link_items'] : ! empty( $data['link_items'] ),
+			'show_variations' => ! isset( $data['show_variations'] ) ? $defaults['show_variations'] : ! empty( $data['show_variations'] ),
+			'show_total_row'  => ! empty( $data['show_total_row'] ),
+			'max_items'       => $max_items,
 		);
 	}
 

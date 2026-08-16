@@ -221,7 +221,7 @@ Template subjects and bodies support these placeholders:
 **Cart**
 
 - `{products}` — the items left in the cart, as a bulleted list
-- `{products_table}` — the same items as a table of name, quantity, and line total
+- `{products_table}` — the same items as a table, laid out per the template's **Product table** options
 - `{product_names}` — the item names on one line, comma separated
 - `{items_count}` — how many items the cart holds
 - `{cart_total}` — the cart value, formatted in the store currency
@@ -247,6 +247,25 @@ Example default body:
 ```text
 Hi {first_name}, your cart is still waiting: {products} {recovery_url}
 ```
+
+### Product table options
+
+Each template carries its own `{products_table}` layout, edited under **Product table** in the template screen and stored as a `table` object on the template:
+
+| Option            | Values                                                  | Effect                                                                                                             |
+| ----------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `enabled`         | bool                                                    | Off keeps the standard product / quantity / line total table on ruled rows.                                        |
+| `columns`         | `image`, `name`, `sku`, `quantity`, `price`, `subtotal` | Rendered left to right in the order chosen; unknown keys are dropped and an empty list falls back to the defaults. |
+| `style`           | `lined`, `boxed`, `plain`                               | Row rules, a full grid with a shaded header, or no rules at all.                                                   |
+| `image_size`      | `32`, `48`, `64`                                        | Thumbnail size in pixels; the column reserves size + 20px.                                                         |
+| `show_header`     | bool                                                    | Column headings on or off.                                                                                         |
+| `with_tax`        | bool                                                    | Recomputes unit price and line total with `wc_get_price_including_tax()` at send time.                             |
+| `link_items`      | bool                                                    | Thumbnail and product name link to the product page.                                                               |
+| `show_variations` | bool                                                    | Adds the chosen variation attributes ("Size: Large") under the name.                                               |
+| `show_total_row`  | bool                                                    | Appends a bold cart-total row.                                                                                     |
+| `max_items`       | int                                                     | Rows to list before an "and N more items" line; `0` lists everything.                                              |
+
+Values are clamped server-side by `TemplateStore::table_config()`, so an unknown style, size, or column can never reach the renderer.
 
 ### Validation and sanitisation notes
 

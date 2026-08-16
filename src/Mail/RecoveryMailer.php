@@ -373,12 +373,15 @@ final class RecoveryMailer {
 			'cart_contents'  => wp_json_encode(
 				array(
 					array(
+						'product_id' => 0,
 						'name'       => 'Blue T-Shirt',
 						'quantity'   => 2,
 						'price'      => 24.0,
 						'line_total' => 48.0,
+						'variation'  => array( 'attribute_pa_size' => 'Large' ),
 					),
 					array(
+						'product_id' => 0,
 						'name'       => 'Leather Wallet',
 						'quantity'   => 1,
 						'price'      => 36.0,
@@ -651,28 +654,31 @@ final class RecoveryMailer {
 
 		// The two list tokens are markup by definition, escaped as they are built.
 		$replacements['{products}']       = $this->products_html( $row );
-		$replacements['{products_table}'] = $this->products_table_html( $row );
+		$replacements['{products_table}'] = $this->products_table_html( $row, $template );
 
 		$recovery_url    = $tokens['{recovery_url}'];
 		$unsubscribe_url = $tokens['{unsubscribe_url}'];
 
+		// Paragraph-wrap the authored body *before* substitution: wpautop closes
+		// an open <p> when it meets block markup, which would leave a stray
+		// </p> inside the injected product table.
 		$content = str_replace(
 			array_keys( $replacements ),
 			array_values( $replacements ),
-			(string) ( $template['body'] ?? '' )
+			wpautop( (string) ( $template['body'] ?? '' ) )
 		);
 
 		$template_path = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/recovery.php' : '';
 
 		if ( '' === $template_path || ! is_readable( $template_path ) ) {
-			return wpautop( $content );
+			return $content;
 		}
 
 		ob_start();
 		require $template_path;
 		$html = ob_get_clean();
 
-		return is_string( $html ) ? $html : wpautop( $content );
+		return is_string( $html ) ? $html : $content;
 	}
 
 	/**
@@ -704,50 +710,355 @@ final class RecoveryMailer {
 	}
 
 	/**
-	 * Build the cart as a table of item, quantity and line total.
+	 * Build the cart as a table, laid out per the template's table options.
 	 *
 	 * Inline styles only, and a plain table layout, because email clients drop
 	 * stylesheets and most of the modern box model.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row Cart row.
+	 * @param array<string, mixed> $row      Cart row.
+	 * @param array<string, mixed> $template The email template being rendered.
 	 * @return string
 	 */
-	private function products_table_html( array $row ): string {
-		$lines    = $this->items( $row );
-		$currency = (string) ( $row['currency'] ?? '' );
+	private function products_table_html( array $row, array $template ): string {
+		$lines = $this->items( $row );
 
 		if ( array() === $lines ) {
 			return '';
 		}
 
-		$cell  = 'padding: 8px 10px; border-bottom: 1px solid #e5e7eb;';
-		$head  = 'padding: 8px 10px; border-bottom: 2px solid #e5e7eb; font-weight: 600;';
-		$left  = ' text-align: left;';
-		$right = ' text-align: right;';
-		$rows  = '<tr>'
-			. '<th style="' . esc_attr( $head . $left ) . '">' . esc_html__( 'Item', 'cart-rebound' ) . '</th>'
-			. '<th style="' . esc_attr( $head . $right ) . '">' . esc_html__( 'Qty', 'cart-rebound' ) . '</th>'
-			. '<th style="' . esc_attr( $head . $right ) . '">' . esc_html__( 'Total', 'cart-rebound' ) . '</th>'
-			. '</tr>';
+		$config   = TemplateStore::table_config( $template['table'] ?? array() );
+		$currency = (string) ( $row['currency'] ?? '' );
+		$columns  = $config['columns'];
+		$shown    = $config['max_items'] > 0 ? array_slice( $lines, 0, $config['max_items'] ) : $lines;
+		$hidden   = count( $lines ) - count( $shown );
+		$rows     = '';
 
-		foreach ( $lines as $line ) {
-			$quantity = (int) ( $line['quantity'] ?? 0 );
-			$total    = isset( $line['line_total'] )
-				? (float) $line['line_total']
-				: (float) ( $line['price'] ?? 0 ) * $quantity;
+		if ( $config['show_header'] ) {
+			$heads = '';
 
+			foreach ( $columns as $column ) {
+				$heads .= '<th style="' . esc_attr( $this->table_style( $config, $column, true ) ) . '">'
+					. esc_html( $this->column_label( $column ) )
+					. '</th>';
+			}
+
+			$rows .= '<tr>' . $heads . '</tr>';
+		}
+
+		foreach ( $shown as $line ) {
+			$cells = '';
+
+			foreach ( $columns as $column ) {
+				$cells .= '<td style="' . esc_attr( $this->table_style( $config, $column, false ) ) . '">'
+					. $this->table_cell( $column, $line, $config, $currency )
+					. '</td>';
+			}
+
+			$rows .= '<tr>' . $cells . '</tr>';
+		}
+
+		if ( $hidden > 0 ) {
+			$rows .= '<tr><td colspan="' . count( $columns ) . '" style="' . esc_attr( $this->table_style( $config, 'name', false ) . ' color: #6b7280;' ) . '">'
+				. esc_html(
+					sprintf(
+						/* translators: %d: number of cart items not listed. */
+						_n( 'and %d more item', 'and %d more items', $hidden, 'cart-rebound' ),
+						$hidden
+					)
+				)
+				. '</td></tr>';
+		}
+
+		if ( $config['show_total_row'] ) {
+			$total = $this->money( (float) ( $row['cart_total'] ?? 0 ), $currency );
+			$span  = max( 1, count( $columns ) - 1 );
 			$rows .= '<tr>'
-				. '<td style="' . esc_attr( $cell . $left ) . '">' . esc_html( (string) ( $line['name'] ?? '' ) ) . '</td>'
-				. '<td style="' . esc_attr( $cell . $right ) . '">' . esc_html( (string) $quantity ) . '</td>'
-				. '<td style="' . esc_attr( $cell . $right ) . '">' . esc_html( $this->money( $total, $currency ) ) . '</td>'
+				. '<td colspan="' . $span . '" style="' . esc_attr( $this->table_style( $config, 'name', false ) . ' font-weight: 600;' ) . '">'
+				. esc_html__( 'Cart total', 'cart-rebound' )
+				. '</td>'
+				. '<td style="' . esc_attr( $this->table_style( $config, 'subtotal', false ) . ' font-weight: 600;' ) . '">'
+				. esc_html( $total )
+				. '</td>'
 				. '</tr>';
 		}
 
 		return '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 12px 0; border-collapse: collapse; font-size: 14px;">'
 			. $rows
 			. '</table>';
+	}
+
+	/**
+	 * Column heading text.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string $column Column key.
+	 * @return string
+	 */
+	private function column_label( string $column ): string {
+		$labels = array(
+			'image'    => '',
+			'name'     => __( 'Item', 'cart-rebound' ),
+			'sku'      => __( 'SKU', 'cart-rebound' ),
+			'quantity' => __( 'Qty', 'cart-rebound' ),
+			'price'    => __( 'Price', 'cart-rebound' ),
+			'subtotal' => __( 'Total', 'cart-rebound' ),
+		);
+
+		return $labels[ $column ] ?? '';
+	}
+
+	/**
+	 * Inline style for one table cell.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $config  Table options.
+	 * @param string               $column  Column key.
+	 * @param bool                 $heading Whether this is a heading cell.
+	 * @return string
+	 */
+	private function table_style( array $config, string $column, bool $heading ): string {
+		$style = 'padding: 8px 10px;';
+
+		if ( 'boxed' === $config['style'] ) {
+			$style .= ' border: 1px solid #e5e7eb;';
+
+			if ( $heading ) {
+				$style .= ' background: #f9fafb;';
+			}
+		} elseif ( 'lined' === $config['style'] ) {
+			$style .= $heading
+				? ' border-bottom: 2px solid #e5e7eb;'
+				: ' border-bottom: 1px solid #e5e7eb;';
+		}
+
+		if ( $heading ) {
+			$style .= ' font-weight: 600;';
+		}
+
+		$style .= in_array( $column, array( 'quantity', 'price', 'subtotal' ), true )
+			? ' text-align: right;'
+			: ' text-align: left;';
+
+		if ( 'image' === $column ) {
+			$style .= ' width: ' . ( (int) $config['image_size'] + 20 ) . 'px;';
+		}
+
+		return $style;
+	}
+
+	/**
+	 * Render one table cell's contents.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param string               $column   Column key.
+	 * @param array<string, mixed> $line     Cart line.
+	 * @param array<string, mixed> $config   Table options.
+	 * @param string               $currency Store currency code.
+	 * @return string
+	 */
+	private function table_cell( string $column, array $line, array $config, string $currency ): string {
+		$quantity = (int) ( $line['quantity'] ?? 0 );
+		$product  = $this->product( $line );
+		$link     = $config['link_items'] ? $this->product_link( $line ) : '';
+
+		if ( 'image' === $column ) {
+			$size = (int) $config['image_size'];
+			$src  = $this->product_image( $product, $size );
+
+			if ( '' === $src ) {
+				return '';
+			}
+
+			$img = '<img src="' . esc_url( $src ) . '" alt="" width="' . $size . '" height="' . $size . '" style="'
+				. esc_attr( 'width: ' . $size . 'px; height: auto; border-radius: 4px; display: block;' )
+				. '">';
+
+			return '' !== $link ? '<a href="' . esc_url( $link ) . '" style="text-decoration: none;">' . $img . '</a>' : $img;
+		}
+
+		if ( 'name' === $column ) {
+			$name = esc_html( (string) ( $line['name'] ?? '' ) );
+			$name = '' !== $link
+				? '<a href="' . esc_url( $link ) . '" style="color: #1a1a1a; text-decoration: none;">' . $name . '</a>'
+				: $name;
+
+			$meta = $config['show_variations'] ? $this->variation_meta( $line ) : '';
+
+			return $name . $meta;
+		}
+
+		if ( 'sku' === $column ) {
+			return esc_html( null !== $product ? (string) $product->get_sku() : '' );
+		}
+
+		if ( 'quantity' === $column ) {
+			return esc_html( (string) $quantity );
+		}
+
+		if ( 'price' === $column ) {
+			return esc_html( $this->money( $this->unit_price( $line, $product, (bool) $config['with_tax'] ), $currency ) );
+		}
+
+		return esc_html( $this->money( $this->line_total( $line, $product, (bool) $config['with_tax'] ), $currency ) );
+	}
+
+	/**
+	 * The chosen variation attributes as a small second line.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $line Cart line.
+	 * @return string
+	 */
+	private function variation_meta( array $line ): string {
+		if ( ! isset( $line['variation'] ) || ! is_array( $line['variation'] ) || array() === $line['variation'] ) {
+			return '';
+		}
+
+		$parts = array();
+
+		foreach ( $line['variation'] as $key => $value ) {
+			$value = is_scalar( $value ) ? (string) $value : '';
+
+			if ( '' === $value ) {
+				continue;
+			}
+
+			$label   = str_replace( '-', ' ', (string) preg_replace( '/^attribute_(pa_)?/', '', (string) $key ) );
+			$parts[] = ucfirst( $label ) . ': ' . $value;
+		}
+
+		if ( array() === $parts ) {
+			return '';
+		}
+
+		return '<div style="margin-top: 2px; color: #6b7280; font-size: 12px;">' . esc_html( implode( ', ', $parts ) ) . '</div>';
+	}
+
+	/**
+	 * Resolve the WooCommerce product behind a cart line, when it still exists.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $line Cart line.
+	 * @return \WC_Product|null
+	 */
+	private function product( array $line ) {
+		if ( ! function_exists( 'wc_get_product' ) ) {
+			return null;
+		}
+
+		$id = (int) ( $line['variation_id'] ?? 0 );
+
+		if ( $id <= 0 ) {
+			$id = (int) ( $line['product_id'] ?? 0 );
+		}
+
+		if ( $id <= 0 ) {
+			return null;
+		}
+
+		$product = wc_get_product( $id );
+
+		return $product instanceof \WC_Product ? $product : null;
+	}
+
+	/**
+	 * Public URL of the product behind a cart line.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $line Cart line.
+	 * @return string
+	 */
+	private function product_link( array $line ): string {
+		$id = (int) ( $line['product_id'] ?? 0 );
+
+		if ( $id <= 0 ) {
+			$id = (int) ( $line['variation_id'] ?? 0 );
+		}
+
+		if ( $id <= 0 ) {
+			return '';
+		}
+
+		$permalink = get_permalink( $id );
+
+		return is_string( $permalink ) ? $permalink : '';
+	}
+
+	/**
+	 * Thumbnail URL for a product, falling back to the WooCommerce placeholder.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param \WC_Product|null $product The product, when it still exists.
+	 * @param int              $size    Requested pixel size.
+	 * @return string
+	 */
+	private function product_image( $product, int $size ): string {
+		if ( null !== $product ) {
+			$image_id = (int) $product->get_image_id();
+
+			if ( $image_id > 0 ) {
+				$src = wp_get_attachment_image_url( $image_id, array( $size * 2, $size * 2 ) );
+
+				if ( is_string( $src ) && '' !== $src ) {
+					return $src;
+				}
+			}
+		}
+
+		return function_exists( 'wc_placeholder_img_src' ) ? (string) wc_placeholder_img_src() : '';
+	}
+
+	/**
+	 * Unit price for a cart line, with tax when the template asks for it.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $line     Cart line.
+	 * @param \WC_Product|null     $product  Resolved product, when available.
+	 * @param bool                 $with_tax Whether to include tax.
+	 * @return float
+	 */
+	private function unit_price( array $line, $product, bool $with_tax ): float {
+		$price = (float) ( $line['price'] ?? 0 );
+
+		if ( $with_tax && null !== $product && function_exists( 'wc_get_price_including_tax' ) ) {
+			return (float) wc_get_price_including_tax( $product );
+		}
+
+		return $price;
+	}
+
+	/**
+	 * Line total for a cart line, with tax when the template asks for it.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $line     Cart line.
+	 * @param \WC_Product|null     $product  Resolved product, when available.
+	 * @param bool                 $with_tax Whether to include tax.
+	 * @return float
+	 */
+	private function line_total( array $line, $product, bool $with_tax ): float {
+		$quantity = (int) ( $line['quantity'] ?? 0 );
+
+		if ( $with_tax && null !== $product && function_exists( 'wc_get_price_including_tax' ) ) {
+			return (float) wc_get_price_including_tax( $product, array( 'qty' => $quantity ) );
+		}
+
+		if ( isset( $line['line_total'] ) ) {
+			return (float) $line['line_total'];
+		}
+
+		return (float) ( $line['price'] ?? 0 ) * $quantity;
 	}
 
 	/**

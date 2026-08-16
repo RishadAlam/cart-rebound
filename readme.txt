@@ -98,6 +98,8 @@ Use these merge tags to personalize the message:
 
 Cart Rebound adds a prominent **Complete your order** button linked to the same recovery URL. Each recovery message also includes a one-click unsubscribe link.
 
+The abandoned-products table has its own per-template layout: pick the columns (thumbnail, product, SKU, quantity, unit price, line total) and their order, choose ruled / boxed / rule-free rows, set the thumbnail size, show prices with tax, link rows to the product page, print the chosen variation under the name, close with a cart-total row, and cap how many rows list before an "and N more items" line.
+
 = WooCommerce coupons and cart restoration =
 
 Cart Rebound works with coupons in two ways:

@@ -2199,6 +2199,79 @@ a.cr-linkbtn {
 	color: var(--cr-muted);
 }
 
+/* ---- Chip multi-select ---- */
+.cr-chips {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.cr-chips__empty {
+	margin: 0;
+	color: var(--cr-muted);
+	font-size: 13px;
+}
+
+.cr-chips__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.cr-chips__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	padding: 3px 4px 3px 10px;
+	border: 1px solid var(--cr-border-strong);
+	border-radius: 999px;
+	background: var(--cr-surface);
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.cr-chips__item-label {
+	color: var(--cr-ink);
+}
+
+.cr-chips__item-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: none;
+	color: var(--cr-muted);
+	font-size: 14px;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color 120ms var(--cr-ease),
+		color 120ms var(--cr-ease);
+}
+
+.cr-chips__item-remove:hover:not(:disabled) {
+	background: var(--cr-panel);
+	color: var(--cr-ink);
+}
+
+.cr-chips__item-remove:focus-visible {
+	outline: none;
+	box-shadow: var(--cr-ring);
+}
+
+.cr-chips__item-remove:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 /* ---- Combobox (searchable select) ---- */
 .cr-combo {
 	position: relative;
