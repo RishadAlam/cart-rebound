@@ -502,7 +502,7 @@ final class RecoveryMailer {
 				continue;
 			}
 
-			$items[] = '<li>' . esc_html(
+			$items[] = '<li style="margin: 0 0 4px;">' . esc_html(
 				sprintf(
 					'%1$s × %2$d',
 					(string) ( $line['name'] ?? '' ),
@@ -511,7 +511,11 @@ final class RecoveryMailer {
 			) . '</li>';
 		}
 
-		return array() === $items ? '' : '<ul>' . implode( '', $items ) . '</ul>';
+		if ( array() === $items ) {
+			return '';
+		}
+
+		return '<ul style="margin: 8px 0; padding-left: 20px; list-style-type: disc;">' . implode( '', $items ) . '</ul>';
 	}
 
 	/**
