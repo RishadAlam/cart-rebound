@@ -15,6 +15,7 @@
  */
 import {
 	useEffect,
+	useId,
 	useRef,
 	useState,
 	type MouseEvent,
@@ -192,6 +193,8 @@ const wrapLooseNodes = (root: HTMLElement) => {
 	flush();
 };
 
+type EditorMode = 'visual' | 'html';
+
 // Commands whose on/off state is reflected in the toolbar.
 const STATEFUL = [
 	'bold',
@@ -216,29 +219,52 @@ export const RichTextEditor = ({
 	tags?: MergeTag[];
 	ariaLabel?: string;
 }) => {
+	const baseId = useId();
 	const ref = useRef<HTMLDivElement>(null);
-	const seeded = useRef(false);
+	const codeRef = useRef<HTMLTextAreaElement>(null);
 	const savedRange = useRef<Range | null>(null);
 	const [active, setActive] = useState<Record<string, boolean>>({});
 	const [selectedImg, setSelectedImg] = useState<HTMLImageElement | null>(
 		null
 	);
+	const [mode, setMode] = useState<EditorMode>('visual');
+	const [code, setCode] = useState(value);
+
+	// HTML waiting to be written into the contentEditable: the initial value on
+	// mount, then whatever the HTML view produced when switching back. Held in a
+	// ref so re-seeding never depends on render order.
+	const pendingSeed = useRef<string | null>(value);
+	const seedEmits = useRef(false);
 
 	useEffect(() => {
-		if (ref.current && !seeded.current) {
-			ref.current.innerHTML = value;
-			wrapLooseNodes(ref.current);
-			seeded.current = true;
+		const el = ref.current;
+		const html = pendingSeed.current;
 
-			// New lines become <p>, not <div>, so they match what wpautop and
-			// the email template produce.
-			try {
-				document.execCommand('defaultParagraphSeparator', false, 'p');
-			} catch {
-				// Not supported everywhere; the default separator is fine.
-			}
+		if (mode !== 'visual' || !el || html === null) {
+			return;
 		}
-	}, [value]);
+
+		el.innerHTML = html;
+		wrapLooseNodes(el);
+		pendingSeed.current = null;
+
+		// New lines become <p>, not <div>, so they match what wpautop and
+		// the email template produce.
+		try {
+			document.execCommand('defaultParagraphSeparator', false, 'p');
+		} catch {
+			// Not supported everywhere; the default separator is fine.
+		}
+
+		// Only edits made in the HTML view are worth emitting; seeding the
+		// initial value must not mark the form as changed.
+		if (seedEmits.current) {
+			seedEmits.current = false;
+			onChange(el.innerHTML);
+		}
+		// Runs when the visual view (re)mounts; the HTML to write lives in a ref.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [mode]);
 
 	const emit = () => {
 		if (ref.current) {
@@ -326,11 +352,55 @@ export const RichTextEditor = ({
 	};
 
 	const insert = (text: string) => {
+		if (mode === 'html') {
+			const field = codeRef.current;
+
+			if (!field) {
+				return;
+			}
+
+			const start = field.selectionStart;
+			const end = field.selectionEnd;
+			const next =
+				field.value.slice(0, start) + text + field.value.slice(end);
+
+			setCode(next);
+			onChange(next);
+			field.focus();
+
+			// Park the caret after the inserted tag once React has written the
+			// new value, so typing continues where the tag ended.
+			window.requestAnimationFrame(() => {
+				const caret = start + text.length;
+				field.setSelectionRange(caret, caret);
+			});
+
+			return;
+		}
+
 		ref.current?.focus();
 		restoreSelection();
 		document.execCommand('insertText', false, text);
 		emit();
 		refresh();
+	};
+
+	// Switching views hands the current markup to the other one: the visual view
+	// is the source of truth in visual mode, the textarea in HTML mode.
+	const switchMode = (next: EditorMode) => {
+		if (next === mode) {
+			return;
+		}
+
+		if (next === 'html') {
+			setCode(ref.current?.innerHTML ?? value);
+		} else {
+			pendingSeed.current = code;
+			seedEmits.current = true;
+			setSelectedImg(null);
+		}
+
+		setMode(next);
 	};
 
 	const addLink = () => {
@@ -507,257 +577,324 @@ export const RichTextEditor = ({
 		</button>
 	);
 
+	const modeTab = (target: EditorMode, label: string) => (
+		<button
+			type="button"
+			role="tab"
+			id={`${baseId}-tab-${target}`}
+			aria-selected={mode === target}
+			aria-controls={`${baseId}-panel-${target}`}
+			className={`cr-rte__mode${mode === target ? ' is-active' : ''}`}
+			onClick={() => {
+				switchMode(target);
+			}}
+		>
+			{label}
+		</button>
+	);
+
+	const tagPicker = tags.length > 0 && (
+		<Combobox
+			compact
+			ariaLabel={__('Insert merge tag', 'cart-rebound')}
+			placeholder={__('Insert tag…', 'cart-rebound')}
+			value=""
+			options={tags}
+			onChange={(next) => {
+				if (next !== '') {
+					insert(next);
+				}
+			}}
+		/>
+	);
+
 	return (
 		<div className="cr-rte">
 			<div
-				className="cr-rte__bar"
-				role="toolbar"
-				aria-label={__('Formatting', 'cart-rebound')}
+				className="cr-rte__modes"
+				role="tablist"
+				aria-label={__('Editor mode', 'cart-rebound')}
 			>
-				<div className="cr-rte__group">
-					{button(
-						'undo',
-						__('Undo', 'cart-rebound'),
-						() => run('undo'),
-						<IconUndo />
-					)}
-					{button(
-						'redo',
-						__('Redo', 'cart-rebound'),
-						() => run('redo'),
-						<IconRedo />
-					)}
-				</div>
+				{modeTab('visual', __('Visual', 'cart-rebound'))}
+				{modeTab('html', __('HTML', 'cart-rebound'))}
+			</div>
 
-				<div className="cr-rte__group">
-					{INLINE.map((tool) =>
-						button(
-							tool.command,
-							tool.label,
-							() => run(tool.command),
-							tool.content,
-							tool.command
-						)
+			{mode === 'html' ? (
+				<>
+					{tagPicker && (
+						<div className="cr-rte__bar">
+							<span className="cr-rte__spacer" />
+							{tagPicker}
+						</div>
 					)}
-				</div>
-
-				<div className="cr-rte__group">
-					<input
-						type="color"
-						className="cr-rte__color"
-						title={__('Text colour', 'cart-rebound')}
-						aria-label={__('Text colour', 'cart-rebound')}
-						defaultValue="#111827"
-						onChange={(changeEvent) => {
-							runRestored(
-								'foreColor',
-								changeEvent.target.value,
-								true
-							);
-						}}
-					/>
-					<input
-						type="color"
-						className="cr-rte__color"
-						title={__('Highlight colour', 'cart-rebound')}
-						aria-label={__('Highlight colour', 'cart-rebound')}
-						defaultValue="#fde68a"
-						onChange={(changeEvent) => {
-							runRestored(
-								'hiliteColor',
-								changeEvent.target.value,
-								true
-							);
-						}}
-					/>
-				</div>
-
-				<div className="cr-rte__group">
-					{BLOCKS.map((item) =>
-						button(
-							item.block,
-							item.label,
-							() => run('formatBlock', item.block),
-							item.text
-						)
-					)}
-				</div>
-
-				<div className="cr-rte__group">
-					{ALIGN.map((dir) =>
-						button(
-							`align${dir}`,
-							ALIGN_LABELS[dir],
-							() => run(`justify${dir}`),
-							<IconAlign dir={dir} />,
-							`justify${dir}`
-						)
-					)}
-				</div>
-
-				<div className="cr-rte__group">
-					{button(
-						'ul',
-						__('Bulleted list', 'cart-rebound'),
-						() => run('insertUnorderedList'),
-						'• —',
-						'insertUnorderedList'
-					)}
-					{button(
-						'ol',
-						__('Numbered list', 'cart-rebound'),
-						() => run('insertOrderedList'),
-						'1.',
-						'insertOrderedList'
-					)}
-					{button(
-						'outdent',
-						__('Decrease indent', 'cart-rebound'),
-						() => run('outdent'),
-						'«'
-					)}
-					{button(
-						'indent',
-						__('Increase indent', 'cart-rebound'),
-						() => run('indent'),
-						'»'
-					)}
-				</div>
-
-				<div className="cr-rte__group">
-					{button(
-						'link',
-						__('Insert link', 'cart-rebound'),
-						addLink,
-						__('Link', 'cart-rebound')
-					)}
-					{button(
-						'unlink',
-						__('Remove link', 'cart-rebound'),
-						() => run('unlink'),
-						__('Unlink', 'cart-rebound')
-					)}
-					{button(
-						'image',
-						__('Insert image', 'cart-rebound'),
-						addImage,
-						__('Image', 'cart-rebound')
-					)}
-					{button(
-						'hr',
-						__('Divider', 'cart-rebound'),
-						() => run('insertHorizontalRule'),
-						'―'
-					)}
-				</div>
-
-				<div className="cr-rte__group">
-					{button(
-						'clear',
-						__('Clear formatting', 'cart-rebound'),
-						() => run('removeFormat'),
-						__('Clear', 'cart-rebound')
-					)}
-				</div>
-
-				{tags.length > 0 && (
-					<>
-						<span className="cr-rte__spacer" />
-						<Combobox
-							compact
-							ariaLabel={__('Insert merge tag', 'cart-rebound')}
-							placeholder={__('Insert tag…', 'cart-rebound')}
-							value=""
-							options={tags}
-							onChange={(next) => {
-								if (next !== '') {
-									insert(next);
-								}
+					<div
+						id={`${baseId}-panel-html`}
+						role="tabpanel"
+						aria-labelledby={`${baseId}-tab-html`}
+					>
+						<textarea
+							ref={codeRef}
+							className="cr-rte__code"
+							aria-label={ariaLabel}
+							spellCheck={false}
+							value={code}
+							onChange={(event) => {
+								setCode(event.target.value);
+								onChange(event.target.value);
 							}}
 						/>
-					</>
-				)}
-			</div>
+					</div>
+				</>
+			) : (
+				<>
+					<div
+						className="cr-rte__bar"
+						role="toolbar"
+						aria-label={__('Formatting', 'cart-rebound')}
+					>
+						<div className="cr-rte__group">
+							{button(
+								'undo',
+								__('Undo', 'cart-rebound'),
+								() => run('undo'),
+								<IconUndo />
+							)}
+							{button(
+								'redo',
+								__('Redo', 'cart-rebound'),
+								() => run('redo'),
+								<IconRedo />
+							)}
+						</div>
 
-			{selectedImg && (
-				<div
-					className="cr-rte__imagebar"
-					role="toolbar"
-					aria-label={__('Image', 'cart-rebound')}
-				>
-					<span className="cr-rte__imagebar-label">
-						{__('Image size', 'cart-rebound')}
-					</span>
-					<div className="cr-rte__group">
-						{['25%', '50%', '75%', '100%'].map((width) =>
-							button(
-								`w${width}`,
-								widthLabel(width),
-								() => sizeImage(width),
-								width
-							)
-						)}
-						{button(
-							'wauto',
-							__('Original size', 'cart-rebound'),
-							() => sizeImage(''),
-							__('Auto', 'cart-rebound')
+						<div className="cr-rte__group">
+							{INLINE.map((tool) =>
+								button(
+									tool.command,
+									tool.label,
+									() => run(tool.command),
+									tool.content,
+									tool.command
+								)
+							)}
+						</div>
+
+						<div className="cr-rte__group">
+							<input
+								type="color"
+								className="cr-rte__color"
+								title={__('Text colour', 'cart-rebound')}
+								aria-label={__('Text colour', 'cart-rebound')}
+								defaultValue="#111827"
+								onChange={(changeEvent) => {
+									runRestored(
+										'foreColor',
+										changeEvent.target.value,
+										true
+									);
+								}}
+							/>
+							<input
+								type="color"
+								className="cr-rte__color"
+								title={__('Highlight colour', 'cart-rebound')}
+								aria-label={__(
+									'Highlight colour',
+									'cart-rebound'
+								)}
+								defaultValue="#fde68a"
+								onChange={(changeEvent) => {
+									runRestored(
+										'hiliteColor',
+										changeEvent.target.value,
+										true
+									);
+								}}
+							/>
+						</div>
+
+						<div className="cr-rte__group">
+							{BLOCKS.map((item) =>
+								button(
+									item.block,
+									item.label,
+									() => run('formatBlock', item.block),
+									item.text
+								)
+							)}
+						</div>
+
+						<div className="cr-rte__group">
+							{ALIGN.map((dir) =>
+								button(
+									`align${dir}`,
+									ALIGN_LABELS[dir],
+									() => run(`justify${dir}`),
+									<IconAlign dir={dir} />,
+									`justify${dir}`
+								)
+							)}
+						</div>
+
+						<div className="cr-rte__group">
+							{button(
+								'ul',
+								__('Bulleted list', 'cart-rebound'),
+								() => run('insertUnorderedList'),
+								'• —',
+								'insertUnorderedList'
+							)}
+							{button(
+								'ol',
+								__('Numbered list', 'cart-rebound'),
+								() => run('insertOrderedList'),
+								'1.',
+								'insertOrderedList'
+							)}
+							{button(
+								'outdent',
+								__('Decrease indent', 'cart-rebound'),
+								() => run('outdent'),
+								'«'
+							)}
+							{button(
+								'indent',
+								__('Increase indent', 'cart-rebound'),
+								() => run('indent'),
+								'»'
+							)}
+						</div>
+
+						<div className="cr-rte__group">
+							{button(
+								'link',
+								__('Insert link', 'cart-rebound'),
+								addLink,
+								__('Link', 'cart-rebound')
+							)}
+							{button(
+								'unlink',
+								__('Remove link', 'cart-rebound'),
+								() => run('unlink'),
+								__('Unlink', 'cart-rebound')
+							)}
+							{button(
+								'image',
+								__('Insert image', 'cart-rebound'),
+								addImage,
+								__('Image', 'cart-rebound')
+							)}
+							{button(
+								'hr',
+								__('Divider', 'cart-rebound'),
+								() => run('insertHorizontalRule'),
+								'―'
+							)}
+						</div>
+
+						<div className="cr-rte__group">
+							{button(
+								'clear',
+								__('Clear formatting', 'cart-rebound'),
+								() => run('removeFormat'),
+								__('Clear', 'cart-rebound')
+							)}
+						</div>
+
+						{tagPicker && (
+							<>
+								<span className="cr-rte__spacer" />
+								{tagPicker}
+							</>
 						)}
 					</div>
-					<div className="cr-rte__group">
-						{button(
-							'imgleft',
-							ALIGN_LABELS.Left,
-							() => alignImage('left'),
-							<IconAlign dir="Left" />
-						)}
-						{button(
-							'imgcenter',
-							ALIGN_LABELS.Center,
-							() => alignImage('center'),
-							<IconAlign dir="Center" />
-						)}
-						{button(
-							'imgright',
-							ALIGN_LABELS.Right,
-							() => alignImage('right'),
-							<IconAlign dir="Right" />
-						)}
-					</div>
-					<span className="cr-rte__spacer" />
-					{button(
-						'imgremove',
-						__('Remove image', 'cart-rebound'),
-						removeImage,
-						__('Remove', 'cart-rebound')
+
+					{selectedImg && (
+						<div
+							className="cr-rte__imagebar"
+							role="toolbar"
+							aria-label={__('Image', 'cart-rebound')}
+						>
+							<span className="cr-rte__imagebar-label">
+								{__('Image size', 'cart-rebound')}
+							</span>
+							<div className="cr-rte__group">
+								{['25%', '50%', '75%', '100%'].map((width) =>
+									button(
+										`w${width}`,
+										widthLabel(width),
+										() => sizeImage(width),
+										width
+									)
+								)}
+								{button(
+									'wauto',
+									__('Original size', 'cart-rebound'),
+									() => sizeImage(''),
+									__('Auto', 'cart-rebound')
+								)}
+							</div>
+							<div className="cr-rte__group">
+								{button(
+									'imgleft',
+									ALIGN_LABELS.Left,
+									() => alignImage('left'),
+									<IconAlign dir="Left" />
+								)}
+								{button(
+									'imgcenter',
+									ALIGN_LABELS.Center,
+									() => alignImage('center'),
+									<IconAlign dir="Center" />
+								)}
+								{button(
+									'imgright',
+									ALIGN_LABELS.Right,
+									() => alignImage('right'),
+									<IconAlign dir="Right" />
+								)}
+							</div>
+							<span className="cr-rte__spacer" />
+							{button(
+								'imgremove',
+								__('Remove image', 'cart-rebound'),
+								removeImage,
+								__('Remove', 'cart-rebound')
+							)}
+						</div>
 					)}
-				</div>
-			)}
 
-			<div className="cr-rte__canvas">
-				<div
-					ref={ref}
-					className="cr-rte__content"
-					contentEditable
-					suppressContentEditableWarning
-					role="textbox"
-					tabIndex={0}
-					aria-multiline="true"
-					aria-label={ariaLabel}
-					onInput={() => {
-						emit();
-						setSelectedImg(null);
-					}}
-					onKeyUp={refresh}
-					onMouseUp={refresh}
-					onClick={onContentClick}
-					onFocus={syncActive}
-					onBlur={() => {
-						saveSelection();
-						emit();
-					}}
-				/>
-			</div>
+					<div
+						className="cr-rte__canvas"
+						id={`${baseId}-panel-visual`}
+						role="tabpanel"
+						aria-labelledby={`${baseId}-tab-visual`}
+					>
+						<div
+							ref={ref}
+							className="cr-rte__content"
+							contentEditable
+							suppressContentEditableWarning
+							role="textbox"
+							tabIndex={0}
+							aria-multiline="true"
+							aria-label={ariaLabel}
+							onInput={() => {
+								emit();
+								setSelectedImg(null);
+							}}
+							onKeyUp={refresh}
+							onMouseUp={refresh}
+							onClick={onContentClick}
+							onFocus={syncActive}
+							onBlur={() => {
+								saveSelection();
+								emit();
+							}}
+						/>
+					</div>
+				</>
+			)}
 		</div>
 	);
 };

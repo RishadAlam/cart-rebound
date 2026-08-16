@@ -1937,6 +1937,68 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
+/* Visual / HTML switch — the editor's own view, so it sits inside the frame
+   above the toolbar rather than floating beside the field label. */
+.cr-rte__modes {
+	display: flex;
+	justify-content: flex-end;
+	gap: 4px;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--cr-border);
+	background: var(--cr-panel);
+}
+
+.cr-rte__mode {
+	padding: 4px 12px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	background: none;
+	color: var(--cr-ink-soft);
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.6;
+	cursor: pointer;
+	transition:
+		background-color 120ms var(--cr-ease),
+		border-color 120ms var(--cr-ease),
+		color 120ms var(--cr-ease);
+}
+
+.cr-rte__mode:hover {
+	color: var(--cr-ink);
+}
+
+.cr-rte__mode.is-active {
+	border-color: var(--cr-border-strong);
+	background: var(--cr-surface);
+	color: var(--cr-ink);
+}
+
+.cr-rte__mode:focus-visible {
+	outline: none;
+	box-shadow: var(--cr-ring);
+}
+
+/* Raw HTML view — a plain code surface, no email canvas. */
+.cr-rte__code {
+	display: block;
+	width: 100%;
+	min-height: 320px;
+	padding: 16px;
+	border: 0;
+	background: var(--cr-surface);
+	color: var(--cr-ink);
+	font-family: ui-monospace, sfmono-regular, menlo, monospace;
+	font-size: 13px;
+	line-height: 1.7;
+	tab-size: 2;
+	resize: vertical;
+}
+
+.cr-rte__code:focus {
+	outline: none;
+}
+
 .cr-rte__bar {
 	position: sticky;
 	top: 0;
