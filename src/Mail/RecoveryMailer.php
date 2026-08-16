@@ -437,7 +437,7 @@ final class RecoveryMailer {
 		$names      = array();
 
 		foreach ( $items as $line ) {
-			$name = (string) ( $line['name'] ?? '' );
+			$name = $this->line_name( $line );
 
 			if ( '' !== $name ) {
 				$names[] = $name;
@@ -557,6 +557,30 @@ final class RecoveryMailer {
 		$args = '' !== $currency ? array( 'currency' => $currency ) : array();
 
 		return html_entity_decode( wp_strip_all_tags( wc_price( $amount, $args ) ), ENT_QUOTES, 'UTF-8' );
+	}
+
+	/**
+	 * The display name for a cart line.
+	 *
+	 * The snapshot stores the name as it was when the cart was captured, but a
+	 * line written before that field existed — or captured while the product was
+	 * unavailable — has none, so fall back to the live product.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param array<string, mixed> $line Cart line.
+	 * @return string
+	 */
+	private function line_name( array $line ): string {
+		$name = trim( (string) ( $line['name'] ?? '' ) );
+
+		if ( '' !== $name ) {
+			return $name;
+		}
+
+		$product = $this->product( $line );
+
+		return null !== $product ? (string) $product->get_name() : '';
 	}
 
 	/**
@@ -696,7 +720,7 @@ final class RecoveryMailer {
 			$items[] = '<li style="margin: 0 0 4px;">' . esc_html(
 				sprintf(
 					'%1$s × %2$d',
-					(string) ( $line['name'] ?? '' ),
+					$this->line_name( $line ),
 					(int) ( $line['quantity'] ?? 0 )
 				)
 			) . '</li>';
@@ -882,7 +906,7 @@ final class RecoveryMailer {
 		}
 
 		if ( 'name' === $column ) {
-			$name = esc_html( (string) ( $line['name'] ?? '' ) );
+			$name = esc_html( $this->line_name( $line ) );
 			$name = '' !== $link
 				? '<a href="' . esc_url( $link ) . '" style="color: #1a1a1a; text-decoration: none;">' . $name . '</a>'
 				: $name;
