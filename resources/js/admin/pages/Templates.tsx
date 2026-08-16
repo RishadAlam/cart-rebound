@@ -757,17 +757,6 @@ export const Templates = () => {
 										{__('Set as default', 'cart-rebound')}
 									</button>
 								)}
-								<button
-									type="button"
-									className="cr-btn is-ghost is-sm"
-									onClick={onPreview}
-									disabled={preview.isPending}
-								>
-									<EyeIcon />
-									{preview.isPending
-										? __('Rendering…', 'cart-rebound')
-										: __('Preview', 'cart-rebound')}
-								</button>
 							</div>
 						</div>
 
@@ -853,6 +842,22 @@ export const Templates = () => {
 								onChange={(html) => {
 									setField('body', html);
 								}}
+								actions={
+									<button
+										type="button"
+										className="cr-btn is-ghost is-sm"
+										onClick={onPreview}
+										disabled={preview.isPending}
+									>
+										<EyeIcon />
+										{preview.isPending
+											? __('Rendering…', 'cart-rebound')
+											: __(
+													'Preview email',
+													'cart-rebound'
+												)}
+									</button>
+								}
 							/>
 							<p className="cr-field__hint">
 								{__(
@@ -969,6 +974,12 @@ export const Templates = () => {
 										<span className="cr-field__label">
 											{__('Table style', 'cart-rebound')}
 										</span>
+										<p className="cr-field__hint">
+											{__(
+												'How rows are separated.',
+												'cart-rebound'
+											)}
+										</p>
 										<Combobox
 											ariaLabel={__(
 												'Table style',
@@ -991,6 +1002,12 @@ export const Templates = () => {
 												'cart-rebound'
 											)}
 										</span>
+										<p className="cr-field__hint">
+											{__(
+												'Used once the Thumbnail column is on.',
+												'cart-rebound'
+											)}
+										</p>
 										<Combobox
 											ariaLabel={__(
 												'Thumbnail size',
@@ -1133,22 +1150,24 @@ export const Templates = () => {
 									)}
 								</div>
 
-								<div className="cr-field">
-									<label
-										htmlFor="cr-tbl-max"
-										className="cr-field__label"
-									>
-										{__(
-											'Rows before “and N more”',
-											'cart-rebound'
-										)}
-									</label>
-									<p className="cr-field__hint">
-										{__(
-											'Keeps a 30-item cart from becoming a 30-row email. 0 lists everything.',
-											'cart-rebound'
-										)}
-									</p>
+								<div className="cr-field--row">
+									<div>
+										<label
+											htmlFor="cr-tbl-max"
+											className="cr-field__label"
+										>
+											{__(
+												'Rows before “and N more”',
+												'cart-rebound'
+											)}
+										</label>
+										<p className="cr-field__hint">
+											{__(
+												'Keeps a 30-item cart from becoming a 30-row email. 0 lists everything.',
+												'cart-rebound'
+											)}
+										</p>
+									</div>
 									<input
 										id="cr-tbl-max"
 										className="cr-input is-narrow"

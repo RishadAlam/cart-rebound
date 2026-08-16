@@ -546,6 +546,37 @@ select.cr-select:disabled {
 	gap: 18px;
 }
 
+/* Hints wrap to different heights, which pushed the inputs of a two-up row out
+   of line. Subgrid puts label / hint / control on shared rows instead. */
+@supports (grid-template-rows: subgrid) {
+	.cr-field__grid {
+		grid-template-rows: auto auto auto;
+		align-items: start;
+		row-gap: 6px;
+		margin-bottom: 20px;
+	}
+
+	.cr-field__grid:last-child {
+		margin-bottom: 0;
+	}
+
+	.cr-field__grid > .cr-field {
+		display: grid;
+		grid-row: span 3;
+		grid-template-rows: subgrid;
+		margin-bottom: 0;
+	}
+
+	/* Row spacing now comes from the grid, so the parts stop adding their own. */
+	.cr-field__grid > .cr-field > .cr-field__label {
+		margin-bottom: 0;
+	}
+
+	.cr-field__grid > .cr-field > .cr-field__hint {
+		margin-top: 0;
+	}
+}
+
 /* ---- Toolbar ---- */
 .cr-toolbar {
 	display: flex;
@@ -1863,20 +1894,47 @@ a.cr-linkbtn {
 /* Closed by default: the reference is for the first template, the picker in the
    toolbar is for every one after it. */
 .cr-tokens__title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
 	margin: 0;
+	padding: 2px 0;
 	color: var(--cr-ink-soft);
 	font-size: 12px;
 	font-weight: 600;
 	cursor: pointer;
-	list-style-position: outside;
+	list-style: none;
+	transition: color 120ms var(--cr-ease);
 }
 
-.cr-tokens__title::marker {
-	color: var(--cr-muted);
+/* The default disclosure marker sits on the text baseline and cannot be
+   styled consistently across browsers, so draw our own. */
+.cr-tokens__title::-webkit-details-marker {
+	display: none;
+}
+
+.cr-tokens__title::before {
+	width: 0;
+	height: 0;
+	border: 4px solid transparent;
+	border-left-color: var(--cr-muted);
+	content: "";
+	transition: transform 160ms var(--cr-ease);
+	transform-origin: 25% 50%;
+}
+
+.cr-tokens[open] .cr-tokens__title::before {
+	transform: rotate(90deg);
+}
+
+.cr-tokens__title:hover {
+	color: var(--cr-ink);
 }
 
 .cr-tokens[open] .cr-tokens__title {
 	margin-bottom: 12px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--cr-border);
 }
 
 .cr-tokens__title:focus-visible {
@@ -2073,11 +2131,17 @@ a.cr-linkbtn {
    above the toolbar rather than floating beside the field label. */
 .cr-rte__modes {
 	display: flex;
-	justify-content: flex-end;
-	gap: 4px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--cr-border);
 	background: var(--cr-panel);
+}
+
+.cr-rte__modeset {
+	display: flex;
+	gap: 4px;
 }
 
 .cr-rte__mode {
@@ -2336,11 +2400,33 @@ a.cr-linkbtn {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 8px;
+	gap: 6px;
+	padding: 6px;
+	border: 1px solid var(--cr-border-strong);
+	border-radius: var(--cr-radius-sm);
+	background: var(--cr-surface);
+	transition:
+		border-color 140ms var(--cr-ease),
+		box-shadow 140ms var(--cr-ease);
+}
+
+.cr-chips:focus-within {
+	border-color: var(--cr-accent);
+	box-shadow: var(--cr-ring);
+}
+
+/* The picker is the last element in the control, not a control of its own. */
+.cr-chips .cr-combo__trigger {
+	border-color: transparent;
+	background: none;
+}
+
+.cr-chips .cr-combo__trigger:hover:not(:disabled) {
+	border-color: var(--cr-border-strong);
 }
 
 .cr-chips__empty {
-	margin: 0;
+	margin: 0 0 0 6px;
 	color: var(--cr-muted);
 	font-size: 13px;
 }
@@ -2358,6 +2444,7 @@ a.cr-linkbtn {
 	display: inline-flex;
 	align-items: center;
 	gap: 2px;
+	min-height: 28px;
 	padding: 3px 4px 3px 10px;
 	border: 1px solid var(--cr-border-strong);
 	border-radius: 999px;

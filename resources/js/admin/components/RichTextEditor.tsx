@@ -150,11 +150,15 @@ export const RichTextEditor = ({
 	onChange,
 	tags = [],
 	ariaLabel = __('Email body', 'cart-rebound'),
+	actions,
 }: {
 	value: string;
 	onChange: (html: string) => void;
 	tags?: MergeTag[];
 	ariaLabel?: string;
+	// Rendered opposite the Visual/HTML switch — for actions that act on the
+	// body as a whole, such as previewing it.
+	actions?: ReactNode;
 }) => {
 	const baseId = useId();
 	const ref = useRef<HTMLDivElement>(null);
@@ -562,13 +566,16 @@ export const RichTextEditor = ({
 
 	return (
 		<div className="cr-rte">
-			<div
-				className="cr-rte__modes"
-				role="tablist"
-				aria-label={__('Editor mode', 'cart-rebound')}
-			>
-				{modeTab('visual', __('Visual', 'cart-rebound'))}
-				{modeTab('html', __('HTML', 'cart-rebound'))}
+			<div className="cr-rte__modes">
+				<div
+					className="cr-rte__modeset"
+					role="tablist"
+					aria-label={__('Editor mode', 'cart-rebound')}
+				>
+					{modeTab('visual', __('Visual', 'cart-rebound'))}
+					{modeTab('html', __('HTML', 'cart-rebound'))}
+				</div>
+				{actions}
 			</div>
 
 			{mode === 'html' ? (
