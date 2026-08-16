@@ -2082,10 +2082,30 @@ a.cr-linkbtn {
 	margin: 0 0 14px;
 }
 
+/* Tailwind preflight strips list markers; the email body is rendered without
+   it, so restore them here or the editor lies about what will be sent. */
 .cr-rte__content ul,
 .cr-rte__content ol {
 	margin: 0 0 14px;
 	padding-left: 24px;
+	list-style-position: outside;
+}
+
+.cr-rte__content ul {
+	list-style-type: disc;
+}
+
+.cr-rte__content ol {
+	list-style-type: decimal;
+}
+
+.cr-rte__content li {
+	display: list-item;
+}
+
+.cr-rte__content li > ul {
+	margin-bottom: 0;
+	list-style-type: circle;
 }
 
 .cr-rte__content blockquote {
