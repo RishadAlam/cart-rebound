@@ -2396,12 +2396,16 @@ a.cr-linkbtn {
 }
 
 /* ---- Chip multi-select ---- */
+
+/* Reads as one field: the chosen items in order, then the control that adds
+   another. The ordinal is what makes the order legible — without it the row is
+   just tags, and the order it encodes is invisible. */
 .cr-chips {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 6px;
-	padding: 6px;
+	gap: 8px;
+	padding: 7px 8px;
 	border: 1px solid var(--cr-border-strong);
 	border-radius: var(--cr-radius-sm);
 	background: var(--cr-surface);
@@ -2415,18 +2419,8 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* The picker is the last element in the control, not a control of its own. */
-.cr-chips .cr-combo__trigger {
-	border-color: transparent;
-	background: none;
-}
-
-.cr-chips .cr-combo__trigger:hover:not(:disabled) {
-	border-color: var(--cr-border-strong);
-}
-
 .cr-chips__empty {
-	margin: 0 0 0 6px;
+	margin: 0 0 0 2px;
 	color: var(--cr-muted);
 	font-size: 13px;
 }
@@ -2443,18 +2437,33 @@ a.cr-linkbtn {
 .cr-chips__item {
 	display: inline-flex;
 	align-items: center;
-	gap: 2px;
-	min-height: 28px;
-	padding: 3px 4px 3px 10px;
-	border: 1px solid var(--cr-border-strong);
-	border-radius: 999px;
-	background: var(--cr-surface);
+	gap: 7px;
+	height: 28px;
+	padding: 0 5px 0 6px;
+	border: 1px solid var(--cr-border);
+	border-radius: 6px;
+	background: var(--cr-panel);
 	font-size: 12px;
-	line-height: 1.6;
+	line-height: 1;
+}
+
+.cr-chips__item-index {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	border-radius: 4px;
+	background: var(--cr-accent-soft);
+	color: var(--cr-accent);
+	font-size: 10px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
 }
 
 .cr-chips__item-label {
 	color: var(--cr-ink);
+	font-weight: 500;
 }
 
 .cr-chips__item-remove {
@@ -2465,11 +2474,9 @@ a.cr-linkbtn {
 	height: 18px;
 	padding: 0;
 	border: 0;
-	border-radius: 999px;
+	border-radius: 4px;
 	background: none;
 	color: var(--cr-muted);
-	font-size: 14px;
-	line-height: 1;
 	cursor: pointer;
 	transition:
 		background-color 120ms var(--cr-ease),
@@ -2477,8 +2484,8 @@ a.cr-linkbtn {
 }
 
 .cr-chips__item-remove:hover:not(:disabled) {
-	background: var(--cr-panel);
-	color: var(--cr-ink);
+	background: var(--cr-danger-soft);
+	color: var(--cr-danger);
 }
 
 .cr-chips__item-remove:focus-visible {
@@ -2489,6 +2496,28 @@ a.cr-linkbtn {
 .cr-chips__item-remove:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+/* The picker is the "add another" affordance, not a second field: dashed so it
+   reads as an opening in the row rather than a control competing with it. */
+.cr-chips .cr-combo {
+	width: auto;
+}
+
+.cr-chips .cr-combo__trigger {
+	height: 28px;
+	padding: 0 8px;
+	border-style: dashed;
+	border-color: var(--cr-border-strong);
+	background: none;
+	color: var(--cr-accent);
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.cr-chips .cr-combo__trigger:hover:not(:disabled) {
+	border-style: solid;
+	background: var(--cr-accent-soft);
 }
 
 /* ---- Combobox (searchable select) ---- */

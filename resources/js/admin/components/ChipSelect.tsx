@@ -37,9 +37,15 @@ export const ChipSelect = ({
 				<p className="cr-chips__empty">{emptyLabel}</p>
 			)}
 
-			<ul className="cr-chips__list">
-				{value.map((item) => (
+			<ol className="cr-chips__list">
+				{value.map((item, index) => (
 					<li key={item} className="cr-chips__item">
+						<span
+							className="cr-chips__item-index"
+							aria-hidden="true"
+						>
+							{index + 1}
+						</span>
 						<span className="cr-chips__item-label">
 							{labelOf(item)}
 						</span>
@@ -56,11 +62,23 @@ export const ChipSelect = ({
 								onChange(value.filter((one) => one !== item));
 							}}
 						>
-							×
+							<svg
+								viewBox="0 0 10 10"
+								width="9"
+								height="9"
+								aria-hidden="true"
+							>
+								<path
+									d="m1.5 1.5 7 7m0-7-7 7"
+									stroke="currentColor"
+									strokeWidth="1.6"
+									strokeLinecap="round"
+								/>
+							</svg>
 						</button>
 					</li>
 				))}
-			</ul>
+			</ol>
 
 			{remaining.length > 0 && (
 				<Combobox
