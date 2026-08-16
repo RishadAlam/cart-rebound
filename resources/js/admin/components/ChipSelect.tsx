@@ -38,14 +38,8 @@ export const ChipSelect = ({
 			)}
 
 			<ol className="cr-chips__list">
-				{value.map((item, index) => (
+				{value.map((item) => (
 					<li key={item} className="cr-chips__item">
-						<span
-							className="cr-chips__item-index"
-							aria-hidden="true"
-						>
-							{index + 1}
-						</span>
 						<span className="cr-chips__item-label">
 							{labelOf(item)}
 						</span>

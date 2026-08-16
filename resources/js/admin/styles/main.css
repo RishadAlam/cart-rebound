@@ -2397,30 +2397,18 @@ a.cr-linkbtn {
 
 /* ---- Chip multi-select ---- */
 
-/* Reads as one field: the chosen items in order, then the control that adds
-   another. The ordinal is what makes the order legible — without it the row is
-   just tags, and the order it encodes is invisible. */
+/* A plain row: the chosen items as pills, then the control that adds another.
+   No container of its own — the chips are the field. Everything in the row is
+   30px tall so the pills and the picker share one line. */
 .cr-chips {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 8px;
-	padding: 7px 8px;
-	border: 1px solid var(--cr-border-strong);
-	border-radius: var(--cr-radius-sm);
-	background: var(--cr-surface);
-	transition:
-		border-color 140ms var(--cr-ease),
-		box-shadow 140ms var(--cr-ease);
-}
-
-.cr-chips:focus-within {
-	border-color: var(--cr-accent);
-	box-shadow: var(--cr-ring);
+	gap: 6px;
 }
 
 .cr-chips__empty {
-	margin: 0 0 0 2px;
+	margin: 0;
 	color: var(--cr-muted);
 	font-size: 13px;
 }
@@ -2428,6 +2416,7 @@ a.cr-linkbtn {
 .cr-chips__list {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 6px;
 	margin: 0;
 	padding: 0;
@@ -2437,28 +2426,15 @@ a.cr-linkbtn {
 .cr-chips__item {
 	display: inline-flex;
 	align-items: center;
-	gap: 7px;
-	height: 28px;
-	padding: 0 5px 0 6px;
-	border: 1px solid var(--cr-border);
-	border-radius: 6px;
-	background: var(--cr-panel);
+	gap: 4px;
+	height: 30px;
+	margin: 0;
+	padding: 0 5px 0 12px;
+	border: 1px solid var(--cr-border-strong);
+	border-radius: 999px;
+	background: var(--cr-surface);
 	font-size: 12px;
 	line-height: 1;
-}
-
-.cr-chips__item-index {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 16px;
-	height: 16px;
-	border-radius: 4px;
-	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
-	font-size: 10px;
-	font-weight: 600;
-	font-variant-numeric: tabular-nums;
 }
 
 .cr-chips__item-label {
@@ -2498,26 +2474,28 @@ a.cr-linkbtn {
 	cursor: not-allowed;
 }
 
-/* The picker is the "add another" affordance, not a second field: dashed so it
-   reads as an opening in the row rather than a control competing with it. */
+/* The picker sits in the same row as the chips, so it matches their height and
+   pill shape and stays quiet until hovered — it adds to the row, it is not a
+   second control beside it. */
 .cr-chips .cr-combo {
+	display: flex;
 	width: auto;
 }
 
 .cr-chips .cr-combo__trigger {
-	height: 28px;
-	padding: 0 8px;
-	border-style: dashed;
-	border-color: var(--cr-border-strong);
+	height: 30px;
+	padding: 0 12px;
+	border-color: transparent;
+	border-radius: 999px;
 	background: none;
-	color: var(--cr-accent);
+	color: var(--cr-muted);
 	font-size: 12px;
 	font-weight: 500;
 }
 
 .cr-chips .cr-combo__trigger:hover:not(:disabled) {
-	border-style: solid;
-	background: var(--cr-accent-soft);
+	border-color: var(--cr-border-strong);
+	color: var(--cr-ink);
 }
 
 /* ---- Combobox (searchable select) ---- */
