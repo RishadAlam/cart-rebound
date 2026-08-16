@@ -4,7 +4,7 @@ Tags: woocommerce, abandoned cart, cart abandonment, cart recovery, recovery ema
 Requires at least: 6.2
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -404,6 +404,34 @@ Production packages can be created with `pnpm production-zip`. See the repositor
 Bundled third-party JavaScript libraries are GPL-compatible and distributed under the MIT License. Copyright and license notices are included in `THIRD-PARTY-LICENSES.txt`.
 
 == Changelog ==
+
+= 1.1.0 =
+
+**Release date:** 2026-08-17
+
+**Added**
+
+* Added Visual and HTML views to the email body editor, with a Format button that indents hand-written markup.
+* Added merge tags for the shopper's surname, full name, and email address.
+* Added merge tags for the cart's item names, item count, value, and the date it was left behind.
+* Added merge tags for the checkout page, the store name, address, contact email, manager name, and the current year.
+* Added a `{products_table}` merge tag that renders the abandoned items as a table.
+* Added per-template product-table options: column choice and order, ruled, boxed, or rule-free rows, thumbnail size, column headings, tax-inclusive prices, product links, the chosen variation under each name, a closing cart-total row, and a row cap.
+
+**Improved**
+
+* Reorganised the template editor into Message, Product table, and Delivery sections with a save bar that stays in reach and reports whether changes are pending.
+* Warned before switching template while edits are unsaved.
+* Listed every merge tag with a description under the body editor, and made the picker searchable.
+* Added a template filter, template count, and subject preview to the template list.
+
+**Fixed**
+
+* Showed bullet and number markers inside the body editor, so a list looks in the editor the way it arrives in the inbox.
+* Kept list and alignment commands on the current line instead of applying them to the whole email body.
+* Stopped a stray paragraph tag appearing inside the rendered product table.
+* Styled the product list and table inline so email clients render them consistently.
+* Used the live product name when a tracked cart line was stored without one.
 
 = 1.0.0 =
 

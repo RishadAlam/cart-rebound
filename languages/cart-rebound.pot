@@ -2,16 +2,16 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Cart Rebound 0.2.0\n"
+"Project-Id-Version: Cart Rebound 1.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/RishadAlam/cart-rebound/issues\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-24T21:06:35+00:00\n"
+"POT-Creation-Date: 2026-08-16T18:35:08+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.12.0\n"
+"X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: cart-rebound\n"
 
 #. Plugin Name of the plugin
@@ -20,7 +20,7 @@ msgstr ""
 #: src/Admin/Menu.php:77
 #: src/Admin/Menu.php:78
 #: src/Privacy/PrivacyPolicy.php:69
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Cart Rebound"
 msgstr ""
 
@@ -31,7 +31,7 @@ msgstr ""
 
 #. Description of the plugin
 #: cart-rebound.php
-msgid "Recover abandoned WooCommerce carts with secure links, optional emails, opt-in guest tracking, and accurate revenue attribution."
+msgid "Free, self-hosted WooCommerce cart abandonment recovery with automated emails, secure restore links, coupons, and revenue reports."
 msgstr ""
 
 #. Author of the plugin
@@ -98,29 +98,28 @@ msgid "This unsubscribe link has expired or has already been used."
 msgstr ""
 
 #: src/Admin/Menu.php:100
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Dashboard"
 msgstr ""
 
 #: src/Admin/Menu.php:101
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Carts"
 msgstr ""
 
 #: src/Admin/Menu.php:102
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:74
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Templates"
 msgstr ""
 
 #: src/Admin/Menu.php:103
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Log"
 msgstr ""
 
 #: src/Admin/Menu.php:104
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Settings"
 msgstr ""
 
@@ -139,19 +138,16 @@ msgstr ""
 
 #. translators: 1: shopper email, 2: formatted amount.
 #: src/Events/LogSubscriber.php:64
-#, php-format
 msgid "Cart abandoned by %1$s (%2$s)."
 msgstr ""
 
 #. translators: %s: recovery method, e.g. email_link or direct.
 #: src/Events/LogSubscriber.php:90
-#, php-format
 msgid " via %s"
 msgstr ""
 
 #. translators: 1: shopper email, 2: formatted amount, 3: order id, 4: " via <method>" or empty.
 #: src/Events/LogSubscriber.php:98
-#, php-format
 msgid "Cart recovered by %1$s (%2$s) — order #%3$d%4$s."
 msgstr ""
 
@@ -161,13 +157,11 @@ msgstr ""
 
 #. translators: 1: template name, 2: recipient email.
 #: src/Events/LogSubscriber.php:126
-#, php-format
 msgid "Recovery email “%1$s” sent to %2$s."
 msgstr ""
 
 #. translators: %s: recipient email.
 #: src/Events/LogSubscriber.php:132
-#, php-format
 msgid "Recovery email sent to %s."
 msgstr ""
 
@@ -215,7 +209,6 @@ msgstr ""
 
 #. translators: %s: form field name.
 #: src/Http/Requests/FormRequest.php:109
-#, php-format
 msgid "The %s field is required."
 msgstr ""
 
@@ -225,37 +218,31 @@ msgstr ""
 
 #. translators: %s: form field name.
 #: src/Http/Requests/FormRequest.php:182
-#, php-format
 msgid "The %s field must be a string."
 msgstr ""
 
 #. translators: %s: form field name.
 #: src/Http/Requests/FormRequest.php:187
-#, php-format
 msgid "The %s field must be an integer."
 msgstr ""
 
 #. translators: %s: form field name.
 #: src/Http/Requests/FormRequest.php:192
-#, php-format
 msgid "The %s field must be a valid email address."
 msgstr ""
 
 #. translators: %s: form field name.
 #: src/Http/Requests/FormRequest.php:197
-#, php-format
 msgid "The %s field must be a valid URL."
 msgstr ""
 
 #. translators: 1: form field name, 2: maximum length.
 #: src/Http/Requests/FormRequest.php:207
-#, php-format
 msgid "The %1$s field may not be longer than %2$d characters."
 msgstr ""
 
 #. translators: 1: form field name, 2: minimum length.
 #: src/Http/Requests/FormRequest.php:216
-#, php-format
 msgid "The %1$s field must be at least %2$d characters."
 msgstr ""
 
@@ -265,7 +252,6 @@ msgstr ""
 
 #. translators: %s: order number.
 #: src/Mail/RecoveryMailer.php:187
-#, php-format
 msgid "[Cart Rebound] Recovered cart — order #%s"
 msgstr ""
 
@@ -275,19 +261,16 @@ msgstr ""
 
 #. translators: %s: order number.
 #: src/Mail/RecoveryMailer.php:198
-#, php-format
 msgid "Order: #%s"
 msgstr ""
 
 #. translators: %s: formatted order total.
 #: src/Mail/RecoveryMailer.php:203
-#, php-format
 msgid "Amount: %s"
 msgstr ""
 
 #. translators: %s: customer name or email.
 #: src/Mail/RecoveryMailer.php:208
-#, php-format
 msgid "Customer: %s"
 msgstr ""
 
@@ -321,16 +304,53 @@ msgstr ""
 
 #. translators: %s: WordPress or SMTP mail error.
 #: src/Mail/RecoveryMailer.php:329
-#, php-format
 msgid "WordPress could not send the email: %s"
 msgstr ""
 
-#: src/Mail/RecoveryMailer.php:413
+#: src/Mail/RecoveryMailer.php:629
 msgid "WordPress could not send the email. Check the site SMTP or mail transport configuration and try again."
 msgstr ""
 
-#: src/Mail/TemplateStore.php:235
-#: public/build/assets/admin-Cj72XtYm.js:75
+#. translators: %d: number of cart items not listed.
+#: src/Mail/RecoveryMailer.php:791
+msgid "and %d more item"
+msgid_plural "and %d more items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Mail/RecoveryMailer.php:803
+#: src/Privacy/PersonalDataExporter.php:153
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:70
+msgid "Cart total"
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:827
+msgid "Item"
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:828
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "SKU"
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:829
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+msgid "Qty"
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:830
+msgid "Price"
+msgstr ""
+
+#: src/Mail/RecoveryMailer.php:831
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:66
+msgid "Total"
+msgstr ""
+
+#: src/Mail/TemplateStore.php:256
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Default"
 msgstr ""
 
@@ -345,7 +365,7 @@ msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:145
 #: src/Privacy/PersonalDataExporter.php:186
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Cart ID"
 msgstr ""
 
@@ -362,7 +382,6 @@ msgid "Email address"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:149
-#: public/build/assets/admin-Cj72XtYm.js:75
 msgid "First name"
 msgstr ""
 
@@ -378,29 +397,24 @@ msgstr ""
 msgid "Cart contents"
 msgstr ""
 
-#: src/Privacy/PersonalDataExporter.php:153
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:66
-msgid "Cart total"
-msgstr ""
-
 #: src/Privacy/PersonalDataExporter.php:154
 msgid "Currency"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:155
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Item count"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:156
-#: public/build/assets/admin-Cj72XtYm.js:46
+#: public/build/assets/admin-Cnh0Hdlo.js:52
 msgid "Coupons"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:157
-#: public/build/assets/admin-Cj72XtYm.js:54
-#: public/build/assets/admin-Cj72XtYm.js:60
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "Status"
 msgstr ""
 
@@ -418,9 +432,9 @@ msgid "Created at"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:161
-#: public/build/assets/admin-Cj72XtYm.js:44
-#: public/build/assets/admin-Cj72XtYm.js:60
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "Last activity"
 msgstr ""
 
@@ -446,19 +460,20 @@ msgid "Log ID"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:188
-#: public/build/assets/admin-Cj72XtYm.js:70
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Level"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:189
-#: public/build/assets/admin-Cj72XtYm.js:70
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Event"
 msgstr ""
 
 #: src/Privacy/PersonalDataExporter.php:190
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Message"
 msgstr ""
 
@@ -476,7 +491,6 @@ msgstr ""
 
 #. translators: 1: unrecovered cart retention days, 2: converted cart retention days.
 #: src/Privacy/PrivacyPolicy.php:62
-#, php-format
 msgid "Active and unrecovered cart records are retained for %1$d days, while recovered and completed cart records are retained for %2$d days. Associated activity logs are deleted with each cart record. Site administrators can change both retention periods in Cart Rebound settings."
 msgstr ""
 
@@ -494,13 +508,11 @@ msgstr ""
 
 #. translators: %d: tracked cart id.
 #: src/Recovery/OrderLinker.php:299
-#, php-format
 msgid "Cart Rebound: order reversed; tracked cart #%d moved to lost."
 msgstr ""
 
 #. translators: 1: tracked cart id, 2: recovery method.
 #: src/Recovery/OrderLinker.php:366
-#, php-format
 msgid "Cart Rebound: recovered cart #%1$d via %2$s."
 msgstr ""
 
@@ -514,7 +526,6 @@ msgstr ""
 
 #. translators: %d: tracked cart id.
 #: src/Recovery/OrderLinker.php:408
-#, php-format
 msgid "Cart Rebound: linked to tracked cart #%d (completed)."
 msgstr ""
 
@@ -530,1281 +541,1645 @@ msgstr ""
 msgid "Hi {first_name}, your cart is still waiting: {products} {recovery_url}"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Could not mark recovered — the order ID may be invalid, or this cart is already linked to an order."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Could not change the cart status."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "WordPress could not send the email. Check the site mail configuration and try again."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Welcome"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Guest carts"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Timing"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Welcome to Cart Rebound"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "A few quick choices and you’ll be recovering abandoned carts. Everything here can be changed later in Settings."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Tracks every cart and the email shoppers enter at checkout."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Emails shoppers a one-click link back to their cart."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Attributes the paid orders you win back to revenue."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Track guest carts"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Capture carts and the email guests enter at checkout, not just logged-in customers — it’s where most abandonment happens."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Track logged-out shoppers"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Recommended for most stores."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "When is a cart abandoned?"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "How long a cart can sit idle before Cart Rebound counts it as abandoned and starts recovery."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Abandonment threshold"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "minutes"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "30–60 minutes works well for most stores."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Recovery email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Send one follow-up with a one-click link back to the cart. You can fine-tune the wording on the Templates tab."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Send a recovery email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Automatically, after the delay below."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Send delay"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "minutes after abandonment"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Set up Cart Rebound"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Takes about a minute."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Skip"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Back"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Finish setup"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Continue"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Recover more WooCommerce sales with automated emails, secure recovery links, and clear revenue tracking."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Select…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Search…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "Search options"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
 msgid "No matches"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:31
+msgid "Rows per page"
+msgstr ""
+
+#. translators: 1: first row on this page, 2: last row on this page, 3: total rows.
+#: public/build/assets/admin-Cnh0Hdlo.js:33
+msgid "Showing %1$d–%2$d of %3$d"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:33
+msgid "Previous"
+msgstr ""
+
+#. translators: 1: current page, 2: total pages.
+#: public/build/assets/admin-Cnh0Hdlo.js:35
+msgid "Page %1$d of %2$d"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:35
+msgid "Next"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgctxt "cart status"
 msgid "Active"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:35
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgctxt "cart status"
 msgid "Abandoned"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgctxt "cart status"
 msgid "Pending payment"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:35
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgctxt "cart status"
 msgid "Recovered"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:35
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgctxt "cart status"
 msgid "Completed"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgctxt "cart status"
 msgid "Lost"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:35
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Something went wrong."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "Shopper is still building their cart — no order placed yet."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "Idle past the threshold; a recovery email may be scheduled."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "Order placed but not paid yet (e.g. cheque or bank transfer). Items are kept and no recovery email is sent."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "An abandoned cart that came back and paid — a recovery win."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "Converted to a paid order without ever being abandoned."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "Abandoned and cleaned up, or a paid order later refunded or cancelled."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "What do these statuses mean?"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "A cancelled or failed order returns the cart to Active with its items kept; a refund moves a converted cart to Lost."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:31
+#: public/build/assets/admin-Cnh0Hdlo.js:35
 msgid "guest"
 msgstr ""
 
 #. translators: 1: order number, 2: customer, 3: total, 4: currency code.
-#: public/build/assets/admin-Cj72XtYm.js:33
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:37
 msgid "#%1$s · %2$s · %3$s %4$s"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:33
+#: public/build/assets/admin-Cnh0Hdlo.js:37
 msgid "This cart already converted to an order"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:33
+#: public/build/assets/admin-Cnh0Hdlo.js:37
 msgid "No email captured for this cart"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:33
+#: public/build/assets/admin-Cnh0Hdlo.js:37
 msgid "This cart has no items to recover"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:33
+#: public/build/assets/admin-Cnh0Hdlo.js:37
 msgid "Send the recovery email now"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:33
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:37
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Untitled"
 msgstr ""
 
 #. translators: %s: template name.
-#: public/build/assets/admin-Cj72XtYm.js:35
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:39
 msgid "%s (default)"
 msgstr ""
 
+#: public/build/assets/admin-Cnh0Hdlo.js:39
+msgid "Open this order in WooCommerce"
+msgstr ""
+
 #. translators: %s: current cart status.
-#: public/build/assets/admin-Cj72XtYm.js:37
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:41
 msgid "Status: %s. Change it"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:37
+#: public/build/assets/admin-Cnh0Hdlo.js:41
 msgid "ascending"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:37
+#: public/build/assets/admin-Cnh0Hdlo.js:41
 msgid "descending"
 msgstr ""
 
 #. translators: 1: column label, 2: sort direction.
-#: public/build/assets/admin-Cj72XtYm.js:39
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:43
 msgid "Sort by %1$s, currently %2$s"
 msgstr ""
 
 #. translators: %s: column label.
-#: public/build/assets/admin-Cj72XtYm.js:41
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:45
 msgid "Sort by %s"
 msgstr ""
 
 #. translators: %d: cart ID.
-#: public/build/assets/admin-Cj72XtYm.js:42
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:46
 msgid "Select cart %d"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:42
+#: public/build/assets/admin-Cnh0Hdlo.js:46
+#: public/build/assets/admin-Cnh0Hdlo.js:48
 msgid "View cart details"
 msgstr ""
 
 #. translators: %s: cart status.
-#: public/build/assets/admin-Cj72XtYm.js:44
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:48
 msgid "Status set to %s."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:44
-#: public/build/assets/admin-Cj72XtYm.js:48
+#. translators: %d: cart ID.
+#: public/build/assets/admin-Cnh0Hdlo.js:50
+msgid "View details for cart %d"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "Mark recovered"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgid "Mark this cart recovered against an order"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:44
-#: public/build/assets/admin-Cj72XtYm.js:48
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:54
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Send recovery email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgid "Delete cart"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgid "Delete this cart"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgid "Created"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:44
+#: public/build/assets/admin-Cnh0Hdlo.js:50
 msgid "Guest cart"
 msgstr ""
 
 #. translators: %d: cart id.
-#: public/build/assets/admin-Cj72XtYm.js:46
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:52
 msgid "Cart #%d"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "Customer"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
+#: public/build/assets/admin-Cnh0Hdlo.js:52
 msgid "Phone"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Order"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Items"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:68
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Product"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
-msgid "Qty"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:60
-msgid "Total"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:46
+#: public/build/assets/admin-Cnh0Hdlo.js:52
 msgid "No items recorded."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
+#: public/build/assets/admin-Cnh0Hdlo.js:52
 msgid "Timeline"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:52
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Close"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:46
+#: public/build/assets/admin-Cnh0Hdlo.js:52
 msgid "Mark cart recovered"
 msgstr ""
 
 #. translators: %s: customer email address or "this cart".
-#: public/build/assets/admin-Cj72XtYm.js:48
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "Link %s to the order it converted to so the recovered revenue is attributed."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "this cart"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "Recent order"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "Select an order…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "Or enter an order ID"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "e.g. 1024"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
-#: public/build/assets/admin-Cj72XtYm.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:54
+#: public/build/assets/admin-Cnh0Hdlo.js:56
 msgid "Cancel"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "Cart marked recovered."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:48
+#: public/build/assets/admin-Cnh0Hdlo.js:54
 msgid "Linking…"
 msgstr ""
 
 #. translators: %s: customer email address or "this shopper".
-#: public/build/assets/admin-Cj72XtYm.js:50
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:56
 msgid "Email %s now, using the template you choose."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:56
 msgid "this shopper"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:56
 msgid "Template"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:56
 msgid "Recovery email sent."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:50
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:56
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Sending…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:50
+#: public/build/assets/admin-Cnh0Hdlo.js:56
 msgid "Send email"
 msgstr ""
 
 #. translators: %d: number of deleted carts.
-#: public/build/assets/admin-Cj72XtYm.js:52
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:58
 msgid "Deleted %d cart."
 msgid_plural "Deleted %d carts."
 msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of updated carts.
-#: public/build/assets/admin-Cj72XtYm.js:54
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:60
 msgid "Updated %d cart."
 msgid_plural "Updated %d carts."
 msgstr[0] ""
 msgstr[1] ""
 
-#: public/build/assets/admin-Cj72XtYm.js:54
+#: public/build/assets/admin-Cnh0Hdlo.js:60
 msgid "Filter carts by status"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:54
+#: public/build/assets/admin-Cnh0Hdlo.js:60
 msgid "All statuses"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:54
+#: public/build/assets/admin-Cnh0Hdlo.js:60
 msgid "Updating…"
 msgstr ""
 
 #. translators: %d: total number of carts.
-#: public/build/assets/admin-Cj72XtYm.js:56
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:62
 msgid "%d cart"
 msgid_plural "%d carts"
 msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of selected carts.
-#: public/build/assets/admin-Cj72XtYm.js:58
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:64
 msgid "%d selected"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:58
+#: public/build/assets/admin-Cnh0Hdlo.js:64
 msgid "Set status for selected carts"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:58
+#: public/build/assets/admin-Cnh0Hdlo.js:64
 msgid "Set status…"
 msgstr ""
 
 #. translators: %d: number of selected carts.
-#: public/build/assets/admin-Cj72XtYm.js:60
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Delete %d selected cart?"
 msgid_plural "Delete %d selected carts?"
 msgstr[0] ""
 msgstr[1] ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Delete"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Clear"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Could not load carts."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "No carts yet"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Tracked carts appear here as shoppers add items and reach checkout."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Select all carts on this page"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "ID"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Actions"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:60
-#: public/build/assets/admin-Cj72XtYm.js:72
-msgid "Previous"
-msgstr ""
-
-#. translators: 1: current page, 2: total pages.
-#: public/build/assets/admin-Cj72XtYm.js:62
-#: public/build/assets/admin-Cj72XtYm.js:74
-#, js-format
-msgid "Page %1$d of %2$d"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:62
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Next"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:62
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Recoverable revenue"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:62
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Recovered revenue"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:62
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "No revenue activity yet"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:62
+#: public/build/assets/admin-Cnh0Hdlo.js:66
 msgid "Once carts are abandoned and recovered in this period, the trend appears here."
 msgstr ""
 
 #. translators: %d: number of days covered by the chart.
-#: public/build/assets/admin-Cj72XtYm.js:64
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Recoverable and recovered revenue over the last %d days"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Recoverable orders"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Abandoned carts that are still open to recovery."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Recovered orders"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Abandoned carts that came back and paid."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Lost orders"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Abandoned carts cleaned up without converting, plus paid orders later refunded or cancelled."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Total value of the carts currently sitting in Abandoned."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Paid order value won back from recovered carts."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Recovery rate"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Share of all abandoned carts that were recovered, measured over the plugin’s lifetime so cleanup cannot inflate it."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:64
+#: public/build/assets/admin-Cnh0Hdlo.js:68
 msgid "Chart time range"
 msgstr ""
 
 #. translators: %d: number of days.
-#: public/build/assets/admin-Cj72XtYm.js:66
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "%dd"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "View all"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "Guest"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "Recent activity"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "Could not load recent carts."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "No carts tracked yet."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:66
+#: public/build/assets/admin-Cnh0Hdlo.js:70
 msgid "Product report"
 msgstr ""
 
 #. translators: %d: number of days.
-#: public/build/assets/admin-Cj72XtYm.js:68
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:72
 msgid "Last %d day"
 msgid_plural "Last %d days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: public/build/assets/admin-Cj72XtYm.js:68
+#: public/build/assets/admin-Cnh0Hdlo.js:72
 msgid "Could not load the product report."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:68
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Abandoned"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:68
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Recovered"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:68
+#: public/build/assets/admin-Cnh0Hdlo.js:72
 msgid "No products abandoned in this period."
 msgstr ""
 
 #. translators: %d: product id.
-#: public/build/assets/admin-Cj72XtYm.js:70
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Product #%d"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Your session has expired. Please reload the page."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Could not load statistics."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Overview"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Lifetime recovery performance across every tracked cart."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Revenue over time"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Value abandoned versus value won back, by day."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "All events"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Emails sent"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgctxt "log level"
 msgid "Info"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgctxt "log level"
 msgid "Success"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgctxt "log level"
 msgid "Warning"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgctxt "log level"
 msgid "Error"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Filter log by level"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "All levels"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Filter log by event"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Cart"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:70
+#: public/build/assets/admin-Cnh0Hdlo.js:74
 msgid "Filter log by cart ID"
 msgstr ""
 
 #. translators: %d: number of log entries.
-#: public/build/assets/admin-Cj72XtYm.js:72
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "%d entry"
 msgid_plural "%d entries"
 msgstr[0] ""
 msgstr[1] ""
 
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Clear the entire activity log?"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Clearing…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Clear log"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Could not load the log."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Nothing logged yet"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Abandonments, recoveries, and sent emails will show up here as they happen."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:72
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Time (UTC)"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "On hold"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Processing"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Completed"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Tracking"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Cart tracking runs automatically while the plugin is active. Choose whether logged-out (guest) carts are tracked too."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Capture carts and the email guests type at checkout."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Abandonment & cleanup"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "When an idle cart is marked abandoned, how often carts are scanned, and how long stale data is kept."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Abandonment threshold (minutes)"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Idle time before a cart is abandoned."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Scan interval (minutes)"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "How often abandoned carts are detected."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Cleanup after (days)"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Unrecovered carts are purged after this."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Converted cart retention (days)"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Recovered and completed carts are purged after this."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Count a cart as recovered when its order is"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Order statuses that mark a tracked cart as paid and attributed."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Optionally email shoppers a one-click recovery link a set time after they abandon a cart."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Schedules a single follow-up email per abandoned cart."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Notify admin on recovery"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Send an email whenever a tracked cart is recovered into a paid order."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Notification email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Where recovery notifications are sent. Leave blank to use the site admin address."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Defaults to the site admin email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Send delay (minutes)"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Wait time after abandonment before sending."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Email content — subject, rich-text body, sender, and coupon — is managed per template on the"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "tab. Automatic recovery emails use the template marked default."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:76
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Saving…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Save settings"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
 msgid "Settings saved."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:76
+msgid "Add…"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:76
+msgid "Nothing selected yet."
+msgstr ""
+
+#. translators: %s: name of the selected item.
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Remove %s"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Bold"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Italic"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Underline"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Strikethrough"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Heading"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Subheading"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Paragraph"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Quote"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Align left"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Align center"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Align right"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Email body"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Formatting"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Undo"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Redo"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Text colour"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Highlight colour"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Bulleted list"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Numbered list"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Decrease indent"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Increase indent"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Insert link"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Link URL (https://…)"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Link"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Remove link"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Unlink"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Insert image"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Image URL (https://…)"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Insert into email"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Image"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Divider"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
-msgid "Clear formatting"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Insert merge tag"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Insert tag…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:74
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Editor mode"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Visual"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "HTML"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Format HTML"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Format"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Formatting"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Undo"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Redo"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Text colour"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Highlight colour"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Bulleted list"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Numbered list"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Decrease indent"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Increase indent"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Insert link"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Link URL (https://…)"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Link"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Remove link"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Unlink"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Insert image"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Image URL (https://…)"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Insert into email"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Image"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Divider"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
+msgid "Clear formatting"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:78
 msgid "Image size"
 msgstr ""
 
 #. translators: %s: an image width percentage, for example 50%.
-#: public/build/assets/admin-Cj72XtYm.js:75
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Width %s"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Original size"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Auto"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Remove image"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Remove"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Products"
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Product table"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Recovery link"
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Delivery"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Coupon code"
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Thumbnail"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Quantity"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Unit price"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Line total"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Ruled rows"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Boxed grid"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "No rules"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Compact — 32px"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Standard — 48px"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Roomy — 64px"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "The shopper's first name (blank if it wasn't captured)."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The shopper's surname."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "First and surname together, with the spacing tidied up."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The address the recovery email is going to."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "A bulleted list of the items left in the cart."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The same items as a table of name, quantity and line total."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Item names on one line, separated by commas."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "How many items the cart holds."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Cart value, formatted in the store currency."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The date the cart was left, in the site's date format."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "A one-click link that restores the cart and reopens checkout."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The plain checkout page address, with nothing restored."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "The coupon code selected below (blank if none is chosen)."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The site title."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The storefront home address."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Your notification address, or the site admin address."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "The site admin's first name, for signing off."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "This year — handy in a footer."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "An opt-out link that suppresses this address."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Shopper first name"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Shopper surname"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Shopper full name"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Shopper email"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Left-behind items list"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Left-behind items table"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Item names in a row"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Cart value"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Date left behind"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Restore cart link"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Checkout page link"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Coupon code"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Store name"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Storefront link"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Store contact email"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Store manager name"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Current year"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "Opt-out link"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
+msgid "This template has unsaved changes. Discard them?"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Save"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:79
 msgid "Create template"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#. translators: %d: number of saved templates.
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Templates (%d)"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "New template"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "+ New"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Filter templates…"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Filter templates"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "No template matches that."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "No subject yet"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Not saved yet"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Draft"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Edit template"
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Automatic abandonment emails use this template."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Saved template — not the one automatic emails use."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Default template set."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Set as default"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Rendering…"
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Template sections"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Preview"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Template name"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Coupon"
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Only you see this — it names the template in the list."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "No coupon"
-msgstr ""
-
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Subject"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Merge tags work here too — {first_name} and {coupon_code} are the useful ones."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:81
 msgid "Body"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "Merge tags — replaced with real values when the email is sent:"
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Rendering…"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
-msgid "A “Complete your order” button is added automatically below the body."
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Preview email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:81
+msgid "Insert tag… drops a merge tag at the caret. A “Complete your order” button is added automatically below the body."
+msgstr ""
+
+#. translators: %d: number of available merge tags.
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "What each of the %d merge tags becomes"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Controls the {products_table} merge tag. Leave this off and the tag renders product, quantity and line total on ruled rows."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Lay the table out myself"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Choose the columns, thumbnail size and totals shown in this template."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Columns"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Shown, in order"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Left to right, in the order you add them."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Product table columns"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Add column…"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "No columns yet — the default three are used."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Layout"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Table style"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "How rows are separated."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Thumbnail size"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Used once the Thumbnail column is on."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Show column headings"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Turn off for a bare list of rows."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Row detail"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Prices include tax"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Recalculated per product at send time, so it matches the storefront."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Link rows to the product"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "The thumbnail and name open the product page."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Show the chosen variation"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Adds a small line such as “Size: Large” under the name."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Close with a cart total row"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Repeats the cart value at the foot of the table."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Rows before “and N more”"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Keeps a 30-item cart from becoming a 30-row email. 0 lists everything."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Who the email comes from, and the offer it carries."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "From name"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Leave blank to use the WordPress default sender."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "From email"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Use an address on your own domain so the mail is not treated as spoofed."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Coupon"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "The code {coupon_code} prints. Cart Rebound never generates new coupons."
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "No coupon"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Name and subject are required."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Template created."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Template saved."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "Unsaved changes"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
+msgid "All changes saved"
+msgstr ""
+
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "you@example.com"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Address to send a test email to"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Test email sent."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Could not send the test email."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:75
+#: public/build/assets/admin-Cnh0Hdlo.js:83
 msgid "Send test"
 msgstr ""
 
 #. translators: %s: template name.
-#: public/build/assets/admin-Cj72XtYm.js:77
-#, js-format
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Delete the \"%s\" template?"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Template deleted."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Set another template as default before deleting this one"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Discard"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Email preview"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Your store"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "(no subject)"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "To: shopper"
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Rendered with sample data (name “Jordan”, two demo items)."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Something went wrong. Please reload the page."
 msgstr ""
 
-#: public/build/assets/admin-Cj72XtYm.js:77
+#: public/build/assets/admin-Cnh0Hdlo.js:85
 msgid "Cart Rebound could not initialise: configuration data is missing. Please reload the page."
 msgstr ""
