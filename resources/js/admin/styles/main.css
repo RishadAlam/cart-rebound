@@ -118,6 +118,18 @@
 	box-shadow: var(--cr-ring);
 }
 
+/* Tabs nested inside a card (template editor panes) sit flush with the card
+   edge, so the pane below reads as the tab's own surface. */
+.cr-tabs.is-inset {
+	margin: 14px 0 0;
+	gap: 4px;
+}
+
+.cr-tabs.is-inset .cr-tab {
+	padding: 8px 12px;
+	font-size: 13px;
+}
+
 /* ---- Cards & sections ---- */
 .cr-card {
 	background: var(--cr-surface);
@@ -132,6 +144,11 @@
 
 .cr-section + .cr-section {
 	border-top: 1px solid var(--cr-border);
+}
+
+/* Hidden panes must not leave their border behind. */
+.cr-section[hidden] {
+	display: none;
 }
 
 .cr-section__title {
@@ -480,6 +497,31 @@ select.cr-select:disabled {
 	height: 16px;
 	accent-color: var(--cr-accent);
 	cursor: pointer;
+}
+
+/* Small group label inside a pane — quieter than a section title, loud enough
+   to break six switch rows into things you can scan. */
+.cr-subhead {
+	margin: 22px 0 12px;
+	color: var(--cr-muted);
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.cr-subhead:first-of-type {
+	margin-top: 4px;
+}
+
+.cr-input.is-narrow {
+	max-width: 120px;
+}
+
+.cr-input.is-sm,
+.cr-select.is-sm {
+	padding: 6px 10px;
+	font-size: 13px;
 }
 
 .cr-field--row {
@@ -1543,6 +1585,11 @@ a.cr-linkbtn {
 	flex: 1;
 }
 
+.cr-savebar__state {
+	color: var(--cr-muted);
+	font-size: 12px;
+}
+
 /* The preview reads like a message in an inbox: sender row, then the render. */
 .cr-preview__mail {
 	margin: 4px 0 12px;
@@ -1663,12 +1710,22 @@ a.cr-linkbtn {
 /* ---- Save bar ---- */
 .cr-savebar {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 14px;
 	padding: 16px 24px;
 	border-top: 1px solid var(--cr-border);
 	background: var(--cr-panel);
 	border-radius: 0 0 var(--cr-radius) var(--cr-radius);
+}
+
+/* Saving is reachable from anywhere in a long template rather than only from
+   the bottom of the page. */
+.cr-savebar.is-sticky {
+	position: sticky;
+	bottom: 0;
+	z-index: 3;
+	box-shadow: 0 -1px 0 var(--cr-border);
 }
 
 .cr-saved {
@@ -1797,17 +1854,35 @@ a.cr-linkbtn {
 /* ---- Merge-tag legend ---- */
 .cr-tokens {
 	margin-top: 10px;
-	padding: 12px 14px;
+	padding: 10px 14px;
 	border: 1px solid var(--cr-border);
 	border-radius: var(--cr-radius-sm);
 	background: var(--cr-panel);
 }
 
+/* Closed by default: the reference is for the first template, the picker in the
+   toolbar is for every one after it. */
 .cr-tokens__title {
-	margin: 0 0 10px;
+	margin: 0;
 	color: var(--cr-ink-soft);
 	font-size: 12px;
 	font-weight: 600;
+	cursor: pointer;
+	list-style-position: outside;
+}
+
+.cr-tokens__title::marker {
+	color: var(--cr-muted);
+}
+
+.cr-tokens[open] .cr-tokens__title {
+	margin-bottom: 12px;
+}
+
+.cr-tokens__title:focus-visible {
+	outline: none;
+	border-radius: 4px;
+	box-shadow: var(--cr-ring);
 }
 
 .cr-tokens__list {
@@ -1816,6 +1891,13 @@ a.cr-linkbtn {
 	gap: 6px 14px;
 	margin: 0;
 	align-items: baseline;
+}
+
+@media (width >= 1100px) {
+	.cr-tokens__list {
+		grid-template-columns: max-content 1fr max-content 1fr;
+		column-gap: 20px;
+	}
 }
 
 .cr-tokens__list dt {
@@ -1842,7 +1924,19 @@ a.cr-linkbtn {
 }
 
 .cr-templates__list {
+	position: sticky;
+	top: 44px;
 	padding: 8px;
+}
+
+.cr-templates__search {
+	margin: 0 2px 8px;
+}
+
+.cr-templates__empty {
+	margin: 4px 10px 8px;
+	color: var(--cr-muted);
+	font-size: 12px;
 }
 
 .cr-templates__listhead {
@@ -1895,8 +1989,41 @@ a.cr-linkbtn {
 	white-space: nowrap;
 }
 
+.cr-templates__text {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 1px;
+	text-align: left;
+}
+
+.cr-templates__sub {
+	overflow: hidden;
+	color: var(--cr-muted);
+	font-size: 11px;
+	font-weight: 400;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cr-templates__item.is-active .cr-templates__sub {
+	color: var(--cr-accent);
+	opacity: 0.75;
+}
+
 .cr-templates__editor {
 	min-width: 0;
+}
+
+/* The editor header carries identity and the pane switcher; the panes below
+   own their own padding, so it stops short of a full section's spacing. */
+.cr-templates__head {
+	padding: 20px 24px 0;
+	border-bottom: 1px solid var(--cr-border);
+}
+
+.cr-templates__head .cr-field__hint {
+	margin-top: 2px;
 }
 
 .cr-templates__edithead {
@@ -1921,6 +2048,11 @@ a.cr-linkbtn {
 @media (max-width: 782px) {
 	.cr-templates {
 		grid-template-columns: 1fr;
+	}
+
+	/* Stacked, the list is above the editor — pinning it would cover the form. */
+	.cr-templates__list {
+		position: static;
 	}
 }
 
