@@ -128,6 +128,70 @@ const widthLabel = (width: string): string =>
 	/* translators: %s: an image width percentage, for example 50%. */
 	sprintf(__('Width %s', 'cart-rebound'), width);
 
+// Block-level tags that already give a line its own container. Anything else at
+// the root is inline (bare text, <span>, <a>, <img>) and gets wrapped in a <p>:
+// without a block wrapper, execCommand list/align commands apply to the whole
+// editable instead of the current line, which is how an entire email body ends
+// up as one bulleted list.
+const BLOCK_TAGS = new Set([
+	'P',
+	'DIV',
+	'H1',
+	'H2',
+	'H3',
+	'H4',
+	'H5',
+	'H6',
+	'UL',
+	'OL',
+	'LI',
+	'BLOCKQUOTE',
+	'PRE',
+	'HR',
+	'TABLE',
+	'FIGURE',
+]);
+
+const wrapLooseNodes = (root: HTMLElement) => {
+	const doc = root.ownerDocument;
+	let buffer: ChildNode[] = [];
+
+	const flush = () => {
+		const first = buffer[0];
+
+		if (!first) {
+			return;
+		}
+
+		const paragraph = doc.createElement('p');
+		first.before(paragraph);
+		buffer.forEach((node) => paragraph.append(node));
+		buffer = [];
+	};
+
+	Array.from(root.childNodes).forEach((node) => {
+		const isBlock =
+			node instanceof HTMLElement && BLOCK_TAGS.has(node.tagName);
+
+		if (isBlock) {
+			flush();
+
+			return;
+		}
+
+		if (
+			node.nodeType === Node.TEXT_NODE &&
+			node.textContent?.trim() === ''
+		) {
+			return;
+		}
+
+		buffer.push(node);
+	});
+
+	flush();
+};
+
 // Commands whose on/off state is reflected in the toolbar.
 const STATEFUL = [
 	'bold',
@@ -163,7 +227,16 @@ export const RichTextEditor = ({
 	useEffect(() => {
 		if (ref.current && !seeded.current) {
 			ref.current.innerHTML = value;
+			wrapLooseNodes(ref.current);
 			seeded.current = true;
+
+			// New lines become <p>, not <div>, so they match what wpautop and
+			// the email template produce.
+			try {
+				document.execCommand('defaultParagraphSeparator', false, 'p');
+			} catch {
+				// Not supported everywhere; the default separator is fine.
+			}
 		}
 	}, [value]);
 
