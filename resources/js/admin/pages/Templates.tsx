@@ -35,18 +35,31 @@ const BLANK: EmailTemplate = {
 	is_default: false,
 };
 
-const TAGS: MergeTag[] = [
-	{ label: __('First name', 'cart-rebound'), value: '{first_name}' },
-	{ label: __('Products', 'cart-rebound'), value: '{products}' },
-	{ label: __('Recovery link', 'cart-rebound'), value: '{recovery_url}' },
-	{ label: __('Coupon code', 'cart-rebound'), value: '{coupon_code}' },
-];
-
+// Merge tags, grouped shopper → cart → store, in the order the picker lists
+// them. TAGS drives the picker; TOKEN_DOCS explains each one under the editor.
 const TOKEN_DOCS = [
 	{
 		token: '{first_name}',
 		description: __(
 			"The shopper's first name (blank if it wasn't captured).",
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{last_name}',
+		description: __("The shopper's surname.", 'cart-rebound'),
+	},
+	{
+		token: '{full_name}',
+		description: __(
+			'First and surname together, with the spacing tidied up.',
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{email}',
+		description: __(
+			'The address the recovery email is going to.',
 			'cart-rebound'
 		),
 	},
@@ -58,9 +71,48 @@ const TOKEN_DOCS = [
 		),
 	},
 	{
+		token: '{products_table}',
+		description: __(
+			'The same items as a table of name, quantity and line total.',
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{product_names}',
+		description: __(
+			'Item names on one line, separated by commas.',
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{items_count}',
+		description: __('How many items the cart holds.', 'cart-rebound'),
+	},
+	{
+		token: '{cart_total}',
+		description: __(
+			'Cart value, formatted in the store currency.',
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{abandoned_on}',
+		description: __(
+			"The date the cart was left, in the site's date format.",
+			'cart-rebound'
+		),
+	},
+	{
 		token: '{recovery_url}',
 		description: __(
 			'A one-click link that restores the cart and reopens checkout.',
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{checkout_url}',
+		description: __(
+			'The plain checkout page address, with nothing restored.',
 			'cart-rebound'
 		),
 	},
@@ -71,7 +123,67 @@ const TOKEN_DOCS = [
 			'cart-rebound'
 		),
 	},
+	{
+		token: '{store_name}',
+		description: __('The site title.', 'cart-rebound'),
+	},
+	{
+		token: '{store_url}',
+		description: __('The storefront home address.', 'cart-rebound'),
+	},
+	{
+		token: '{store_email}',
+		description: __(
+			'Your notification address, or the site admin address.',
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{manager_name}',
+		description: __(
+			"The site admin's first name, for signing off.",
+			'cart-rebound'
+		),
+	},
+	{
+		token: '{current_year}',
+		description: __('This year — handy in a footer.', 'cart-rebound'),
+	},
+	{
+		token: '{unsubscribe_url}',
+		description: __(
+			'An opt-out link that suppresses this address.',
+			'cart-rebound'
+		),
+	},
 ];
+
+const TAG_LABELS: Record<string, string> = {
+	'{first_name}': __('Shopper first name', 'cart-rebound'),
+	'{last_name}': __('Shopper surname', 'cart-rebound'),
+	'{full_name}': __('Shopper full name', 'cart-rebound'),
+	'{email}': __('Shopper email', 'cart-rebound'),
+	'{products}': __('Left-behind items list', 'cart-rebound'),
+	'{products_table}': __('Left-behind items table', 'cart-rebound'),
+	'{product_names}': __('Item names in a row', 'cart-rebound'),
+	'{items_count}': __('Item count', 'cart-rebound'),
+	'{cart_total}': __('Cart value', 'cart-rebound'),
+	'{abandoned_on}': __('Date left behind', 'cart-rebound'),
+	'{recovery_url}': __('Restore cart link', 'cart-rebound'),
+	'{checkout_url}': __('Checkout page link', 'cart-rebound'),
+	'{coupon_code}': __('Coupon code', 'cart-rebound'),
+	'{store_name}': __('Store name', 'cart-rebound'),
+	'{store_url}': __('Storefront link', 'cart-rebound'),
+	'{store_email}': __('Store contact email', 'cart-rebound'),
+	'{manager_name}': __('Store manager name', 'cart-rebound'),
+	'{current_year}': __('Current year', 'cart-rebound'),
+	'{unsubscribe_url}': __('Opt-out link', 'cart-rebound'),
+};
+
+const TAGS: MergeTag[] = TOKEN_DOCS.map((doc) => ({
+	label: TAG_LABELS[doc.token] ?? doc.token,
+	value: doc.token,
+}));
 
 const messageOf = (error: unknown): string =>
 	error instanceof Error

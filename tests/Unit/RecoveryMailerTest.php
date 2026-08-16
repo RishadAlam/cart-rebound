@@ -37,6 +37,17 @@ final class RecoveryMailerTest extends TestCase {
 			}
 		);
 		Functions\when( 'sanitize_email' )->returnArg();
+
+		// Merge-tag values pull in a handful of formatting/site helpers.
+		Functions\when( 'number_format_i18n' )->alias(
+			static function ( $number, $decimals = 0 ) {
+				return number_format( (float) $number, (int) $decimals );
+			}
+		);
+		Functions\when( 'mysql2date' )->justReturn( '1 January 2026' );
+		Functions\when( 'wp_date' )->justReturn( '2026' );
+		Functions\when( 'get_bloginfo' )->justReturn( 'Test Store' );
+		Functions\when( 'get_user_by' )->justReturn( false );
 	}
 
 	protected function tear_down(): void {

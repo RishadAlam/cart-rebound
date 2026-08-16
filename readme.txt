@@ -89,10 +89,12 @@ The built-in editor includes:
 
 Use these merge tags to personalize the message:
 
-* `{first_name}` — the shopper's captured first name;
-* `{products}` — a list of products left in the cart;
-* `{recovery_url}` — the unique one-click cart recovery link; and
-* `{coupon_code}` — the selected WooCommerce coupon code.
+* `{first_name}`, `{last_name}`, `{full_name}`, `{email}` — who the shopper is;
+* `{products}`, `{products_table}`, `{product_names}`, `{items_count}`, `{cart_total}` — what they left behind;
+* `{abandoned_on}` — the date the cart was left;
+* `{recovery_url}`, `{checkout_url}`, `{unsubscribe_url}` — where the message can send them;
+* `{coupon_code}` — the selected WooCommerce coupon code; and
+* `{store_name}`, `{store_url}`, `{store_email}`, `{manager_name}`, `{current_year}` — details about your store.
 
 Cart Rebound adds a prominent **Complete your order** button linked to the same recovery URL. Each recovery message also includes a one-click unsubscribe link.
 
@@ -275,7 +277,7 @@ Yes. Customize the subject, rich-text body, sender name, sender email, images, l
 
 = Which email personalization tags are available? =
 
-Use `{first_name}`, `{products}`, `{recovery_url}`, and `{coupon_code}`. The products tag creates a list of saved cart items, and the recovery URL gives the shopper a direct route back to checkout.
+Shopper tags (`{first_name}`, `{last_name}`, `{full_name}`, `{email}`), cart tags (`{products}`, `{products_table}`, `{product_names}`, `{items_count}`, `{cart_total}`, `{abandoned_on}`), link tags (`{recovery_url}`, `{checkout_url}`, `{unsubscribe_url}`), the `{coupon_code}` tag, and store tags (`{store_name}`, `{store_url}`, `{store_email}`, `{manager_name}`, `{current_year}`). The full list, with a description of each, sits under the body editor in the template screen.
 
 = Can I add a coupon to an abandoned cart email? =
 

@@ -19,7 +19,7 @@
 - **Configurable abandonment detection** — driven by **Action Scheduler** (WooCommerce's bundled, self-healing scheduler) with a wp-cron fallback. The idle threshold lives in the query, so changing it takes effect on the next scan.
 - **Tokenized recovery links** — rebuild the cart (items, variations, and coupons) and send the shopper straight to checkout. No raw session key in the URL.
 - **Accurate revenue attribution** — orders are linked to carts by **explicit order meta, never fuzzy total matching**, so coupons, shipping, and tax never break the link. Carts resolve to _recovered_ or _completed_ only on real payment, with separate timestamps and a dedicated recovered-amount field.
-- **Optional built-in recovery email** — disabled by default and scheduled a configurable delay after abandonment, with `{first_name}`, `{products}`, `{recovery_url}`, and `{coupon_code}` tokens.
+- **Optional built-in recovery email** — disabled by default and scheduled a configurable delay after abandonment, with merge tags for the shopper, the cart contents and value, the recovery and checkout links, the coupon, and your store details.
 - **Developer event &amp; REST API** — `cart_rebound_abandoned` / `cart_rebound_recovered` actions, and a read API for carts, stats, and recovered revenue.
 - **Admin dashboard** — active / abandoned / recovered counts, **recovered revenue**, recovery rate, and a filterable list of cart sessions with row actions.
 - **HPOS-compatible** — built for WooCommerce High-Performance Order Storage.

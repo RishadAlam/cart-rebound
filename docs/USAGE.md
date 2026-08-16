@@ -28,7 +28,7 @@ Cart Rebound is a WooCommerce abandoned-cart recovery plugin. It records logged-
 - **Configurable abandonment detection** driven by Action Scheduler, with a wp-cron fallback. The idle threshold lives in the scan query, so changing it takes effect on the next scan without rescheduling.
 - **Tokenized recovery links** that rebuild the cart (items, variations, and coupons) and send the shopper to checkout — no raw session key is exposed in the URL.
 - **Accurate revenue attribution**: orders are linked to carts by explicit order meta rather than fuzzy total matching, so coupons, shipping, and tax never break the link. Carts resolve to _recovered_ or _completed_, each with its own timestamp, plus a dedicated recovered-amount field.
-- **Optional built-in recovery email**, disabled by default and scheduled a configurable delay after abandonment, supporting the `{first_name}`, `{products}`, `{recovery_url}`, and `{coupon_code}` tokens.
+- **Optional built-in recovery email**, disabled by default and scheduled a configurable delay after abandonment, supporting merge tags for the shopper, the cart contents and value, the recovery and checkout links, the coupon, and the store's own details.
 - **Event & REST API for integrations**: fires `do_action( 'cart_rebound_abandoned', $payload )` and `do_action( 'cart_rebound_recovered', $payload )`, and provides a read API for carts, stats, and recovered revenue.
 - **Admin dashboard** showing active / abandoned / recovered counts, recovered revenue, recovery rate, and a filterable list of cart sessions with row actions.
 
@@ -211,10 +211,36 @@ The `email_subject`, `email_body`, `email_from_name`, `email_from_email`, and `e
 
 Template subjects and bodies support these placeholders:
 
+**Shopper**
+
 - `{first_name}` — the customer's first name
-- `{products}` — the products left in the cart
+- `{last_name}` — the customer's surname
+- `{full_name}` — both names, with the spacing tidied up
+- `{email}` — the address the email is going to
+
+**Cart**
+
+- `{products}` — the items left in the cart, as a bulleted list
+- `{products_table}` — the same items as a table of name, quantity, and line total
+- `{product_names}` — the item names on one line, comma separated
+- `{items_count}` — how many items the cart holds
+- `{cart_total}` — the cart value, formatted in the store currency
+- `{abandoned_on}` — the date the cart was left, in the site's date format
+
+**Links and offer**
+
 - `{recovery_url}` — the link that restores the abandoned cart
+- `{checkout_url}` — the plain checkout page address, with nothing restored
+- `{unsubscribe_url}` — the one-click opt-out link
 - `{coupon_code}` — the WooCommerce coupon selected for the template, or an empty value
+
+**Store**
+
+- `{store_name}` — the site title
+- `{store_url}` — the storefront home address
+- `{store_email}` — the configured notification address, or the site admin address
+- `{manager_name}` — the site admin's first name, for signing off
+- `{current_year}` — the current year
 
 Example default body:
 
@@ -368,14 +394,31 @@ Sending an email is off by default. The `recovery_email_enabled` switch and `ema
 
 On a successful `wp_mail()` send it sets the row's `email_sent` to `1`, which is what makes the dedup permanent.
 
-**Template tokens.** `build_body()` replaces four supported merge tags in the selected template:
+**Template tokens.** `tokens()` builds every merge tag as plain text; `build_body()` then escapes each one for HTML (`esc_url()` for the link tags, `esc_html()` for the rest) and swaps in the two markup tags:
 
-| Token            | Replaced with                                                                     |
-| ---------------- | --------------------------------------------------------------------------------- |
-| `{first_name}`   | the shopper's stored first name (escaped)                                         |
-| `{products}`     | an HTML `<ul>` list of `name × quantity` per cart line (empty string if no items) |
-| `{recovery_url}` | the tokenized recovery URL from `RecoveryLink::url()` (escaped)                   |
-| `{coupon_code}`  | the selected WooCommerce coupon code, or an empty value                           |
+| Token               | Replaced with                                                                     |
+| ------------------- | --------------------------------------------------------------------------------- |
+| `{first_name}`      | the shopper's stored first name                                                   |
+| `{last_name}`       | the shopper's stored surname                                                      |
+| `{full_name}`       | both names, trimmed                                                               |
+| `{email}`           | the cart's captured email address                                                 |
+| `{products}`        | an HTML `<ul>` list of `name × quantity` per cart line (empty string if no items) |
+| `{products_table}`  | an inline-styled HTML table of name, quantity, and line total                     |
+| `{product_names}`   | the item names, comma separated                                                   |
+| `{items_count}`     | the stored `items_count`, falling back to the number of cart lines                |
+| `{cart_total}`      | `cart_total` through `wc_price()`, stripped to plain text                         |
+| `{abandoned_on}`    | `abandoned_at` (or `created_at`) in the site's date format                        |
+| `{recovery_url}`    | the tokenized recovery URL from `RecoveryLink::url()`                             |
+| `{checkout_url}`    | the stored checkout URL, falling back to `wc_get_checkout_url()`                  |
+| `{unsubscribe_url}` | the tokenized one-click unsubscribe URL                                           |
+| `{coupon_code}`     | the selected WooCommerce coupon code, or an empty value                           |
+| `{store_name}`      | `get_bloginfo( 'name' )`                                                          |
+| `{store_url}`       | `home_url( '/' )`                                                                 |
+| `{store_email}`     | the `admin_notification_email` setting, falling back to `admin_email`             |
+| `{manager_name}`    | the admin user's first name, falling back to their display name                   |
+| `{current_year}`    | the current year in site time                                                     |
+
+`subject()` uses the same values as plain text; because a subject cannot carry markup, `{products}` and `{products_table}` fall back to `{product_names}` there.
 
 The token-replaced content is rendered inside the HTML template at `resources/views/emails/recovery.php`, which wraps it in a 600px container and appends a styled "Complete your order" button pointing at the same recovery URL. If that template file is missing/unreadable, the body falls back to `wpautop( $content )`.
 
