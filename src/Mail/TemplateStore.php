@@ -362,10 +362,10 @@ final class TemplateStore {
 			'style'           => in_array( $style, self::TABLE_STYLES, true ) ? $style : $defaults['style'],
 			'columns'         => array() !== $columns ? $columns : $defaults['columns'],
 			'image_size'      => in_array( $image_size, self::TABLE_IMAGE_SIZES, true ) ? $image_size : $defaults['image_size'],
-			'show_header'     => ! isset( $data['show_header'] ) ? $defaults['show_header'] : ! empty( $data['show_header'] ),
+			'show_header'     => isset( $data['show_header'] ) ? ! empty( $data['show_header'] ) : $defaults['show_header'],
 			'with_tax'        => ! empty( $data['with_tax'] ),
-			'link_items'      => ! isset( $data['link_items'] ) ? $defaults['link_items'] : ! empty( $data['link_items'] ),
-			'show_variations' => ! isset( $data['show_variations'] ) ? $defaults['show_variations'] : ! empty( $data['show_variations'] ),
+			'link_items'      => isset( $data['link_items'] ) ? ! empty( $data['link_items'] ) : $defaults['link_items'],
+			'show_variations' => isset( $data['show_variations'] ) ? ! empty( $data['show_variations'] ) : $defaults['show_variations'],
 			'show_total_row'  => ! empty( $data['show_total_row'] ),
 			'max_items'       => $max_items,
 		);
