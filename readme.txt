@@ -407,7 +407,7 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 
 = 1.1.0 =
 
-**Release date:** 2026-08-17
+**Release date:** 2026-08-18
 
 **Added**
 
