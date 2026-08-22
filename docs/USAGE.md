@@ -34,7 +34,7 @@ Cart Rebound is a WooCommerce abandoned-cart recovery plugin. It records logged-
 
 ### Requirements
 
-- **WordPress** 6.2 or later (tested up to 7.0)
+- **WordPress** 6.2 or later (tested up to 7.1)
 - **WooCommerce** installed and active (declared via the `Requires Plugins: woocommerce` header; the plugin shows an admin notice if WooCommerce is not active)
 - **PHP** 7.4 or later
 
@@ -56,7 +56,7 @@ Cart Rebound is a WooCommerce extension, so WooCommerce must be installed and ac
 * Requires PHP:      7.4
 ```
 
-Stable release: **0.1.0**. Tested up to WordPress 7.0.
+Stable release: **1.1.1**. Tested up to WordPress 7.1.
 
 ### Requirements
 

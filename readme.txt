@@ -2,9 +2,9 @@
 Contributors: rishadbitcode
 Tags: woocommerce, abandoned cart, cart abandonment, cart recovery, recovery emails
 Requires at least: 6.2
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -404,6 +404,18 @@ Production packages can be created with `pnpm production-zip`. See the repositor
 Bundled third-party JavaScript libraries are GPL-compatible and distributed under the MIT License. Copyright and license notices are included in `THIRD-PARTY-LICENSES.txt`.
 
 == Changelog ==
+
+= 1.1.1 =
+
+**Release date:** 2026-08-22
+
+**Improved**
+
+* Tested against WordPress 7.1.
+
+**Fixed**
+
+* Corrected the plugin banner and screenshot assets shown on WordPress.org.
 
 = 1.1.0 =
 
