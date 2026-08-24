@@ -195,15 +195,18 @@ All plugin behavior is configured under **Cart Rebound → Settings** in the Wor
 
 ### Every setting
 
-| Key                      | UI label                             | Default | Controls                                                                                |
-| ------------------------ | ------------------------------------ | ------- | --------------------------------------------------------------------------------------- |
-| `guest_tracking`         | **Track guest carts**                | `false` | Whether carts from logged-out visitors are tracked. Logged-in cart tracking remains on. |
-| `abandonment_threshold`  | **Abandonment threshold (minutes)**  | `30`    | Minutes of inactivity before an eligible cart is considered abandoned.                  |
-| `scan_interval`          | **Scan interval (minutes)**          | `5`     | How often the background abandonment scan runs.                                         |
-| `cleanup_days`           | **Unrecovered cleanup after (days)** | `30`    | Retention for stale active and unconverted abandoned/lost carts.                        |
-| `converted_cleanup_days` | **Converted cleanup after (days)**   | `365`   | Retention for recovered and completed cart records.                                     |
-| `recovery_email_enabled` | **Send recovery email**              | `false` | Whether one automatic recovery email is scheduled for an eligible abandoned cart.       |
-| `email_delay_minutes`    | **Send delay (minutes)**             | `60`    | Delay between abandonment and an enabled automatic recovery email.                      |
+| Key                        | UI label                                        | Default                      | Controls                                                                                |
+| -------------------------- | ----------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
+| `guest_tracking`           | **Track guest carts**                           | `false`                      | Whether carts from logged-out visitors are tracked. Logged-in cart tracking remains on. |
+| `abandonment_threshold`    | **Abandonment threshold (minutes)**             | `30`                         | Minutes of inactivity before an eligible cart is considered abandoned.                  |
+| `scan_interval`            | **Scan interval (minutes)**                     | `5`                          | How often the background abandonment scan runs.                                         |
+| `cleanup_days`             | **Unrecovered cleanup after (days)**            | `30`                         | Retention for stale active and unconverted abandoned/lost carts.                        |
+| `converted_cleanup_days`   | **Converted cleanup after (days)**              | `365`                        | Retention for recovered and completed cart records.                                     |
+| `recovery_email_enabled`   | **Send recovery email**                         | `false`                      | Whether one automatic recovery email is scheduled for an eligible abandoned cart.       |
+| `admin_recovery_email`     | **Notify admin on recovery**                    | `false`                      | Whether the store is emailed each time a tracked cart converts into a paid order.       |
+| `admin_notification_email` | **Notification email**                          | `''`                         | Where recovery notifications go; blank falls back to the site admin address.            |
+| `paid_order_statuses`      | **Count a cart as recovered when its order is** | `['processing','completed']` | Order statuses that mark a tracked cart as paid and attributed.                         |
+| `email_delay_minutes`      | **Send delay (minutes)**                        | `60`                         | Delay between abandonment and an enabled automatic recovery email.                      |
 
 The `email_subject`, `email_body`, `email_from_name`, `email_from_email`, and `email_coupon` values are retained as backward-compatible seed values for the first default template. Manage current email content, sender details, and coupons under **Cart Rebound → Templates**.
 
@@ -272,6 +275,7 @@ Values are clamped server-side by `TemplateStore::table_config()`, so an unknown
 - **Checkboxes** (`guest_tracking`, `recovery_email_enabled`) are coerced to strict booleans server-side via `! empty( … )`.
 - **Number fields** (`abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, `email_delay_minutes`) are cast to `int` and forced to a minimum of `1` server-side. The form also enforces `min={1}` client-side and falls back to `1` if the input is left non-numeric.
 - **Legacy seed text fields** use `sanitize_text_field()`, `sanitize_textarea_field()`, or `sanitize_email()` according to their type. Template content is separately sanitized when saved from the Templates tab.
+- **`paid_order_statuses`** is normalised by `Settings::sanitise_statuses()`: each entry is passed through `sanitize_key()`, has any `wc-` prefix stripped (WooCommerce stores `wc-processing` but compares on `processing`), and is then checked against the statuses WooCommerce actually registers (`wc_get_order_statuses()`). Anything unknown is discarded, and an empty result falls back to `['processing', 'completed']` so a converting cart can always be attributed. When WooCommerce is unavailable the whitelist step is skipped rather than rejecting everything.
 - Saved values are merged over the defaults on read (`Settings::all()` does `array_merge( defaults(), stored )`), so any missing key falls back to its default.
 
 ---
@@ -335,7 +339,9 @@ Carts with no captured email are never abandoned (they are instead purged later 
 
 ### An active shopper re-activates an abandoned cart
 
-If a shopper comes back and touches the cart again, `CartTracker::upsert()` detects the existing row is `abandoned` (and not terminal) and returns it to the active funnel: `status` → `active`, `abandonment_notified` → `0`, `abandoned_at` → `null`. Any non-terminal row also gets `last_activity` bumped on every snapshot.
+If a shopper comes back and touches the cart again, `CartTracker::upsert()` detects the existing row is `abandoned` (and not terminal) and returns it to the active funnel: `status` → `active`, `abandonment_notified` → `0`. Any non-terminal row also gets `last_activity` bumped on every snapshot.
+
+`abandoned_at` is deliberately **kept**. It is the historical “this cart was once abandoned” marker: `OrderLinker` reads it to decide whether a later paid order counts as `recovered` (a win) rather than `completed` (a straight-through sale), and the revenue chart and product report bucket their abandonment figures on it. Clearing it would silently reclassify every shopper who returned without clicking the recovery link. The same rule applies when a cancelled or failed order returns a `pending-payment` cart to `active` (`OrderLinker::on_reversal()`).
 
 ### Status lifecycle
 
@@ -387,12 +393,14 @@ The token is the only credential in the URL — the session key is never exposed
 1. It reads `cart_rebound_recover`; if the value is not exactly `1`, it returns and the page renders normally.
 2. It reads `cart_rebound_token`; an empty token also returns.
 3. It looks up a `CartSession` row whose `recovery_token` matches **and** whose `status` is `active` or `abandoned`. No match (e.g. a cart that already converted, or a bad token) means it silently returns — no error, no redirect.
-4. On a match it calls `restore_cart()`, which:
+4. On a match it calls `adopt_session()`, which re-points the recovered row's `session_key` at this browser's tracking key. This happens **before** the cart is touched: `CartTracker` runs on the cart writes below, and without the adoption it would open a second row for the same cart — leaving the original sitting in `abandoned` while the duplicate collected its own recovery email. If another row already holds the key it is archived first (renamed to `sha256( key . '|archived|' . id )`), exactly as `CartTracker` archives a terminal row, so the UNIQUE index is respected and no history is lost.
+5. It calls `restore_cart()`, which:
     - empties the current WooCommerce cart (`WC()->cart->empty_cart()`),
     - decodes the stored `cart_contents` JSON and re-adds each line via `add_to_cart( product_id, quantity, variation_id, variation )` — quantity is forced to at least `1`, lines with a non-positive `product_id` are skipped, and variation IDs/attributes are preserved,
-    - decodes the stored `coupons` JSON and re-applies each non-empty coupon code via `apply_coupon()`.
-5. It binds the cart row id into the WooCommerce session under `cart_rebound_recovery_cart_id` (`RecoveryHandler::SESSION_CART_ID`) so a resulting order can later be attributed as recovered by `OrderLinker`.
-6. It redirects with `wp_safe_redirect()` to `wc_get_checkout_url()` (falling back to `home_url('/')`) and `exit`s.
+    - decodes the stored `coupons` JSON and re-applies each non-empty coupon code via `apply_coupon()` — but only for codes that still exist (`wc_get_coupon_id_by_code()`), so a code deleted since the cart was captured cannot greet the returning shopper with a red “coupon does not exist” notice.
+6. It calls `prefill_customer()`, which seeds the WooCommerce customer with the contact details captured on the row — `email` into `billing_email`, and `first_name` / `last_name` / `phone` into **both** the billing and shipping address books. Only fields that are still empty are written, so a logged-in customer's saved details are never overwritten. Both address books are filled because the block checkout compares them to decide whether to keep “use the same address for billing” ticked; filling one side only would split the form into two addresses to complete.
+7. It binds the cart row id into the WooCommerce session under `cart_rebound_recovery_cart_id` (`RecoveryHandler::SESSION_CART_ID`) so a resulting order can later be attributed as recovered by `OrderLinker`.
+8. It redirects with `wp_safe_redirect()` to `wc_get_checkout_url()` (falling back to `home_url('/')`) and `exit`s.
 
 If WooCommerce or its cart object isn't available, `restore_cart()` returns `false` and no redirect happens.
 
@@ -818,7 +826,6 @@ Each cart object (from `CartRepository::present()`) has this shape:
 ```json
 {
 	"id": 12,
-	"session_key": "abc123",
 	"user_id": 0,
 	"email": "guest@example.com",
 	"first_name": "Ada",

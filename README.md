@@ -11,7 +11,13 @@
 
 ## Documentation
 
-📖 **[Full usage & developer guide → `docs/USAGE.md`](docs/USAGE.md)** — step-by-step installation, every setting, how tracking & recovery work end to end, the admin dashboard, and the events + REST API reference.
+📖 **[Illustrated manual → `docs/MANUAL.md`](docs/MANUAL.md)** — a screen-by-screen walkthrough for store owners, with a screenshot of every view: the setup wizard, dashboard, carts, templates, log, settings, and what the shopper sees when they click a recovery link.
+
+🔧 **[Usage & developer guide → `docs/USAGE.md`](docs/USAGE.md)** — step-by-step installation, every setting, how tracking & recovery work end to end, the admin dashboard, and the events + REST API reference.
+
+🧪 **[Manual QA report → `docs/QA-REPORT.md`](docs/QA-REPORT.md)** — what the hand-driven browser test pass covered, the defects it found, and how each was fixed and verified.
+
+🗺️ **[Multisite plan → `docs/MULTISITE-PLAN.md`](docs/MULTISITE-PLAN.md)** — Cart Rebound does not support WordPress networks today. This records what already works, the six gaps that stop it, and what closing each would take.
 
 ## Features
 
