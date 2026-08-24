@@ -93,6 +93,8 @@ final class RecoveryHandler {
 			return;
 		}
 
+		$this->prefill_customer( $row );
+
 		if ( function_exists( 'WC' ) && null !== WC()->session ) {
 			WC()->session->set( self::SESSION_CART_ID, (int) ( $row['id'] ?? 0 ) );
 		}
@@ -143,6 +145,68 @@ final class RecoveryHandler {
 		}
 
 		CartSession::update( $cart_id, array( 'session_key' => $key ) );
+	}
+
+	/**
+	 * Seed the checkout with the contact details captured on the tracked cart.
+	 *
+	 * A recovery link is a one-click return: the shopper should not have to retype
+	 * the address the store already emailed them at. Only empty fields are filled,
+	 * so a logged-in customer's saved details are never overwritten.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row The cart row.
+	 * @return void
+	 */
+	private function prefill_customer( array $row ): void {
+		if ( ! function_exists( 'WC' ) ) {
+			return;
+		}
+
+		$customer = WC()->customer;
+
+		if ( null === $customer ) {
+			return;
+		}
+
+		$email  = (string) ( $row['email'] ?? '' );
+		$filled = false;
+
+		if ( '' !== $email && is_email( $email ) && '' === $customer->get_billing_email() ) {
+			$customer->set_billing_email( $email );
+			$filled = true;
+		}
+
+		// Both address books are seeded: the block checkout compares them to decide
+		// whether to keep "use the same address for billing" ticked, and filling
+		// only one side would split the form into two addresses to complete.
+		$names = array(
+			'first_name' => array( 'billing_first_name', 'shipping_first_name' ),
+			'last_name'  => array( 'billing_last_name', 'shipping_last_name' ),
+			'phone'      => array( 'billing_phone', 'shipping_phone' ),
+		);
+
+		foreach ( $names as $column => $properties ) {
+			$value = (string) ( $row[ $column ] ?? '' );
+
+			if ( '' === $value ) {
+				continue;
+			}
+
+			foreach ( $properties as $property ) {
+				if ( '' !== (string) $customer->{'get_' . $property}() ) {
+					continue;
+				}
+
+				$customer->{'set_' . $property}( $value );
+				$filled = true;
+			}
+		}
+
+		if ( $filled ) {
+			$customer->save();
+		}
 	}
 
 	/**
