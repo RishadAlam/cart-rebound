@@ -261,12 +261,32 @@ final class RecoveryHandler {
 
 		if ( is_array( $coupons ) ) {
 			foreach ( $coupons as $code ) {
-				if ( is_string( $code ) && '' !== $code ) {
+				// Coupons captured weeks ago are often gone by the time the link is
+				// clicked. Re-applying a deleted code makes WooCommerce print a red
+				// "coupon does not exist" block, which is the first thing a
+				// returning shopper would see — so only live codes are restored.
+				if ( is_string( $code ) && '' !== $code && $this->coupon_exists( $code ) ) {
 					$cart->apply_coupon( $code );
 				}
 			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Whether a coupon code still exists in the store.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param string $code Coupon code.
+	 * @return bool
+	 */
+	private function coupon_exists( string $code ): bool {
+		if ( ! function_exists( 'wc_get_coupon_id_by_code' ) ) {
+			return true;
+		}
+
+		return wc_get_coupon_id_by_code( $code ) > 0;
 	}
 }
