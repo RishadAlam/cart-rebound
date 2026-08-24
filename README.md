@@ -11,7 +11,7 @@
 
 ## Documentation
 
-📖 **[Illustrated manual → `docs/MANUAL.md`](docs/MANUAL.md)** — a screen-by-screen walkthrough for store owners, with a screenshot of every view: the setup wizard, dashboard, carts, templates, log, settings, and what the shopper sees when they click a recovery link.
+📖 **[Plain-English guide → `docs/MANUAL.md`](docs/MANUAL.md)** — start here if you run the shop. No jargon: what an abandoned cart is, a five-minute setup, a worked example of one customer being won back, then a tour of every screen with a screenshot of it.
 
 🔧 **[Usage & developer guide → `docs/USAGE.md`](docs/USAGE.md)** — step-by-step installation, every setting, how tracking & recovery work end to end, the admin dashboard, and the events + REST API reference.
 
