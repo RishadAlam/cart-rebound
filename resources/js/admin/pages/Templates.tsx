@@ -257,7 +257,7 @@ const EyeIcon = () => (
 );
 
 export const Templates = () => {
-	const { data: templates, isLoading } = useTemplates();
+	const { data: templates, isLoading, isFetching } = useTemplates();
 	const { data: coupons } = useCoupons();
 	const create = useCreateTemplate();
 	const update = useUpdateTemplate();
@@ -323,6 +323,15 @@ export const Templates = () => {
 			return;
 		}
 
+		// A just-created template is selected before its id can appear in the
+		// cached list — the create invalidates the query, so the refetch is still
+		// in flight. Rescuing here would read that gap as "the selection vanished"
+		// and throw the editor onto the default template, one keystroke after the
+		// merchant created this one. Wait for the list to settle instead.
+		if (isFetching) {
+			return;
+		}
+
 		const stillExists =
 			selectedId !== null &&
 			templates.some((template) => template.id === selectedId);
@@ -337,7 +346,7 @@ export const Templates = () => {
 		if (initial) {
 			load(initial, initial.id);
 		}
-	}, [templates, selectedId]);
+	}, [templates, selectedId, isFetching]);
 
 	useEffect(() => {
 		if (!feedback) {
