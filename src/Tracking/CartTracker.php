@@ -150,10 +150,14 @@ final class CartTracker {
 				$update = array_merge( $data, array( 'last_activity' => $now ) );
 
 				if ( CartSession::STATUS_ABANDONED === $status ) {
-					// Shopper is active again — return the cart to the active funnel.
+					// Shopper is active again — return the cart to the active funnel
+					// so the detector can re-fire. `abandoned_at` deliberately stays:
+					// it is the historical "this cart was once abandoned" marker that
+					// OrderLinker reads to attribute a later paid order as recovered
+					// rather than as a straight-through completion, and that the
+					// revenue chart and product report bucket their abandonments on.
 					$update['status']               = CartSession::STATUS_ACTIVE;
 					$update['abandonment_notified'] = 0;
-					$update['abandoned_at']         = null;
 				}
 
 				CartSession::update( $id, $update );

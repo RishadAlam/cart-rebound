@@ -270,12 +270,14 @@ final class OrderLinker {
 		$status = (string) ( $row['status'] ?? '' );
 
 		if ( CartSession::STATUS_PENDING_PAYMENT === $status ) {
+			// `abandoned_at` is kept: if this cart had been abandoned before the
+			// (now reversed) order, a later paid order still has to attribute as
+			// recovered instead of as a straight-through completion.
 			CartSession::update(
 				$cart_id,
 				array(
 					'status'               => CartSession::STATUS_ACTIVE,
 					'order_id'             => 0,
-					'abandoned_at'         => null,
 					'abandonment_notified' => 0,
 				)
 			);
