@@ -209,10 +209,6 @@ final class AssetServiceProvider extends ServiceProvider {
 				'thousandSeparator' => function_exists( 'wc_get_price_thousand_separator' ) ? wc_get_price_thousand_separator() : ',',
 				'decimals'          => function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2,
 			),
-			'currentUser'  => array(
-				'id'   => get_current_user_id(),
-				'caps' => $this->current_user_caps(),
-			),
 		);
 
 		$json = wp_json_encode( $data );
@@ -224,25 +220,5 @@ final class AssetServiceProvider extends ServiceProvider {
 		}
 
 		return $js;
-	}
-
-	/**
-	 * Collect the current user's granted capabilities.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @return array<int, string>
-	 */
-	private function current_user_caps(): array {
-		$user = wp_get_current_user();
-		$caps = array();
-
-		foreach ( $user->allcaps as $capability => $granted ) {
-			if ( $granted ) {
-				$caps[] = (string) $capability;
-			}
-		}
-
-		return $caps;
 	}
 }

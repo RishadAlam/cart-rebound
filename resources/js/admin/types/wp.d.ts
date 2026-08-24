@@ -19,10 +19,6 @@ declare global {
 			thousandSeparator: string;
 			decimals: number;
 		};
-		currentUser: {
-			id: number;
-			caps: string[];
-		};
 	}
 
 	interface WpMediaAttachment {
