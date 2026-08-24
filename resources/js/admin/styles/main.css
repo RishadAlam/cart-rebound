@@ -1038,6 +1038,10 @@ select.cr-select:disabled {
 	line-height: 1.5;
 }
 
+.cr-dialog__error {
+	margin-top: 18px;
+}
+
 .cr-dialog__actions {
 	display: flex;
 	justify-content: flex-end;

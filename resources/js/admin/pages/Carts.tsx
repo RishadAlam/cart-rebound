@@ -305,6 +305,20 @@ const Spinner = ({ size = 15 }: { size?: number }) => (
 	</svg>
 );
 
+/**
+ * A failed dialog action has to report inside the dialog: the page-level notice
+ * sits behind the modal backdrop, where the shopper-facing error would never be
+ * seen before it auto-dismissed.
+ * @param root0
+ * @param root0.error
+ */
+const DialogError = ({ error }: { error: unknown }) =>
+	error ? (
+		<div className="cr-notice is-error cr-dialog__error" role="alert">
+			{messageOf(error)}
+		</div>
+	) : null;
+
 const StatusSelect = ({
 	cart,
 	pending,
@@ -811,6 +825,7 @@ const RecoverDialog = ({
 		if (cart) {
 			setPicked('');
 			setCustom('');
+			mark.reset();
 
 			if (!el.open) {
 				el.showModal();
@@ -818,6 +833,8 @@ const RecoverDialog = ({
 		} else if (el.open) {
 			el.close();
 		}
+		// Only re-run when the target cart changes; `mark` is a stable mutation.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [cart]);
 
 	const parsedCustom = Number.parseInt(custom, 10);
@@ -839,9 +856,6 @@ const RecoverDialog = ({
 						message: __('Cart marked recovered.', 'cart-rebound'),
 					});
 					onClose();
-				},
-				onError: (error: unknown) => {
-					notify({ type: 'error', message: messageOf(error) });
 				},
 			}
 		);
@@ -922,6 +936,8 @@ const RecoverDialog = ({
 					/>
 				</div>
 
+				<DialogError error={mark.error} />
+
 				<div className="cr-dialog__actions">
 					<button
 						type="button"
@@ -975,6 +991,7 @@ const SendDialog = ({
 				templates.find((template) => template.is_default) ??
 				templates[0];
 			setTemplateId(initial ? initial.id : '');
+			send.reset();
 
 			if (!el.open) {
 				el.showModal();
@@ -1002,9 +1019,6 @@ const SendDialog = ({
 						message: __('Recovery email sent.', 'cart-rebound'),
 					});
 					onClose();
-				},
-				onError: (error: unknown) => {
-					notify({ type: 'error', message: messageOf(error) });
 				},
 			}
 		);
@@ -1055,6 +1069,8 @@ const SendDialog = ({
 						}))}
 					/>
 				</div>
+
+				<DialogError error={send.error} />
 
 				<div className="cr-dialog__actions">
 					<button
