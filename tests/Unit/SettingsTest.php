@@ -97,4 +97,46 @@ final class SettingsTest extends TestCase {
 
 		$this->assertSame( 'owner@example.com', $result['admin_notification_email'] );
 	}
+
+	public function test_paid_statuses_drop_the_wc_prefix_and_reject_unknown_slugs(): void {
+		$this->stub_option_writes();
+		Functions\when( 'wc_get_order_statuses' )->justReturn(
+			array(
+				'wc-pending'    => 'Pending payment',
+				'wc-processing' => 'Processing',
+				'wc-completed'  => 'Completed',
+				'wc-on-hold'    => 'On hold',
+			)
+		);
+
+		$result = ( new Settings() )->update(
+			array(
+				'paid_order_statuses' => array( 'wc-processing', 'completed', 'not-a-status', 'processing' ),
+			)
+		);
+
+		$this->assertSame( array( 'processing', 'completed' ), $result['paid_order_statuses'] );
+	}
+
+	public function test_paid_statuses_fall_back_when_nothing_valid_survives(): void {
+		$this->stub_option_writes();
+		Functions\when( 'wc_get_order_statuses' )->justReturn( array( 'wc-processing' => 'Processing' ) );
+
+		$result = ( new Settings() )->update( array( 'paid_order_statuses' => array( 'bogus', '' ) ) );
+
+		$this->assertSame( array( 'processing', 'completed' ), $result['paid_order_statuses'] );
+	}
+
+	/**
+	 * Stub the WordPress helpers Settings::update() needs to persist a value.
+	 *
+	 * @return void
+	 */
+	private function stub_option_writes(): void {
+		Functions\when( 'get_option' )->justReturn( array() );
+		Functions\when( 'sanitize_text_field' )->returnArg();
+		Functions\when( 'sanitize_textarea_field' )->returnArg();
+		Functions\when( 'sanitize_email' )->returnArg();
+		Functions\when( 'update_option' )->justReturn( true );
+	}
 }

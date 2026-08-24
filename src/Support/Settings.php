@@ -148,16 +148,53 @@ final class Settings {
 	 */
 	private function sanitise_statuses( $value ): array {
 		$statuses = is_array( $value ) ? $value : array();
+		$known    = $this->known_order_statuses();
 		$clean    = array();
 
 		foreach ( $statuses as $status ) {
+			// Accept both the `wc-` prefixed slug WooCommerce stores and the bare
+			// slug its `has_status()` comparisons use; keep the bare form.
 			$key = sanitize_key( (string) $status );
+			$key = 0 === strpos( $key, 'wc-' ) ? substr( $key, 3 ) : $key;
 
-			if ( '' !== $key && ! in_array( $key, $clean, true ) ) {
-				$clean[] = $key;
+			if ( '' === $key || in_array( $key, $clean, true ) ) {
+				continue;
 			}
+
+			// Reject anything WooCommerce does not actually register, so the
+			// stored list can never accumulate statuses no order will ever reach.
+			if ( array() !== $known && ! in_array( $key, $known, true ) ) {
+				continue;
+			}
+
+			$clean[] = $key;
 		}
 
 		return array() === $clean ? array( 'processing', 'completed' ) : $clean;
+	}
+
+	/**
+	 * The bare order-status slugs WooCommerce currently registers.
+	 *
+	 * Returns an empty array when WooCommerce is unavailable, which callers treat
+	 * as "cannot validate" rather than "nothing is valid".
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return array<int, string>
+	 */
+	private function known_order_statuses(): array {
+		if ( ! function_exists( 'wc_get_order_statuses' ) ) {
+			return array();
+		}
+
+		$slugs = array();
+
+		foreach ( array_keys( wc_get_order_statuses() ) as $slug ) {
+			$slug    = (string) $slug;
+			$slugs[] = 0 === strpos( $slug, 'wc-' ) ? substr( $slug, 3 ) : $slug;
+		}
+
+		return $slugs;
 	}
 }
