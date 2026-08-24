@@ -16,7 +16,6 @@ export interface CartProduct {
 
 export interface Cart {
 	id: number;
-	session_key: string;
 	user_id: number;
 	email: string;
 	first_name: string;

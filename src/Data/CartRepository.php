@@ -564,7 +564,6 @@ final class CartRepository {
 	private function present( array $row ): array {
 		return array(
 			'id'               => (int) ( $row['id'] ?? 0 ),
-			'session_key'      => (string) ( $row['session_key'] ?? '' ),
 			'user_id'          => (int) ( $row['user_id'] ?? 0 ),
 			'email'            => (string) ( $row['email'] ?? '' ),
 			'first_name'       => (string) ( $row['first_name'] ?? '' ),
