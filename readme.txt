@@ -405,6 +405,27 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 
 == Changelog ==
 
+= 1.1.2 =
+
+**Release date:** unreleased
+
+**Fixed**
+
+* Fixed recovered revenue being lost when a shopper returned to an abandoned cart without clicking the recovery link and then paid — the order was recorded as a straight-through completion instead of a recovery.
+* Fixed a recovery link opening a second, duplicate cart record for the same shopper, which could queue them a second recovery email for a cart they had already returned to.
+* Fixed the recovery link dropping shoppers onto an empty checkout form; the email, name and phone already captured for the cart are now filled in for them.
+* Fixed coupons that had been deleted since the cart was captured being re-applied on the recovery landing page, where they produced a "coupon does not exist" error.
+* Fixed a failed "send recovery email" or "mark recovered" reporting nothing: the reason is now shown inside the dialog instead of behind it.
+* Fixed the "count a cart as recovered when its order is" setting accepting order statuses WooCommerce does not register.
+* Fixed the Pending payment badge and the coupon chip falling below the WCAG AA contrast minimum.
+* Fixed creating an email template switching the editor to a different template, so the next edit landed on the wrong one.
+
+**Improved**
+
+* Made the loading shimmer run on the compositor instead of the main thread, removing the only layout-shift culprit on the admin screens.
+* Stopped shipping the current user's full capability list into every Cart Rebound admin page, cutting tens of kilobytes from each page load.
+* Stopped exposing the visitor's tracking session key in the carts REST response; nothing displayed it.
+
 = 1.1.1 =
 
 **Release date:** 2026-08-22
