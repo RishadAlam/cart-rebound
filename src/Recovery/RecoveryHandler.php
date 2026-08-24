@@ -12,6 +12,7 @@ namespace CartRebound\Recovery;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Models\CartSession;
+use CartRebound\Tracking\SessionManager;
 
 /**
  * Intercepts a tokenised recovery link, rebuilds the cart, and redirects to checkout.
@@ -30,6 +31,25 @@ final class RecoveryHandler {
 	 * @var string
 	 */
 	public const SESSION_CART_ID = 'cart_rebound_recovery_cart_id';
+
+	/**
+	 * Session key resolver.
+	 *
+	 * @since 1.1.2
+	 * @var SessionManager
+	 */
+	private $sessions;
+
+	/**
+	 * Constructor.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param SessionManager $sessions Session key resolver.
+	 */
+	public function __construct( SessionManager $sessions ) {
+		$this->sessions = $sessions;
+	}
 
 	/**
 	 * Handle a possible recovery request on template_redirect.
@@ -58,7 +78,18 @@ final class RecoveryHandler {
 			->where_in( 'status', array( CartSession::STATUS_ACTIVE, CartSession::STATUS_ABANDONED ) )
 			->first();
 
-		if ( ! is_array( $row ) || ! $this->restore_cart( $row ) ) {
+		if ( ! is_array( $row ) ) {
+			return;
+		}
+
+		// Adopt the recovered row into this browser's tracking session BEFORE the
+		// cart is rebuilt. CartTracker runs on the cart writes below, and without
+		// this it would open a second row for the same cart — leaving the original
+		// sitting in `abandoned` while the duplicate collected its own recovery
+		// email for the shopper who just clicked this link.
+		$this->adopt_session( (int) ( $row['id'] ?? 0 ) );
+
+		if ( ! $this->restore_cart( $row ) ) {
 			return;
 		}
 
@@ -70,6 +101,48 @@ final class RecoveryHandler {
 
 		wp_safe_redirect( $checkout );
 		exit;
+	}
+
+
+	/**
+	 * Re-key the recovered row onto this visitor's tracking session.
+	 *
+	 * Any row already holding the key is archived first — the same deterministic
+	 * rename {@see \CartRebound\Tracking\CartTracker} uses — so the UNIQUE index
+	 * is respected and no tracked history is destroyed.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param int $cart_id The recovered cart row id.
+	 * @return void
+	 */
+	private function adopt_session( int $cart_id ): void {
+		if ( $cart_id <= 0 ) {
+			return;
+		}
+
+		$key = $this->sessions->resolve_session_key();
+
+		if ( '' === $key ) {
+			return;
+		}
+
+		$holder = CartSession::query()->where( 'session_key', '=', $key )->first();
+
+		if ( is_array( $holder ) ) {
+			$holder_id = (int) ( $holder['id'] ?? 0 );
+
+			if ( $holder_id === $cart_id ) {
+				return;
+			}
+
+			CartSession::update(
+				$holder_id,
+				array( 'session_key' => hash( 'sha256', $key . '|archived|' . $holder_id ) )
+			);
+		}
+
+		CartSession::update( $cart_id, array( 'session_key' => $key ) );
 	}
 
 	/**
