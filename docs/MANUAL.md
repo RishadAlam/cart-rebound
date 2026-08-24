@@ -14,24 +14,25 @@ This guide starts from zero: what the plugin is for, how to switch it on, and th
 
 1. [The problem this solves](#the-problem-this-solves)
 2. [Set it up in five minutes](#set-it-up-in-five-minutes)
-3. [What happens after that](#what-happens-after-that)
-4. [Words you will see](#words-you-will-see)
-5. [Your first week](#your-first-week)
+3. [See it work in three minutes](#see-it-work-in-three-minutes)
+4. [What happens after that](#what-happens-after-that)
+5. [Words you will see](#words-you-will-see)
+6. [Your first week](#your-first-week)
 
 **The screens, one by one**
 
-6. [Dashboard — how am I doing?](#dashboard--how-am-i-doing)
-7. [Carts — who left what behind](#carts--who-left-what-behind)
-8. [Templates — writing the email](#templates--writing-the-email)
-9. [Log — what the plugin did and when](#log--what-the-plugin-did-and-when)
-10. [Settings — the knobs](#settings--the-knobs)
+7. [Dashboard — how am I doing?](#dashboard--how-am-i-doing)
+8. [Carts — who left what behind](#carts--who-left-what-behind)
+9. [Templates — writing the email](#templates--writing-the-email)
+10. [Log — what the plugin did and when](#log--what-the-plugin-did-and-when)
+11. [Settings — the knobs](#settings--the-knobs)
 
 **Good to know**
 
-11. [What your customer sees](#what-your-customer-sees)
-12. [The whole journey on one page](#the-whole-journey-on-one-page)
-13. [Accessibility and other languages](#accessibility-and-other-languages)
-14. [If something looks wrong](#if-something-looks-wrong)
+12. [What your customer sees](#what-your-customer-sees)
+13. [The whole journey on one page](#the-whole-journey-on-one-page)
+14. [Accessibility and other languages](#accessibility-and-other-languages)
+15. [If something looks wrong](#if-something-looks-wrong)
 
 ---
 
@@ -91,11 +92,87 @@ WordPress is bad at sending email on its own. Most hosts either block it or let 
 
 That is the whole setup. Cart Rebound is already watching carts.
 
+**Now go and prove it.** The next section walks you through a complete abandoned-and-recovered cart in about three minutes, instead of waiting the two hours the real settings take.
+
+---
+
+## See it work in three minutes
+
+Cart Rebound is deliberately patient. Out of the box it waits an hour before calling a cart abandoned, then another hour before emailing. That is right for a real shop — and useless for finding out whether you set it up correctly, because you will sit there for two hours seeing nothing.
+
+So speed it up once, watch the whole thing happen, then put it back. Ten minutes of your time, and you will know it works.
+
+> **Do this on a staging site if you have one.** On a live shop, while the timings are short, real customers can be marked abandoned and emailed within minutes of stepping away. That is why the last step puts the settings back — do not skip it.
+
+### Turn the speed up
+
+**Cart Rebound → Settings**, change these three, press **Save settings**:
+
+| Setting               | Normal | For the test | Why                                           |
+| --------------------- | ------ | ------------ | --------------------------------------------- |
+| Abandonment threshold | 60     | **1**        | A cart counts as abandoned after a minute.    |
+| Scan interval         | 5      | **1**        | The plugin looks for idle carts every minute. |
+| Send delay            | 60     | **1**        | The email goes out a minute after that.       |
+
+Write the old numbers down now, or take a screenshot of the page. You will want them back.
+
+### Play the customer
+
+Open your shop in a **private / incognito window** — that makes you look like a brand-new visitor rather than the logged-in owner.
+
+1. **Add any product to the cart.**
+2. **Go to checkout** and type an email address you can actually open. Your own is fine.
+3. **Stop there. Do not place the order.** Close the tab.
+
+That third step is the one people get wrong. The email box is enough — Cart Rebound saves what you typed the moment you move to the next field, without you pressing anything.
+
+### Watch it happen
+
+Back in wp-admin, open **Cart Rebound → Carts** and refresh every so often.
+
+| When           | What you should see                                                 | If it does not happen                                                        |
+| -------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Straight away  | A new row, status **Active**, with your email and the product on it | Check **Track guest carts** is on in Settings                                |
+| After ~1–2 min | The same row flips to **Abandoned**                                 | See "the clock is not ticking" below                                         |
+| ~1 min later   | The reminder email lands in your inbox                              | Check the **Log** for an _Emails sent_ entry — then it is your mail provider |
+
+**If the clock is not ticking:** WordPress only runs background jobs when somebody visits the site. On a quiet test store, nothing visits. Load your shop's front page two or three times and the scan will catch up. (On a real shop with real traffic this is never an issue.)
+
+### Finish the journey
+
+1. **Open the email and press "Complete your order."** Your cart rebuilds itself and checkout opens with your email and name already filled in. That is the whole point of the plugin — the bit worth seeing.
+2. **Place the order.**
+3. Back in **Carts**, the row now says **Pending payment** — the order exists but has not been paid.
+4. **Go to WooCommerce → Orders and set that order to Processing or Completed**, the way you would when the money clears.
+5. Refresh **Carts**. The row now says **Recovered**, and the amount appears in **Recovered revenue** on the Dashboard.
+
+> **Step 3 catches everybody out.** If you paid by cheque or bank transfer, WooCommerce puts the order **on hold** — nobody has actually paid yet — so Cart Rebound will not claim it as recovered revenue. That is the plugin being careful with your numbers, not a fault. Mark the order paid and it turns Recovered immediately.
+
+### Put the settings back
+
+**Cart Rebound → Settings**, restore your three numbers (60 / 5 / 60, or whatever you noted), and **Save settings**.
+
+Optionally tidy up: delete the test cart from the **Carts** list, and bin the test order in WooCommerce.
+
+### What you just proved
+
+Everything, end to end: the cart was tracked, the email was captured without a form submission, the timer fired, the email was delivered, the link rebuilt the cart, and the sale was attributed back to it. If all six worked at one-minute speed, they will work at sixty.
+
+For reference, this is what it looked like when we timed it on a real store:
+
+```
+18:52:39   cart tracked, status Active, email captured
+18:54:16   status flips to Abandoned          (95 seconds later)
+18:55:16   reminder email due                 (1 minute after that)
+```
+
+Two and a half minutes from typing an email address to the reminder going out.
+
 ---
 
 ## What happens after that
 
-Nothing, visibly — and that is correct. Here is the story it is quietly running, using real numbers so you can follow along.
+Nothing, visibly — and that is correct. This is the same journey you just watched at one-minute speed, now at the pace a real shop runs it, with a real customer.
 
 **10:04 am.** Maria adds a £45 jacket to her cart. Cart Rebound records the cart. She is just **Active** — a normal shopper, still shopping.
 
@@ -144,6 +221,8 @@ So you know what normal looks like:
 - **Day 1–2:** the first recovery emails go out. Check the **Log** to see them leave.
 - **Day 2–7:** your first **Recovered** row. Recovery rates of a few percent are normal, and vary hugely by store and price point. Do not judge it on three carts.
 - **Ongoing:** old unconverted carts are tidied away automatically after 30 days, so the list never grows forever.
+
+**If a day passes and nothing has happened at all**, do not wait another one — run the [three-minute test](#see-it-work-in-three-minutes). It tells you in minutes which link in the chain is broken.
 
 **Most common surprise:** far fewer abandoned carts than visitors. That is because a cart only becomes abandoned once someone has given you an email address. Everyone who bounced before the checkout form stays **Active** and is quietly cleaned up later.
 
@@ -435,6 +514,9 @@ The plugin is fully translatable — 495 pieces of text, including everything in
 ---
 
 ## If something looks wrong
+
+**Nothing at all seems to be happening.**
+Run the [three-minute test](#see-it-work-in-three-minutes) before anything else. It walks the whole journey at speed and shows you exactly which step fails, instead of leaving you guessing across two hours.
 
 **No carts are showing up at all.**
 Check WooCommerce is active. If the visitors are not logged in, check **Track guest carts** is switched on in Settings.

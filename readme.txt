@@ -208,6 +208,23 @@ WooCommerce must be installed and active. Compatibility with a specific third-pa
 9. Send a test email and confirm that the site's email delivery is configured correctly.
 10. Enable automatic recovery email when the store is ready to send customer reminders.
 
+= See the whole thing work in three minutes =
+
+The default timings wait an hour before a cart counts as abandoned and another hour before emailing. That is right for a real shop, but it means a new installation shows nothing for two hours and you cannot tell whether it is set up correctly.
+
+Speed it up once, watch a full cycle, then put it back:
+
+1. In **Settings**, set the abandonment threshold to 1 minute, the scan interval to 1 minute, and the send delay to 1 minute. Note the old values first.
+2. Open the shop in a private browsing window, add a product, go to checkout, type an email address you can open, and close the tab without ordering.
+3. In **Carts**, watch the row turn from Active to Abandoned within a minute or two, then check the inbox for the reminder.
+4. Follow the "Complete your order" button — the cart rebuilds itself and checkout reopens with the details already filled in — and place the order.
+5. Mark that order Processing or Completed in WooCommerce. The cart becomes Recovered and the amount appears in recovered revenue.
+6. Restore the original timings.
+
+Run this on a staging site where possible. While the timings are short, real shoppers on a live store can be marked abandoned and emailed within minutes.
+
+Background jobs in WordPress only run when somebody visits the site, so on a quiet test store load the shop's front page a couple of times to let the scan catch up.
+
 = Recommended first-time setup =
 
 Before enabling customer email:
