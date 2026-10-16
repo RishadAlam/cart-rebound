@@ -7,6 +7,7 @@ import {
 	type ReactNode,
 } from 'react';
 import { __ } from '@wordpress/i18n';
+import { AdminLink } from '../components/AdminLink';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
@@ -386,7 +387,9 @@ export const Settings = () => {
 						'Email content — subject, rich-text body, sender, and coupon — is managed per template on the',
 						'cart-rebound'
 					)}{' '}
-					<a href="#/templates">{__('Templates', 'cart-rebound')}</a>{' '}
+					<AdminLink to="/templates">
+						{__('Templates', 'cart-rebound')}
+					</AdminLink>{' '}
 					{__(
 						'tab. Automatic recovery emails use the template marked default.',
 						'cart-rebound'

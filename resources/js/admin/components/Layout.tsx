@@ -1,5 +1,6 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { __ } from '@wordpress/i18n';
+import { AdminLink } from './AdminLink';
 import { OnboardingWizard } from './OnboardingWizard';
 
 interface Tab {
@@ -48,14 +49,14 @@ export const Layout = () => {
 
 			<nav className="cr-tabs">
 				{tabs.map((tab) => (
-					<NavLink
+					<AdminLink
 						key={tab.to}
 						to={tab.to}
 						end={tab.end}
 						className={tabClass}
 					>
 						{tab.label}
-					</NavLink>
+					</AdminLink>
 				))}
 			</nav>
 

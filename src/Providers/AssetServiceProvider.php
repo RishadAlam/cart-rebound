@@ -64,7 +64,7 @@ final class AssetServiceProvider extends ServiceProvider {
 
 		$version   = $this->app->version();
 		$base_file = $this->app->base_path( 'cart-rebound.php' );
-		$boot_data = $this->boot_data( $route );
+		$boot_data = $this->boot_data( $route, $menu->route_pages() );
 
 		/**
 		 * Filter whether the compiled admin assets should be loaded.
@@ -180,22 +180,23 @@ final class AssetServiceProvider extends ServiceProvider {
 	/**
 	 * Build the `window.CartRebound` bootstrap script.
 	 *
-	 * Also seeds the hash router with the submenu's route before the app module
-	 * evaluates, so each WordPress submenu item deep-links straight to its tab.
-	 * An existing hash (in-app navigation) is respected.
+	 * Includes the submenu page behind every route so in-app navigation keeps
+	 * the address bar on the same URL the WordPress sidebar links to.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param string $route The SPA route this page should open on.
+	 * @param string                                           $route The SPA route this page should open on.
+	 * @param array<string, array{url: string, title: string}> $pages Admin URL and title of each route's submenu page.
 	 * @return string
 	 */
-	private function boot_data( string $route ): string {
+	private function boot_data( string $route, array $pages ): string {
 		$currency = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '';
 
 		$data = array(
 			'apiUrl'       => esc_url_raw( rest_url( 'cart-rebound/v1' ) ),
 			'nonce'        => wp_create_nonce( 'wp_rest' ),
 			'initialRoute' => $route,
+			'pages'        => $pages,
 			// Ships the store's price display settings so the admin renders money
 			// exactly as the storefront does instead of guessing with Intl.
 			'currency'     => array(
@@ -211,13 +212,7 @@ final class AssetServiceProvider extends ServiceProvider {
 		);
 
 		$json = wp_json_encode( $data );
-		$js   = 'window.CartRebound = ' . ( false === $json ? '{}' : $json ) . ';';
 
-		if ( '/' !== $route ) {
-			$hash = wp_json_encode( '#' . $route );
-			$js  .= 'if(!window.location.hash||"#/"===window.location.hash){window.location.hash=' . ( false === $hash ? '"#/"' : $hash ) . ';}';
-		}
-
-		return $js;
+		return 'window.CartRebound = ' . ( false === $json ? '{}' : $json ) . ';';
 	}
 }

@@ -2,9 +2,9 @@
 // lifetime counters); only the chart and product report follow the time range.
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { __, _n, sprintf } from '@wordpress/i18n';
+import { AdminLink } from '../components/AdminLink';
 import { RevenueChart } from '../components/RevenueChart';
 import {
 	useCarts,
@@ -196,10 +196,10 @@ const RangePicker = ({
 );
 
 const ViewAll = ({ to }: { to: string }) => (
-	<Link className="cr-viewall" to={to}>
+	<AdminLink className="cr-viewall" to={to}>
 		{__('View all', 'cart-rebound')}
 		<ArrowIcon />
-	</Link>
+	</AdminLink>
 );
 
 const TableSkeleton = ({ columns }: { columns: number }) => (

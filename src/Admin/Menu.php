@@ -53,6 +53,14 @@ final class Menu {
 	private $page_hooks = array();
 
 	/**
+	 * Map of every SPA route → its submenu slug and title.
+	 *
+	 * @since 1.1.2
+	 * @var array<string, array{slug: string, title: string}>
+	 */
+	private $routes = array();
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
@@ -85,6 +93,7 @@ final class Menu {
 
 		$this->page_hook  = is_string( $hook ) ? $hook : '';
 		$this->page_hooks = array();
+		$this->routes     = array();
 
 		if ( '' !== $this->page_hook ) {
 			$this->page_hooks[ $this->page_hook ] = '/';
@@ -101,6 +110,11 @@ final class Menu {
 		);
 
 		foreach ( $submenus as $slug => $meta ) {
+			$this->routes[ $meta[1] ] = array(
+				'slug'  => $slug,
+				'title' => $meta[0],
+			);
+
 			$sub_hook = add_submenu_page(
 				self::SLUG,
 				$meta[0],
@@ -180,5 +194,25 @@ final class Menu {
 	 */
 	public function route_for_hook( string $hook ): string {
 		return $this->page_hooks[ $hook ] ?? '/';
+	}
+
+	/**
+	 * Get the admin URL and title of every SPA route's submenu page.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return array<string, array{url: string, title: string}>
+	 */
+	public function route_pages(): array {
+		$pages = array();
+
+		foreach ( $this->routes as $route => $page ) {
+			$pages[ $route ] = array(
+				'url'   => admin_url( 'admin.php?page=' . $page['slug'] ),
+				'title' => $page['title'],
+			);
+		}
+
+		return $pages;
 	}
 }
