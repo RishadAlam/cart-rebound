@@ -642,8 +642,8 @@ select.cr-select:disabled {
 
 .cr-search {
 	position: relative;
-	flex: 1 1 260px;
-	max-width: 340px;
+	flex: 0 1 340px;
+	min-width: 220px;
 }
 
 .cr-search > svg {
@@ -716,7 +716,7 @@ select.cr-select:disabled {
 @media (max-width: 782px) {
 	.cr-search {
 		flex-basis: 100%;
-		max-width: none;
+		order: -1;
 	}
 }
 

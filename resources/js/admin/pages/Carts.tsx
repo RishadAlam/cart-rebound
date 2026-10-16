@@ -1324,38 +1324,6 @@ export const Carts = () => {
 	return (
 		<div>
 			<div className="cr-toolbar">
-				<div className="cr-search" role="search">
-					<SearchIcon />
-					<input
-						type="search"
-						className="cr-input is-compact cr-search__input"
-						value={query}
-						placeholder={__(
-							'Search email, name, phone or #id',
-							'cart-rebound'
-						)}
-						aria-label={__('Search carts', 'cart-rebound')}
-						onChange={(event) => {
-							setQuery(event.target.value);
-						}}
-						onKeyDown={(event) => {
-							if (event.key === 'Escape' && query !== '') {
-								event.preventDefault();
-								clearSearch();
-							}
-						}}
-					/>
-					{query !== '' && (
-						<button
-							type="button"
-							className="cr-search__clear"
-							aria-label={__('Clear search', 'cart-rebound')}
-							onClick={clearSearch}
-						>
-							<CloseIcon />
-						</button>
-					)}
-				</div>
 				<span className="cr-toolbar__label">
 					{__('Status', 'cart-rebound')}
 				</span>
@@ -1396,6 +1364,38 @@ export const Carts = () => {
 						)}
 					</span>
 				)}
+				<div className="cr-search" role="search">
+					<SearchIcon />
+					<input
+						type="search"
+						className="cr-input is-compact cr-search__input"
+						value={query}
+						placeholder={__(
+							'Search email, name, phone or #id',
+							'cart-rebound'
+						)}
+						aria-label={__('Search carts', 'cart-rebound')}
+						onChange={(event) => {
+							setQuery(event.target.value);
+						}}
+						onKeyDown={(event) => {
+							if (event.key === 'Escape' && query !== '') {
+								event.preventDefault();
+								clearSearch();
+							}
+						}}
+					/>
+					{query !== '' && (
+						<button
+							type="button"
+							className="cr-search__clear"
+							aria-label={__('Clear search', 'cart-rebound')}
+							onClick={clearSearch}
+						>
+							<CloseIcon />
+						</button>
+					)}
+				</div>
 			</div>
 
 			<StatusGuide />
