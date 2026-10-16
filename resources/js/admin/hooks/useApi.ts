@@ -51,8 +51,7 @@ export const useStats = () =>
 		queryFn: fetchStats,
 	});
 
-// Keyed under ['stats', …] so any cart mutation that invalidates 'stats' also
-// refreshes the chart and the product report.
+// Keyed under 'stats' so cart mutations that invalidate 'stats' refresh it too.
 export const useTimeseries = (days: number) =>
 	useQuery<TimeseriesPoint[]>({
 		queryKey: ['stats', 'timeseries', days],

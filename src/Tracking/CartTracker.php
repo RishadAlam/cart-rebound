@@ -19,10 +19,6 @@ use WC_Product;
 /**
  * Captures the live WooCommerce cart into a tracked row and back-fills identity.
  *
- * One row per stable session key (enforced by a UNIQUE index); when a key's row
- * has reached a terminal status its key is archived so a fresh cart cycle starts
- * a new row without losing the prior order/revenue attribution.
- *
  * @since 0.1.0
  */
 final class CartTracker {
@@ -97,9 +93,6 @@ final class CartTracker {
 
 	/**
 	 * Run a callback with cart tracking paused.
-	 *
-	 * Rebuilding a cart empties it first; tracking each intermediate write would
-	 * record an empty cart and fire events for a state the shopper never saw.
 	 *
 	 * @since 1.1.2
 	 *
@@ -222,7 +215,6 @@ final class CartTracker {
 			}
 
 			// Free the UNIQUE session_key slot while staying within varchar(64).
-			// The archived key is deterministic and cannot collide with the live key.
 			CartSession::update( $id, array( 'session_key' => hash( 'sha256', $key . '|archived|' . $id ) ) );
 		}
 
@@ -387,13 +379,8 @@ final class CartTracker {
 	/**
 	 * Whether a checkout order was placed earlier in this request.
 	 *
-	 * WooCommerce empties the cart during payment processing, which fires the
-	 * tracking hooks with an empty cart. Both the classic and the Store API
-	 * (block) checkout fire their `*_order_processed` action before that point,
-	 * so a fired action tells an order-placement empty apart from a shopper who
-	 * deliberately removed every item (no checkout action has run). This is used
-	 * instead of the session's `order_awaiting_payment`, which the classic
-	 * checkout sets but the Store API does not.
+	 * Uses the `*_order_processed` actions, not the session's `order_awaiting_payment`, which
+	 * the Store API checkout never sets.
 	 *
 	 * @since 0.1.0
 	 *

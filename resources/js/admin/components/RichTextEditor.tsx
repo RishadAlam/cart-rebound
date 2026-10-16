@@ -155,8 +155,6 @@ export const RichTextEditor = ({
 	const [mode, setMode] = useState<EditorMode>('visual');
 	const [code, setCode] = useState(value);
 
-	// HTML waiting to be written into the contentEditable. Held in a ref so
-	// re-seeding never depends on render order.
 	const pendingSeed = useRef<string | null>(value);
 	const seedEmits = useRef(false);
 
@@ -172,8 +170,6 @@ export const RichTextEditor = ({
 		wrapLooseNodes(el);
 		pendingSeed.current = null;
 
-		// New lines become <p>, not <div>, so they match what wpautop and
-		// the email template produce.
 		try {
 			document.execCommand('defaultParagraphSeparator', false, 'p');
 		} catch {
@@ -186,7 +182,6 @@ export const RichTextEditor = ({
 			seedEmits.current = false;
 			onChange(el.innerHTML);
 		}
-		// Runs when the visual view (re)mounts; the HTML to write lives in a ref.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [mode]);
 
@@ -290,8 +285,7 @@ export const RichTextEditor = ({
 			onChange(next);
 			field.focus();
 
-			// Park the caret after the inserted tag once React has written the
-			// new value, so typing continues where the tag ended.
+			// Set the caret after React writes the new value, or that write moves it.
 			window.requestAnimationFrame(() => {
 				const caret = start + text.length;
 				field.setSelectionRange(caret, caret);

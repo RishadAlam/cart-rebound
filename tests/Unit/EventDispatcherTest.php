@@ -59,7 +59,6 @@ final class EventDispatcherTest extends TestCase {
 
 		( new EventDispatcher( new RecoveryLink() ) )->abandoned( $this->row() );
 
-		// The action expectation above is the assertion for this test.
 		$this->addToAssertionCount( 1 );
 	}
 

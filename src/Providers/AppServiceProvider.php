@@ -48,8 +48,7 @@ final class AppServiceProvider extends ServiceProvider {
 	 * @return void
 	 */
 	public function boot(): void {
-		// No load_plugin_textdomain(): WordPress 4.6+ loads translations by slug, and
-		// Plugin Check flags the call for wordpress.org plugins.
+		// No load_plugin_textdomain(): WordPress loads translations by slug and Plugin Check flags the call.
 
 		if ( defined( 'WP_CLI' ) ) {
 			$this->app->make( CommandLoader::class )->register();

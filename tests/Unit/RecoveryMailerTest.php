@@ -181,7 +181,6 @@ class RecoveryMailerWpdb {
 	public function prepare( $query, $args = array() ) {
 		$flat = is_array( $args ) ? $args : array( $args );
 
-		// Interpolate so get_results() can see the target table name.
 		return (string) preg_replace_callback(
 			'/%[isd]/',
 			static function () use ( &$flat ) {
@@ -194,7 +193,6 @@ class RecoveryMailerWpdb {
 	public function get_results( $query, $output ) {
 		unset( $output );
 
-		// Match the table name, not any query whose values merely contain the word.
 		if ( is_string( $query ) && false !== strpos( $query, 'cart_rebound_unsubscribes' ) ) {
 			return $this->unsubscribed
 				? array( array( 'id' => 1, 'email' => 'shopper@example.com' ) )

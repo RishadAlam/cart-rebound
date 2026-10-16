@@ -24,8 +24,8 @@ final class PersonalDataEraser {
 	/**
 	 * Rows removed per WordPress eraser request.
 	 *
-	 * Because rows are deleted during each call, every batch starts at offset
-	 * zero; this prevents records from being skipped as the result set shrinks.
+	 * Rows are deleted during each call, so every batch starts at offset zero to avoid skipping
+	 * records.
 	 *
 	 * @var int
 	 */

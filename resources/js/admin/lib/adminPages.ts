@@ -23,7 +23,6 @@ export const pageUrl = (route: string): string =>
 export const routeForUrl = (url: string): string | undefined =>
 	routeBySlug.get(pageSlug(url));
 
-// Bookmarks from the hash-router era still open on the tab they named.
 export const initialRoute = (): string => {
 	const legacy = window.location.hash.replace(/^#/, '');
 

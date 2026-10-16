@@ -94,10 +94,6 @@ final class Route {
 	/**
 	 * Mark the route as intentionally public.
 	 *
-	 * Routes with no middleware are denied by the kernel (secure by default);
-	 * this attaches the `public` middleware so a genuinely public, unauthenticated
-	 * endpoint passes that gate explicitly.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @return Route

@@ -14,9 +14,6 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Base class for schema migrations.
  *
- * Subclasses implement {@see up()} and {@see down()} and use the helpers here
- * to build dbDelta-friendly schema.
- *
  * @since 0.1.0
  */
 abstract class Migration {

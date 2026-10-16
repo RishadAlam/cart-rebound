@@ -10,8 +10,7 @@
 
 declare( strict_types=1 );
 
-// Composer's `files` autoloader loads this eagerly, so `return`, never `exit`:
-// an `exit` would kill PHPCS, PHPUnit and PHPStan on startup.
+// Composer's `files` autoloader loads this eagerly, so `return`, never `exit`, or PHPCS/PHPUnit/PHPStan die.
 if ( ! defined( 'ABSPATH' ) ) {
 	return;
 }

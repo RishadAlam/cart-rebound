@@ -21,9 +21,6 @@ use ReflectionType;
 /**
  * A small Laravel-inspired service container.
  *
- * Supports explicit bindings, shared singletons, pre-built instances and
- * constructor auto-wiring via reflection.
- *
  * @since 0.1.0
  */
 class Container implements ContainerInterface {

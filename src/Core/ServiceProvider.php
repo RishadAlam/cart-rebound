@@ -16,9 +16,6 @@ use CartRebound\Core\Contracts\ServiceProviderInterface;
 /**
  * Base class for service providers.
  *
- * Subclasses override {@see register()} to bind services and {@see boot()} to
- * wire WordPress hooks once every provider has been registered.
- *
  * @since 0.1.0
  */
 abstract class ServiceProvider implements ServiceProviderInterface {

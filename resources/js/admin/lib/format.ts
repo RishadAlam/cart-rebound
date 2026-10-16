@@ -17,8 +17,7 @@ const formatWooCommerceMoney = (
 			? `${grouped}${format.decimalSeparator}${fraction}`
 			: grouped;
 	const symbol = format.symbol !== '' ? format.symbol : format.code;
-	// Non-breaking, matching WooCommerce: a price must never wrap away from its
-	// symbol at the end of a table cell.
+	// Non-breaking, as in WooCommerce: a price must never wrap away from its symbol.
 	const space = ' ';
 	let price: string;
 

@@ -10,7 +10,6 @@ export default {
 			'always',
 			{ except: [ 'first-nested' ], ignore: [ 'after-comment' ] },
 		],
-		// Fights logical grouping of related selectors.
 		'no-descending-specificity': null,
 		'at-rule-no-unknown': [
 			true,

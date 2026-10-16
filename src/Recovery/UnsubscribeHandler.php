@@ -18,12 +18,6 @@ use CartRebound\Models\Unsubscribe;
 /**
  * Intercepts a tokenised unsubscribe link and suppresses the address.
  *
- * The unguessable recovery token is the credential (no nonce applies, like the
- * recovery link). To avoid the well-known problem of mail clients and security
- * scanners auto-following links, a GET only renders a confirmation the shopper
- * submits; suppression happens on the resulting POST and the address is only
- * reported as unsubscribed when it was actually added to the suppression list.
- *
  * @since 0.1.0
  */
 final class UnsubscribeHandler {
@@ -76,8 +70,7 @@ final class UnsubscribeHandler {
 		}
 
 		if ( ! $this->is_post() ) {
-			// A GET may be a mail-client / scanner prefetch, which must never
-			// unsubscribe anyone — only offer a confirmation the shopper submits.
+			// A GET may be a mail-client or scanner prefetch: never unsubscribe on it, only offer a confirmation.
 			$this->render( 'confirm', $token );
 		}
 
@@ -102,9 +95,8 @@ final class UnsubscribeHandler {
 	/**
 	 * Render the standalone, theme-independent unsubscribe page and stop.
 	 *
-	 * All dynamic values are escaped inside the view; only the trusted static
-	 * markup and CSS live there, so this bypasses wp_die() (whose wp_kses would
-	 * strip the styled layout) and outputs a complete document directly.
+	 * Bypasses wp_die(), whose wp_kses would strip the styled layout; the view escapes every
+	 * dynamic value.
 	 *
 	 * @since 0.1.0
 	 *

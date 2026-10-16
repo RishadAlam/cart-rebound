@@ -178,8 +178,6 @@ export const OnboardingWizard = () => {
 		}
 	}, [settings, form]);
 
-	// Open as a native modal (focus trap + Esc handled for free) once the dialog
-	// is actually rendered — i.e. settings loaded and setup not yet complete.
 	useEffect(() => {
 		const el = ref.current;
 

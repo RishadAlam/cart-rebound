@@ -85,7 +85,6 @@
 	--cr-ring: 0 0 0 3px rgba(var(--cr-accent-rgb), 0.3);
 	--cr-ease: cubic-bezier(0.23, 1, 0.32, 1);
 
-	/* Matches WooCommerce admin type: wp-admin stack, 14px controls, 23px titles. */
 	--cr-font:
 		-apple-system, blinkmacsystemfont, "Segoe UI", roboto, oxygen-sans,
 		ubuntu, cantarell, "Helvetica Neue", sans-serif;
@@ -108,7 +107,6 @@
 	-webkit-font-smoothing: antialiased;
 }
 
-/* Form pages keep the default measure; full-width label/input rows are hard to scan. */
 .cr-app.is-wide {
 	max-width: none;
 }
@@ -585,8 +583,6 @@ select.cr-select:disabled {
 	gap: 18px;
 }
 
-/* Subgrid shares label/hint/control rows so wrapping hints don't misalign a
-   two-up row's inputs. */
 @supports (grid-template-rows: subgrid) {
 	.cr-field__grid {
 		grid-template-rows: auto auto auto;
@@ -3095,7 +3091,6 @@ a.cr-linkbtn {
 	text-align: center;
 }
 
-/* Align the table gutters with the report header padding. */
 .cr-report .cr-table th:first-child,
 .cr-report .cr-table td:first-child {
 	padding-left: 18px;

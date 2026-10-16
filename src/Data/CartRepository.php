@@ -52,9 +52,6 @@ final class CartRepository {
 	/**
 	 * Memoised admin URL prefix an order is edited under.
 	 *
-	 * Resolved once per request: whether HPOS is enabled cannot change midway,
-	 * and presenting a page of carts would otherwise repeat the check per row.
-	 *
 	 * @since 0.1.0
 	 * @var string|null
 	 */
@@ -201,11 +198,6 @@ final class CartRepository {
 	/**
 	 * Daily recovery time series for the dashboard chart.
 	 *
-	 * Points are bucketed on the UTC date a cart was abandoned (recoverable) or
-	 * recovered (recovered) — the same UTC basis the rest of the plugin stores
-	 * and renders. The window is zero-filled so quiet days still produce a point
-	 * and the chart keeps an even time axis.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param int $days Window length in days, including today.
@@ -238,12 +230,6 @@ final class CartRepository {
 
 	/**
 	 * Per-product abandonment/recovery tallies for the dashboard report.
-	 *
-	 * Line items live in the JSON cart snapshot rather than their own table, so
-	 * the tally runs in PHP over a bounded slice of rows. Each cart counts at
-	 * most once per distinct product, and the scan stops at
-	 * {@see self::REPORT_SCAN_LIMIT} rows so a busy store cannot blow the
-	 * request budget.
 	 *
 	 * @since 0.1.0
 	 *
@@ -281,7 +267,6 @@ final class CartRepository {
 			$abandoned_at = (string) ( $row['abandoned_at'] ?? '' );
 			$recovered_at = (string) ( $row['recovered_at'] ?? '' );
 
-			// Datetimes are stored as 'Y-m-d H:i:s', so a string compare is chronological.
 			$was_abandoned = '' !== $abandoned_at && $abandoned_at >= $since;
 			$was_recovered = '' !== $recovered_at && $recovered_at >= $since;
 
@@ -345,8 +330,6 @@ final class CartRepository {
 	private function daily_totals( string $table, string $column, string $amount, string $start ): array {
 		global $wpdb;
 
-		// A NULL timestamp never satisfies `>=`, so unabandoned/unrecovered rows
-		// drop out without an extra IS NOT NULL clause.
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
@@ -434,10 +417,8 @@ final class CartRepository {
 	/**
 	 * Manually set a cart's lifecycle status, applying the matching timestamps.
 	 *
-	 * This is the pure-data transition used for every status except a manual
-	 * abandon that should notify (that path runs through
-	 * {@see \CartRebound\Cron\AbandonmentDetector::abandon()} so the event fires
-	 * and the follow-up email is queued). Only the status-change events fire here.
+	 * A manual abandon that should notify goes through {@see
+	 * \CartRebound\Cron\AbandonmentDetector::abandon()} instead.
 	 *
 	 * @since 0.1.0
 	 *
@@ -465,7 +446,6 @@ final class CartRepository {
 
 		switch ( $status ) {
 			case CartSession::STATUS_ACTIVE:
-				// Return the row to the live funnel so the detector can re-fire.
 				$data['abandoned_at']         = null;
 				$data['abandonment_notified'] = 0;
 				break;
@@ -476,8 +456,7 @@ final class CartRepository {
 				$data['abandonment_notified'] = 1;
 				break;
 			case CartSession::STATUS_LOST:
-				// Janitor uses abandoned_at as the unrecovered-retention clock.
-				// A manually lost active cart may not have one yet.
+				// Janitor uses abandoned_at as the retention clock; a manually lost active cart may not have one yet.
 				if ( '' === (string) ( $row['abandoned_at'] ?? '' ) ) {
 					$data['abandoned_at'] = $now;
 				}
@@ -613,11 +592,6 @@ final class CartRepository {
 
 	/**
 	 * Resolve the admin URL prefix orders are edited under.
-	 *
-	 * HPOS moves orders off the posts table onto their own admin screen, so the
-	 * edit link differs per store. Deriving it from the flag keeps presenting a
-	 * page of carts cheap — calling get_edit_order_url() instead would mean
-	 * loading every linked order just to read a URL off it.
 	 *
 	 * @since 0.1.0
 	 *

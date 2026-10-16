@@ -18,8 +18,6 @@ use WP_CLI;
 /**
  * Registers the plugin's WP-CLI commands.
  *
- * Resolved and called only when the WP_CLI constant is defined.
- *
  * @since 0.1.0
  */
 final class CommandLoader {

@@ -16,9 +16,8 @@ use InvalidArgumentException;
 /**
  * A minimal, safe query builder.
  *
- * Every query is assembled from literal fragments plus `%i` / `%s` / `%d`
- * placeholders and run through $wpdb->prepare(); no caller value is ever
- * concatenated into SQL.
+ * No caller value is ever concatenated into SQL; everything goes through $wpdb->prepare()
+ * placeholders.
  *
  * @since 0.1.0
  */
@@ -26,9 +25,6 @@ final class QueryBuilder {
 
 	/**
 	 * Allowed comparison operators mapped to their literal prepared fragment.
-	 *
-	 * This single map is the only source of truth for which operators are
-	 * supported (validated in {@see where()}) and how each compiles.
 	 *
 	 * @since 0.1.0
 	 * @var array<string, string>
@@ -142,9 +138,6 @@ final class QueryBuilder {
 
 	/**
 	 * Add a `WHERE column IN (...)` condition.
-	 *
-	 * An empty value set produces a clause that matches nothing (a safe `1 = 0`),
-	 * never an invalid empty `IN ()`.
 	 *
 	 * @since 0.1.0
 	 *
@@ -340,8 +333,7 @@ final class QueryBuilder {
 	/**
 	 * Set the result offset.
 	 *
-	 * Only takes effect together with a positive {@see limit()} (SQL OFFSET
-	 * requires a LIMIT). Intended for page-based admin listings.
+	 * Only takes effect together with a positive {@see limit()} (SQL OFFSET requires a LIMIT).
 	 *
 	 * @since 0.1.0
 	 *
@@ -406,9 +398,6 @@ final class QueryBuilder {
 	/**
 	 * Delete every row matching the current constraints.
 	 *
-	 * Refuses to run without at least one WHERE condition, so it can never wipe
-	 * the whole table by accident.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @return int Number of rows deleted.
@@ -436,12 +425,6 @@ final class QueryBuilder {
 
 	/**
 	 * Update every row matching the current constraints in one atomic statement.
-	 *
-	 * Unlike {@see update()} (which targets a single id), this compiles the WHERE
-	 * clause into the UPDATE so the change only lands on rows that still satisfy
-	 * the conditions — enabling compare-and-set flips such as "abandon this cart
-	 * only while it is still active". Refuses to run without a WHERE condition so
-	 * it can never rewrite the whole table by accident.
 	 *
 	 * @since 0.1.0
 	 *

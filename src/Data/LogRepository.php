@@ -16,9 +16,6 @@ use CartRebound\Models\LogEntry;
 /**
  * Writes activity-log entries and reads them back for the admin log view.
  *
- * The table is self-capping: writes occasionally prune the oldest rows beyond
- * {@see MAX_ROWS} so the log cannot grow without bound.
- *
  * @since 0.1.0
  */
 final class LogRepository {

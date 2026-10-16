@@ -2,9 +2,7 @@
 /**
  * Migration: create the email suppression (unsubscribe) table.
  *
- * One row per address that opted out of recovery emails. Kept in its own table
- * (keyed by email) rather than a flag on the cart row so a suppression survives
- * cart cleanup and applies to every future cart for that address.
+ * Kept apart from the cart rows so a suppression survives cart cleanup.
  *
  * @package CartRebound
  */

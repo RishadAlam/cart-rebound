@@ -17,15 +17,8 @@ use WP_REST_Request;
 /**
  * Per-route Origin gate.
  *
- * This is an OPT-IN middleware: it only runs on routes that declare the `cors`
- * alias (`->middleware('cors')`), so it is not a site-wide CORS policy. On those
- * routes, requests with no `Origin` header (same-origin / non-browser) pass
- * straight through; a cross-origin request is allowed only when its origin is in
- * the allow-list, which defaults to the site's own origin and can be extended via
- * the `cart_rebound_allowed_cors_origins` filter. Emitting `Access-Control-*`
- * response headers remains WordPress core's responsibility (it reflects the
- * origin on `rest_pre_serve_request`); this middleware only blocks disallowed
- * origins.
+ * Opt-in per route via the `cors` alias, not a site-wide policy; it only blocks disallowed
+ * origins and WordPress core still emits the CORS headers.
  *
  * @since 0.1.0
  */

@@ -17,10 +17,7 @@ use CartRebound\Models\CartSession;
 /**
  * Resolves a stable, unguessable key that identifies a visitor's cart.
  *
- * The key is generated specifically for Cart Rebound, mirrored into both a
- * first-party cookie and the WooCommerce session, and never derived from a
- * predictable WordPress user or WooCommerce customer id. On login a guest row
- * is merged into the user's identity.
+ * The key is never derived from a predictable WordPress user or WooCommerce customer id.
  *
  * @since 0.1.0
  */
@@ -135,11 +132,6 @@ final class SessionManager {
 	/**
 	 * Forget the current visitor's tracking session after their cart converts.
 	 *
-	 * Best-effort: drops the WooCommerce session slot and expires the first-party
-	 * cookie so the shopper's next cart opens a brand-new tracked row instead of
-	 * reusing the just-converted key. Safe to call in any context — it no-ops when
-	 * WooCommerce has no session or headers are already sent.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @return void
@@ -213,7 +205,6 @@ final class SessionManager {
 			return '';
 		}
 
-		// Read-only identifier cookie: no nonce applies; it is strictly validated on use.
 		return $this->validated_key( sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE ] ) ) );
 	}
 
@@ -251,9 +242,8 @@ final class SessionManager {
 	/**
 	 * Build the cookie option array shared by the set and clear paths.
 	 *
-	 * Keeping one definition guarantees the expiring cookie carries the exact
-	 * path/secure/samesite scope the original was set with — a mismatch would
-	 * leave the browser holding the old cookie.
+	 * The expiring cookie must match the original's path/secure/samesite scope or the browser
+	 * keeps the old cookie.
 	 *
 	 * @since 0.1.0
 	 *

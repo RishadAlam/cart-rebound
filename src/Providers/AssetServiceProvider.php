@@ -57,7 +57,6 @@ final class AssetServiceProvider extends ServiceProvider {
 
 		$route = $menu->route_for_hook( $hook_suffix );
 
-		// The template editor opens the media frame to insert images.
 		if ( function_exists( 'wp_enqueue_media' ) ) {
 			wp_enqueue_media();
 		}
@@ -70,8 +69,6 @@ final class AssetServiceProvider extends ServiceProvider {
 		 * Filter whether the compiled admin assets should be loaded.
 		 *
 		 * Development tooling can enqueue its own local assets and return false.
-		 * The callback is supplied only through Composer's development autoloader
-		 * and is absent from release archives.
 		 *
 		 * @since 0.1.0
 		 *
@@ -160,8 +157,7 @@ final class AssetServiceProvider extends ServiceProvider {
 
 		$css = ( isset( $entry['css'] ) && is_array( $entry['css'] ) ) ? $entry['css'] : array();
 
-		// With cssCodeSplit disabled Vite emits the stylesheet as a standalone
-		// manifest asset instead of nesting it under the JavaScript entry.
+		// With cssCodeSplit disabled, Vite emits the stylesheet as its own manifest entry, not under the JS entry.
 		foreach ( $manifest as $item ) {
 			$file = is_array( $item ) && isset( $item['file'] ) && is_string( $item['file'] )
 				? $item['file']
@@ -180,9 +176,6 @@ final class AssetServiceProvider extends ServiceProvider {
 	/**
 	 * Build the `window.CartRebound` bootstrap script.
 	 *
-	 * Includes the submenu page behind every route so in-app navigation keeps
-	 * the address bar on the same URL the WordPress sidebar links to.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param string                                           $route The SPA route this page should open on.
@@ -197,8 +190,6 @@ final class AssetServiceProvider extends ServiceProvider {
 			'nonce'        => wp_create_nonce( 'wp_rest' ),
 			'initialRoute' => $route,
 			'pages'        => $pages,
-			// Ships the store's price display settings so the admin renders money
-			// exactly as the storefront does instead of guessing with Intl.
 			'currency'     => array(
 				'code'              => $currency,
 				'symbol'            => function_exists( 'get_woocommerce_currency_symbol' )

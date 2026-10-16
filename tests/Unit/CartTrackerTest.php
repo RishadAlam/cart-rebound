@@ -68,8 +68,7 @@ final class CartTrackerTest extends TestCase {
 		$this->assertSame( CartSession::STATUS_ACTIVE, $written['status'] );
 		$this->assertSame( 0, $written['abandonment_notified'] );
 
-		// The abandonment stamp is what OrderLinker reads to attribute a later
-		// paid order as recovered, so reopening must never clear it.
+		// OrderLinker reads abandoned_at to attribute a later paid order, so reopening must keep it.
 		$this->assertArrayNotHasKey( 'abandoned_at', $written );
 	}
 }

@@ -89,7 +89,6 @@ export default defineConfig({
 				comments: /translators:|@license|@preserve|^!/i,
 			},
 		},
-		// Emit a real stylesheet for WordPress to enqueue instead of CSS injected by JS.
 		cssCodeSplit: false,
 		rollupOptions: {
 			external: [

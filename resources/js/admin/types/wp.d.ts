@@ -32,9 +32,7 @@ declare global {
 	}
 
 	interface Window {
-		// Injected by wp_add_inline_script; absent if the boot script failed to run.
 		CartRebound?: CartReboundBootData;
-		// The WordPress media library (present when wp_enqueue_media() has run).
 		wp?: {
 			media?: (options?: Record<string, unknown>) => WpMediaFrame;
 		};

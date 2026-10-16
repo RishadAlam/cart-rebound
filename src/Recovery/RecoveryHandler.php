@@ -19,9 +19,7 @@ use CartRebound\Tracking\SessionManager;
 /**
  * Intercepts a tokenised recovery link, rebuilds the cart, and redirects to checkout.
  *
- * The unguessable token is the credential (no nonce applies, like a password-reset
- * link); the cart row id is bound into the WooCommerce session so {@see OrderLinker}
- * can attribute the resulting order as recovered.
+ * The unguessable token is the credential; no nonce applies, like a password-reset link.
  *
  * @since 0.1.0
  */
@@ -104,8 +102,7 @@ final class RecoveryHandler {
 			return;
 		}
 
-		// Adopt the row before the cart is rebuilt: CartTracker runs on those writes and would
-		// otherwise open a duplicate row that gets its own recovery email.
+		// Adopt the row before the rebuild: CartTracker runs on those writes and would open a duplicate row.
 		$this->adopt_session( (int) ( $row['id'] ?? 0 ) );
 
 		$restored = $this->tracker->without_tracking(
@@ -135,13 +132,10 @@ final class RecoveryHandler {
 		exit;
 	}
 
-
 	/**
 	 * Re-key the recovered row onto this visitor's tracking session.
 	 *
-	 * Any row already holding the key is archived first — the same deterministic
-	 * rename {@see \CartRebound\Tracking\CartTracker} uses — so the UNIQUE index
-	 * is respected and no tracked history is destroyed.
+	 * Any row already holding the key is archived first so the UNIQUE index is respected.
 	 *
 	 * @since 1.1.2
 	 *
@@ -179,10 +173,6 @@ final class RecoveryHandler {
 
 	/**
 	 * Seed the checkout with the contact details captured on the tracked cart.
-	 *
-	 * A recovery link is a one-click return: the shopper should not have to retype
-	 * the address the store already emailed them at. Only empty fields are filled,
-	 * so a logged-in customer's saved details are never overwritten.
 	 *
 	 * @since 1.1.2
 	 *
@@ -290,8 +280,7 @@ final class RecoveryHandler {
 
 		if ( is_array( $coupons ) ) {
 			foreach ( $coupons as $code ) {
-				// Re-applying a since-deleted code makes WooCommerce show a "coupon does not exist"
-				// error to the returning shopper, so only live codes are restored.
+				// Restore only live codes: WooCommerce shows a "coupon does not exist" error for a deleted one.
 				if ( is_string( $code ) && '' !== $code && $this->coupon_exists( $code ) ) {
 					$cart->apply_coupon( $code );
 				}

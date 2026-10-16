@@ -17,9 +17,6 @@ use WC_Order;
 /**
  * Fires the plugin's public integration events with a flat, mappable payload.
  *
- * Automation tools (FlowMattic, Bit Integrations, etc.) hook these actions
- * instead of coupling to the plugin internals.
- *
  * @since 0.1.0
  */
 final class EventDispatcher {
@@ -120,9 +117,6 @@ final class EventDispatcher {
 	/**
 	 * Fire the cart-captured event.
 	 *
-	 * Fires when a cart first holds a contact email, or when its contact details
-	 * change, so automations hear about every cart that can be recovered.
-	 *
 	 * @since 1.1.2
 	 *
 	 * @param array<string, mixed> $row The cart row after the capture.
@@ -186,8 +180,6 @@ final class EventDispatcher {
 
 	/**
 	 * Fire the recovery-email-sent events.
-	 *
-	 * Also fires the coupon event when the email carried a coupon code.
 	 *
 	 * @since 1.1.2
 	 *

@@ -141,10 +141,6 @@ final class CartsController extends Controller {
 	/**
 	 * Manually change a cart's lifecycle status.
 	 *
-	 * A manual move to `abandoned` runs through the detector so the abandonment
-	 * event fires and a recovery email is queued; every other status is a plain
-	 * data transition.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param UpdateStatusRequest $request The validated request.
@@ -241,7 +237,6 @@ final class CartsController extends Controller {
 				return false;
 			}
 
-			// Already abandoned is a successful no-op (mirrors update_status()), not a failure.
 			if ( CartSession::STATUS_ABANDONED === (string) $cart['status'] ) {
 				return true;
 			}

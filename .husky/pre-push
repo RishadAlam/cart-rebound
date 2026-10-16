@@ -15,6 +15,4 @@ echo "▶ PHP Compatibility" && composer compat
 echo "▶ Rector (dry-run)"  && composer rector
 echo "▶ PHPUnit"           && composer test
 
-# Plugin Check runs in CI (.github/workflows/plugin-check.yml), not locally.
-
 echo "✅ All checks passed."

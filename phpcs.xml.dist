@@ -15,7 +15,6 @@
 	<exclude-pattern>*/public/build/*</exclude-pattern>
 	<exclude-pattern>*/tests/*</exclude-pattern>
 
-	<!-- Dev-only tooling run on the local PHP CLI, not inside WordPress. -->
 	<exclude-pattern>*/rector.php</exclude-pattern>
 	<exclude-pattern>*.php-cs-fixer.dist.php</exclude-pattern>
 	<exclude-pattern>*/scripts/bump-version.php</exclude-pattern>
@@ -44,7 +43,6 @@
 		</properties>
 	</rule>
 
-	<!-- manage_woocommerce comes from WooCommerce, a hard dependency. -->
 	<rule ref="WordPress.WP.Capabilities">
 		<properties>
 			<property name="custom_capabilities" type="array">
@@ -53,10 +51,7 @@
 		</properties>
 	</rule>
 
-	<!-- src/ follows PSR-4 StudlyCase, so the WP file-naming rule does not apply there. -->
 	<rule ref="WordPress.Files.FileName">
 		<exclude-pattern>*/src/*</exclude-pattern>
 	</rule>
-
-	<!-- Custom-table queries use scoped `// phpcs:ignore` per audited call site, not a global exclude. -->
 </ruleset>

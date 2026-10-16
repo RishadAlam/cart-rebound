@@ -1,4 +1,3 @@
-// Elements that carry their own line box, so a newline around them is inert.
 export const BLOCK_TAGS = new Set([
 	'P',
 	'DIV',
@@ -62,8 +61,6 @@ const openTag = (el: Element): string => {
 	return `<${name}${attributes}>`;
 };
 
-// Serialise a run of inline siblings through a detached element so the original
-// markup — entities, attribute order, self-closing style — survives untouched.
 const inlineRun = (nodes: Node[], doc: Document): string => {
 	const holder = doc.createElement('div');
 
@@ -100,8 +97,6 @@ const formatElement = (el: Element, depth: number): string => {
 	return `${pad}${openTag(el)}\n${lines.join('\n')}\n${pad}</${name}>`;
 };
 
-// Block children get their own line; consecutive inline siblings are kept
-// together on one line so no whitespace lands inside a formatted run.
 const formatNodes = (nodes: Node[], depth: number, doc: Document): string[] => {
 	const pad = INDENT.repeat(depth);
 	const lines: string[] = [];

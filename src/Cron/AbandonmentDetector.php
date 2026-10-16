@@ -19,9 +19,7 @@ use CartRebound\Support\Settings;
 /**
  * Flips idle active carts to `abandoned` and dispatches the abandonment event.
  *
- * The idle threshold lives in the WHERE clause (not the cron cadence), so a
- * changed threshold takes effect on the next scan with no rescheduling. Each row
- * is marked before its event fires so it can never be selected twice.
+ * Each row is marked before its event fires so it can never be selected twice.
  *
  * @since 0.1.0
  */
@@ -126,11 +124,6 @@ final class AbandonmentDetector {
 	/**
 	 * Manually abandon a single cart by id (admin action).
 	 *
-	 * Reuses the exact detector transition so a hand-abandoned cart fires the
-	 * abandonment event, bumps the lifetime counter, and queues the recovery
-	 * email just like an auto-detected one. No-ops on an unknown row or one that
-	 * is already abandoned (so the event can never double-fire).
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param int $cart_id Cart id.
@@ -155,12 +148,8 @@ final class AbandonmentDetector {
 	/**
 	 * Abandon a cart from the scan, but only while it is still idle and active.
 	 *
-	 * The batch is read first and flipped afterwards, so a shopper can return in
-	 * between (their cart is re-touched, bumping last_activity, or it converts /
-	 * empties). This re-checks those exact conditions in the WHERE clause of the
-	 * flip itself — an atomic compare-and-set — so a cart that became active
-	 * again is never force-marked abandoned, and the event/email only fire when a
-	 * row was genuinely transitioned.
+	 * The flip re-checks idleness in its WHERE clause (compare-and-set), so a shopper who
+	 * returned mid-batch is never marked abandoned.
 	 *
 	 * @since 0.1.0
 	 *
@@ -188,9 +177,6 @@ final class AbandonmentDetector {
 
 	/**
 	 * Flip a single row to abandoned unconditionally, then notify.
-	 *
-	 * Used by the manual admin action ({@see abandon()}), which intentionally
-	 * overrides the idle check — an admin may abandon a cart on demand.
 	 *
 	 * @since 0.1.0
 	 *

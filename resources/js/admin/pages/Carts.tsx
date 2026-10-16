@@ -1,5 +1,3 @@
-// The order picker is a native <dialog> so it escapes the table's horizontal
-// scroll container instead of being clipped by it.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
@@ -815,7 +813,6 @@ const RecoverDialog = ({
 		} else if (el.open) {
 			el.close();
 		}
-		// Only re-run when the target cart changes; `mark` is a stable mutation.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [cart]);
 
@@ -844,7 +841,6 @@ const RecoverDialog = ({
 	};
 
 	return (
-		// Backdrop click-to-close is a mouse nicety; Esc is handled natively.
 		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
 		<dialog
 			ref={ref}
@@ -979,7 +975,6 @@ const SendDialog = ({
 		} else if (el.open) {
 			el.close();
 		}
-		// Only re-run when the target cart changes, not on template refetch.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [cart]);
 
@@ -1005,7 +1000,6 @@ const SendDialog = ({
 	};
 
 	return (
-		// Backdrop click-to-close is a mouse nicety; Esc is handled natively.
 		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
 		<dialog
 			ref={ref}
@@ -1137,12 +1131,8 @@ export const Carts = () => {
 	const bulk = useBulkCarts();
 
 	const items = useMemo(() => data?.items ?? [], [data]);
-	// One store currency for the whole page: every row, dialog, and order label
-	// reads the same code instead of trusting per-row values.
 	const currency = data?.currency ?? '';
 
-	// Only on-screen rows can stay selected, so prune on every list change
-	// (filter/page/sort switch, or a refetch after a row action).
 	useEffect(() => {
 		const visible = new Set(items.map((cart) => cart.id));
 
@@ -1246,8 +1236,7 @@ export const Carts = () => {
 					});
 				},
 				onError: (error: unknown) => {
-					// Reset the select so the same status can be retried (an
-					// unchanged <option> emits no onChange event).
+					// Reset so the same status can be retried: an unchanged <option> emits no onChange.
 					setBulkStatus('');
 					setFeedback({ type: 'error', message: messageOf(error) });
 				},

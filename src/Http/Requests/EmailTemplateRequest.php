@@ -14,9 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Validates the required fields of an email template.
  *
- * Only `name` and `subject` are validated here; the HTML `body` and the other
- * optional fields are read raw and sanitised by the TemplateStore (the body
- * must keep its markup, which a string rule would strip).
+ * The HTML `body` is sanitised by the TemplateStore; a string rule would strip its markup.
  *
  * @since 0.1.0
  */

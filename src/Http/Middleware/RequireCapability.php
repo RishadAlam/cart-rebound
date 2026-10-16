@@ -17,8 +17,6 @@ use WP_REST_Request;
 /**
  * Ensures the current user has a required capability.
  *
- * Created from the `can:<capability>` route middleware alias.
- *
  * @since 0.1.0
  */
 final class RequireCapability implements Middleware {

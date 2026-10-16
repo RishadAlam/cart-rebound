@@ -1,4 +1,3 @@
-// Tracking is always on while the plugin is active; there is no master toggle.
 import {
 	useEffect,
 	useState,

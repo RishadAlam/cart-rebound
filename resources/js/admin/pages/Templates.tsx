@@ -1,4 +1,3 @@
-// Exactly one template is the default: the one automatic abandonment emails use.
 import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { ChipSelect } from '../components/ChipSelect';
@@ -23,8 +22,6 @@ import type {
 
 type Feedback = { type: 'success' | 'error'; message: string };
 
-// The editor is one form saved in one go; the panes only decide what is on
-// screen, so a long template never buries the fields that matter today.
 type Pane = 'message' | 'table' | 'delivery';
 
 const PANES: { id: Pane; label: string }[] = [
@@ -77,8 +74,6 @@ const IMAGE_SIZE_OPTIONS = [
 	{ value: '64', label: __('Roomy — 64px', 'cart-rebound') },
 ];
 
-// Merge tags, grouped shopper → cart → store, in the order the picker lists
-// them. TAGS drives the picker; TOKEN_DOCS explains each one under the editor.
 const TOKEN_DOCS = [
 	{
 		token: '{first_name}',
@@ -1351,7 +1346,6 @@ export const Templates = () => {
 				</section>
 			</div>
 
-			{/* Backdrop click-to-close is a mouse nicety; Esc is handled natively. */}
 			{/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
 			<dialog
 				ref={previewRef}

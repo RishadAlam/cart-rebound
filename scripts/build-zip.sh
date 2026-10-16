@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# QA runs in the `production-zip` npm script, not here.
 set -euo pipefail
 
 SLUG="cart-rebound"
@@ -28,7 +27,6 @@ echo "▶ Staging plugin files"
 rm -rf "${BUILD}"
 mkdir -p "${STAGE}"
 
-# Explicit allowlist so new repository tooling can never leak into the archive.
 RUNTIME_PATHS=(
 	"cart-rebound.php"
 	"uninstall.php"

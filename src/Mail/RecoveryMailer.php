@@ -22,8 +22,7 @@ use WP_Error;
 /**
  * Sends the optional single recovery email, scheduled a delay after abandonment.
  *
- * Skips carts that already converted or were already emailed; restores the
- * wp_mail content type after sending so it never leaks to other mail.
+ * Restores the wp_mail content type after sending so it never leaks to other mail.
  *
  * @since 0.1.0
  */
@@ -130,7 +129,6 @@ final class RecoveryMailer {
 			return;
 		}
 
-		// Suppression is a DB lookup, so it runs after the cheap row-field guards.
 		if ( Unsubscribe::is_suppressed( $email ) ) {
 			return;
 		}
@@ -163,10 +161,6 @@ final class RecoveryMailer {
 
 	/**
 	 * Email the site admin that a tracked cart was recovered into a paid order.
-	 *
-	 * A no-op unless the `admin_recovery_email` setting is enabled. Sends a
-	 * plain-text summary to the WordPress admin address; independent of the
-	 * shopper-facing recovery email toggle and never throws.
 	 *
 	 * @since 0.1.0
 	 *
@@ -235,11 +229,6 @@ final class RecoveryMailer {
 	/**
 	 * Send the recovery email right now, on demand (admin "send email" action).
 	 *
-	 * Unlike {@see send()} this ignores the scheduled-delay guards — the
-	 * enabled toggle, the abandoned-only rule, and the already-sent flag — so an
-	 * admin can (re)send at will. It still refuses to mail an empty cart or an
-	 * address that is missing / invalid.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param int    $cart_id     Cart id.
@@ -295,9 +284,6 @@ final class RecoveryMailer {
 	/**
 	 * Send a test render of a template to an address (admin "send test" action).
 	 *
-	 * Uses representative sample cart data so an admin can see exactly what a
-	 * shopper would receive, without touching a real cart.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param string               $email    Recipient address.
@@ -330,8 +316,8 @@ final class RecoveryMailer {
 	/**
 	 * Capture the detailed error emitted by WordPress when wp_mail() fails.
 	 *
-	 * This callback is attached only for the duration of this mailer's own send,
-	 * so unrelated site email failures can never leak into the admin response.
+	 * Attached only for this mailer's own send, so unrelated site email failures never leak
+	 * into the admin response.
 	 *
 	 * @since 0.1.0
 	 *
@@ -352,9 +338,6 @@ final class RecoveryMailer {
 
 	/**
 	 * Render a template against sample data for an on-screen preview.
-	 *
-	 * Uses the real subject/body token substitution and the real email shell,
-	 * so the preview matches what a shopper would receive.
 	 *
 	 * @since 0.1.0
 	 *
@@ -436,8 +419,7 @@ final class RecoveryMailer {
 	/**
 	 * Every merge tag and its plain-text value for a cart.
 	 *
-	 * Values are unescaped here; callers escape per context — {@see subject()}
-	 * uses them as text, {@see build_body()} escapes each one for HTML.
+	 * Values are unescaped; callers escape per context.
 	 *
 	 * @since 0.1.0
 	 *
@@ -578,10 +560,6 @@ final class RecoveryMailer {
 
 	/**
 	 * The display name for a cart line.
-	 *
-	 * The snapshot stores the name as it was when the cart was captured, but a
-	 * line written before that field existed — or captured while the product was
-	 * unavailable — has none, so fall back to the live product.
 	 *
 	 * @since 0.1.0
 	 *
@@ -752,8 +730,7 @@ final class RecoveryMailer {
 	/**
 	 * Build the cart as a table, laid out per the template's table options.
 	 *
-	 * Inline styles only, and a plain table layout, because email clients drop
-	 * stylesheets and most of the modern box model.
+	 * Inline styles and a plain table layout only, because email clients drop stylesheets.
 	 *
 	 * @since 0.1.0
 	 *

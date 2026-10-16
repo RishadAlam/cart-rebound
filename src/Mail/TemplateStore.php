@@ -16,10 +16,6 @@ use CartRebound\Support\Settings;
 /**
  * CRUD store for the recovery-email templates kept in a single option.
  *
- * Exactly one template is the default; it drives the automatic abandonment
- * email. On first read the store seeds a "Default" template from the legacy
- * flat email settings, so existing configuration carries over transparently.
- *
  * @since 0.1.0
  */
 final class TemplateStore {
@@ -93,8 +89,6 @@ final class TemplateStore {
 			}
 		}
 
-		// A corrupted option can filter down to nothing; re-seed so at least one template
-		// always exists.
 		if ( array() === $templates ) {
 			return $this->seed_and_persist();
 		}
@@ -147,8 +141,6 @@ final class TemplateStore {
 		$template       = $this->sanitise( $data );
 		$template['id'] = $this->new_id();
 
-		// all() always returns at least the seeded default, so a new template
-		// only becomes the default when explicitly asked to.
 		$default_id = empty( $data['is_default'] ) ? $this->default_id( $templates ) : $template['id'];
 
 		$templates[] = $template;
@@ -193,9 +185,6 @@ final class TemplateStore {
 
 	/**
 	 * Delete a template by id.
-	 *
-	 * The default template cannot be deleted (set another as default first),
-	 * which also guarantees at least one template always survives.
 	 *
 	 * @since 0.1.0
 	 *
@@ -304,9 +293,8 @@ final class TemplateStore {
 	/**
 	 * Default {products_table} rendering options.
 	 *
-	 * These describe the table as it renders when a template has not opted into
-	 * customising it, so a stored template written before this option existed
-	 * keeps the layout it already had.
+	 * Templates stored before table options existed render with these, so changing them changes
+	 * existing emails.
 	 *
 	 * @since 0.1.0
 	 *
@@ -329,10 +317,6 @@ final class TemplateStore {
 
 	/**
 	 * Sanitise raw {products_table} options against the defaults.
-	 *
-	 * Unknown columns are dropped and the order the merchant chose is kept, so
-	 * the chip order in the editor is the column order in the email. An empty
-	 * selection falls back to the default columns rather than an empty table.
 	 *
 	 * @since 0.1.0
 	 *

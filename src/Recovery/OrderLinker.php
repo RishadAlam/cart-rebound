@@ -22,10 +22,6 @@ use WC_Order;
 /**
  * Links an order to its originating cart by explicit meta — never fuzzy totals.
  *
- * Stamps the resolved cart id onto the order at creation, then resolves the cart
- * to `recovered` (abandoned cart or arrived via a recovery link) or `completed`
- * (a cart that converted without ever being abandoned).
- *
  * @since 0.1.0
  */
 final class OrderLinker {
@@ -143,8 +139,7 @@ final class OrderLinker {
 				$this->mark_order_placed( $resolved['id'], $order );
 			}
 
-			// The recovery binding is single-use; drop it so a later unrelated
-			// order can't be mis-attributed to this recovery cart.
+			// The recovery binding is single-use, so a later unrelated order can't be mis-attributed to this cart.
 			$this->clear_recovery_binding();
 		}
 
@@ -197,9 +192,6 @@ final class OrderLinker {
 	/**
 	 * WooCommerce order statuses that count as a paid conversion.
 	 *
-	 * Configurable via the `paid_order_statuses` setting (default
-	 * processing + completed) and the `cart_rebound_paid_order_statuses` filter.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @return array<int, string>
@@ -232,12 +224,6 @@ final class OrderLinker {
 	/**
 	 * Undo a cart's conversion when its order is cancelled, fails, or is refunded.
 	 *
-	 * - A pending-payment cart (order placed, never paid) returns to `active` with
-	 *   its items intact so it can be recovered like any abandoned cart.
-	 * - A recovered/completed cart (a paid order that was reversed) drops to `lost`
-	 *   with its recovered revenue cleared, so reporting never counts money that
-	 *   was refunded. Other states are left untouched.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param int $order_id Order id.
@@ -265,8 +251,7 @@ final class OrderLinker {
 		$status = (string) ( $row['status'] ?? '' );
 
 		if ( CartSession::STATUS_PENDING_PAYMENT === $status ) {
-			// `abandoned_at` is kept so a later paid order still attributes as recovered
-			// instead of as a straight-through completion.
+			// Keep `abandoned_at` so a later paid order still attributes as recovered.
 			$reopened = array(
 				'status'               => CartSession::STATUS_ACTIVE,
 				'order_id'             => 0,
@@ -302,12 +287,6 @@ final class OrderLinker {
 	/**
 	 * Resolve the stamped cart once its order is paid (idempotent).
 	 *
-	 * A previously abandoned/lost cart — or one that arrived through a recovery
-	 * link — becomes `recovered`; anything else converted straight through. Either
-	 * way the just-converted cart never needs its pending recovery email, so that
-	 * scheduled job is cancelled, an order note is written, and the visitor's
-	 * tracking session is retired so their next cart opens a fresh row.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param WC_Order $order The order.
@@ -330,7 +309,6 @@ final class OrderLinker {
 
 		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
 
-		// `abandoned_at` survives the pending-payment transition, so a once-abandoned cart counts as recovered.
 		$via_link      = '1' === (string) $order->get_meta( self::META_RECOVERED );
 		$was_abandoned = '' !== (string) ( $row['abandoned_at'] ?? '' );
 		$is_recovered  = $via_link || $was_abandoned;
@@ -373,10 +351,6 @@ final class OrderLinker {
 	/**
 	 * Resolve a cart that converted to a paid order without being abandoned.
 	 *
-	 * Kept as `completed` (not deleted) so a straight-through paid conversion
-	 * stays visible in the list and its revenue is counted, mirroring the
-	 * recovered path for abandoned carts.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param WC_Order             $order The paid order.
@@ -405,11 +379,6 @@ final class OrderLinker {
 
 	/**
 	 * Stamp a newly placed order onto its cart row as pending payment.
-	 *
-	 * Runs as soon as the order is created (before payment) so the cart keeps its
-	 * captured items through the post-checkout empty-cart events and leaves the
-	 * active/abandoned funnel. Only an open cart is moved; a row already resolved
-	 * (paid/lost) or already linked to an order is left untouched.
 	 *
 	 * @since 0.1.0
 	 *
@@ -506,8 +475,7 @@ final class OrderLinker {
 		if ( $customer_id > 0 ) {
 			/**
 			 * Recency window (in days) for matching a customer's earlier cart to a
-			 * new order by customer id. Guards against crediting an ancient cart to
-			 * an unrelated later purchase from the same account.
+			 * new order by customer id.
 			 *
 			 * @since 0.1.0
 			 *

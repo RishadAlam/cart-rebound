@@ -39,7 +39,6 @@ final class RouteServiceProvider extends ServiceProvider {
 					$files = array();
 				}
 
-				// Deterministic load order regardless of filesystem ordering.
 				sort( $files );
 
 				foreach ( $files as $route_file ) {

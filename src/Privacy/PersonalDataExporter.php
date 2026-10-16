@@ -221,8 +221,8 @@ final class PersonalDataExporter {
 	/**
 	 * Resolve the WordPress account currently using an email address.
 	 *
-	 * Matching by user id as well as email ensures historical carts remain
-	 * exportable after a registered shopper changes their account email.
+	 * Matching by user id keeps historical carts exportable after the shopper changes their
+	 * account email.
 	 *
 	 * @since 0.1.0
 	 *

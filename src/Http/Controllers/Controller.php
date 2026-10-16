@@ -17,9 +17,6 @@ use WP_REST_Response;
 /**
  * Base class for REST controllers.
  *
- * Controllers are resolved from the container, so any dependency they type-hint
- * in their constructor is auto-wired.
- *
  * @since 0.1.0
  */
 abstract class Controller {

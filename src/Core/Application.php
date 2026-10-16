@@ -16,10 +16,6 @@ use CartRebound\Core\Contracts\ContainerInterface;
 /**
  * The CartRebound application.
  *
- * Extends the container and orchestrates the two-phase service-provider
- * lifecycle (register all, then boot all). Implemented as a singleton so the
- * same instance is shared between the bootstrap file and runtime hooks.
- *
  * @since 0.1.0
  */
 final class Application extends Container {

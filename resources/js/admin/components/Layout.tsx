@@ -24,7 +24,6 @@ const tabs: Tab[] = [
 const tabClass = ({ isActive }: { isActive: boolean }): string =>
 	isActive ? 'cr-tab is-active' : 'cr-tab';
 
-// Form pages stay width-capped so their label/input rows remain scannable.
 const WIDE_ROUTES = ['/', '/carts', '/logs'];
 
 export const Layout = () => {

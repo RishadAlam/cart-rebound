@@ -1,5 +1,3 @@
-// Selection order is display order. Reordering is remove + re-add rather than drag,
-// so keyboard users get the same path and a two-item swap stays quick.
 import { __, sprintf } from '@wordpress/i18n';
 import { Combobox, type ComboOption } from './Combobox';
 

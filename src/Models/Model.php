@@ -14,10 +14,6 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Base class for models backed by a custom database table.
  *
- * Subclasses declare their table suffix and fillable columns; the table name is
- * automatically prefixed with the WordPress prefix and the `cart_rebound_`
- * namespace (e.g. `wp_cart_rebound_examples`).
- *
  * @since 0.1.0
  */
 abstract class Model {

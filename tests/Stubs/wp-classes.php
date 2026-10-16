@@ -2,7 +2,6 @@
 
 declare( strict_types=1 );
 
-// Brain\Monkey mocks functions but not classes.
 defined( 'ARRAY_A' ) || define( 'ARRAY_A', 'ARRAY_A' );
 defined( 'ARRAY_N' ) || define( 'ARRAY_N', 'ARRAY_N' );
 defined( 'OBJECT' ) || define( 'OBJECT', 'OBJECT' );

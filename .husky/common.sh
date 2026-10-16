@@ -1,6 +1,4 @@
 #!/usr/bin/env sh
-# GUI git clients run hooks with a minimal PATH that often omits Node (e.g. nvm installs).
-
 # Append, never prepend, so a writable user dir cannot shadow a system binary.
 for dir in "/usr/local/bin" "/opt/homebrew/bin" "$HOME/.local/bin"; do
 	case ":$PATH:" in

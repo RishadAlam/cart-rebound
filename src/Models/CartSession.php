@@ -14,10 +14,6 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Represents one tracked cart row in `{$wpdb->prefix}cart_rebound_sessions`.
  *
- * Rows are plain associative arrays (the query layer does no hydration); this
- * class is configuration only — table name, writable columns, and the lifecycle
- * status vocabulary used across the plugin.
- *
  * @since 0.1.0
  */
 final class CartSession extends Model {

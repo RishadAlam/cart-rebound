@@ -14,8 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Base class for transforming models into API-shaped arrays.
  *
- * Named JsonResource (rather than Resource) because `resource` is a soft
- * reserved word in PHP.
+ * Not named Resource because `resource` is a soft reserved word in PHP.
  *
  * @since 0.1.0
  */

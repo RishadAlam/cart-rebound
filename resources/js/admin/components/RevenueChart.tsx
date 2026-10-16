@@ -1,4 +1,3 @@
-// Hand-rolled SVG: two area/line pairs don't justify a ~100 kB chart library.
 // Catmull-Rom splines can overshoot the baseline, so the plot is clipped to its rect.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';

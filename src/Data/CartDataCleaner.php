@@ -19,8 +19,8 @@ use CartRebound\Models\LogEntry;
 /**
  * Deletes cart sessions together with their associated activity-log entries.
  *
- * Logs are removed first so a failed log deletion never leaves an orphaned
- * message containing personal data after its cart row has disappeared.
+ * Logs go first so a failed log deletion never orphans personal data after its cart row is
+ * gone.
  *
  * @since 0.1.0
  */

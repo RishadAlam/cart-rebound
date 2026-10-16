@@ -21,10 +21,6 @@ use CartRebound\Support\Requirements;
 /**
  * Centralises activation, deactivation and uninstall behaviour.
  *
- * Registered from the bootstrap file via the WordPress lifecycle hooks. Each
- * method resolves its collaborators from the container rather than doing work
- * inline, keeping lifecycle logic testable.
- *
  * @since 0.1.0
  */
 final class Plugin {
@@ -120,8 +116,7 @@ final class Plugin {
 	/**
 	 * Remove every recurring and one-off job owned by the plugin.
 	 *
-	 * This runs directly from the lifecycle hooks because service providers may
-	 * not have booted during activation, deactivation, or uninstall requests.
+	 * Called directly because service providers may not have booted during lifecycle requests.
 	 *
 	 * @since 0.1.0
 	 *

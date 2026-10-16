@@ -16,9 +16,8 @@ use WP_REST_Request;
 /**
  * Explicit opt-in for an unauthenticated route.
  *
- * The kernel denies any route with an empty middleware stack (secure by
- * default). A genuinely public endpoint declares this middleware — via
- * {@see \CartRebound\Http\Route::public()} — to pass the gate intentionally.
+ * The kernel denies routes with an empty middleware stack; a public endpoint declares this via
+ * {@see \CartRebound\Http\Route::public()}.
  *
  * @since 0.1.0
  */

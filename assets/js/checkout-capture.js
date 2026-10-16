@@ -9,8 +9,7 @@
 
 	var timer = null;
 
-	// Block checkout uses `billing-*` ids only with a separate billing address,
-	// otherwise the shared `shipping-*` form, so both are tried.
+	// Block checkout uses `billing-*` ids only with a separate billing address, else `shipping-*`.
 	var FIELDS = {
 		email: [ 'billing_email', 'email' ],
 		first_name: [ 'billing_first_name', 'billing-first_name', 'shipping-first_name' ],

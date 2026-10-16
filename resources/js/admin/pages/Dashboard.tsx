@@ -1,5 +1,3 @@
-// The Overview strip is lifetime/current state (the recovery rate uses purge-immune
-// lifetime counters); only the chart and product report follow the time range.
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { isAxiosError } from 'axios';

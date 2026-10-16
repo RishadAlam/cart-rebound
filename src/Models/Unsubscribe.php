@@ -100,8 +100,7 @@ final class Unsubscribe extends Model {
 			return true;
 		}
 
-		// A concurrent request may win the UNIQUE(email) race; the address is suppressed
-		// either way, so report the end state rather than this insert's result.
+		// A concurrent insert may win the UNIQUE(email) race, so report the end state, not this insert's result.
 		return is_array( self::query()->where( 'email', '=', $email )->first() );
 	}
 }

@@ -43,9 +43,7 @@ abstract class Command {
 	/**
 	 * Validate that a string is a safe PHP class name.
 	 *
-	 * Rejects anything that is not a bare identifier (letters/digits, leading
-	 * letter), which blocks path-traversal sequences (`/`, `\`, `.`, `..`) from
-	 * reaching the generated file path.
+	 * Blocks path-traversal sequences from reaching the generated file path.
 	 *
 	 * @since 0.1.0
 	 *

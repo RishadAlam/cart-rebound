@@ -15,10 +15,6 @@ defined( 'ABSPATH' ) || exit;
  * Thin wrapper that prefers WooCommerce's bundled Action Scheduler and falls
  * back to native wp-cron when it is unavailable.
  *
- * Action Scheduler self-heals on low-traffic sites where wp-cron stalls, so it
- * is the production-grade choice; the fallback keeps the plugin functional if
- * WooCommerce (and thus Action Scheduler) is somehow absent.
- *
  * @since 0.1.0
  */
 final class Scheduler {
@@ -131,7 +127,6 @@ final class Scheduler {
 			as_unschedule_all_actions( $hook, $args, self::GROUP );
 		}
 
-		// Also clear the fallback store in case the scheduling backend changed.
 		wp_clear_scheduled_hook( $hook, $args );
 	}
 

@@ -22,7 +22,6 @@ export interface Cart {
 	items_count: number;
 	status: string;
 	order_id: number;
-	/** Empty when there is no linked order. */
 	order_edit_url: string;
 	recovered_amount: number;
 	created_at: string;

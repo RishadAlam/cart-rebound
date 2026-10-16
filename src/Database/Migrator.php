@@ -16,9 +16,7 @@ use CartRebound\Core\Application;
 /**
  * Discovers, runs and reverses migrations.
  *
- * Each file in src/Database/Migrations returns an anonymous {@see Migration}
- * instance. Applied migrations are tracked in the `cart_rebound_migrations` option
- * (an array of file basenames), so re-activating the plugin only runs new ones.
+ * Applied migrations are tracked by file basename in the `cart_rebound_migrations` option.
  *
  * @since 0.1.0
  */
