@@ -1,7 +1,3 @@
-/**
- * Shared API response types.
- */
-
 export interface PingResponse {
 	pong: boolean;
 	version: string;
@@ -26,7 +22,6 @@ export interface Cart {
 	items_count: number;
 	status: string;
 	order_id: number;
-	/** wp-admin edit URL for the linked order; empty when there is none. */
 	order_edit_url: string;
 	recovered_amount: number;
 	created_at: string;
@@ -43,7 +38,6 @@ export interface CartList {
 	total: number;
 	page: number;
 	per_page: number;
-	/** Store currency the listed totals are denominated in. */
 	currency: string;
 }
 
@@ -55,7 +49,6 @@ export interface Stats {
 	currency: string;
 }
 
-/** One day of the dashboard revenue chart. */
 export interface TimeseriesPoint {
 	date: string;
 	recoverable_revenue: number;
@@ -64,7 +57,6 @@ export interface TimeseriesPoint {
 	recovered: number;
 }
 
-/** One row of the per-product abandonment/recovery report. */
 export interface ProductReportRow {
 	product_id: number;
 	name: string;
@@ -73,11 +65,13 @@ export interface ProductReportRow {
 }
 
 export interface Settings {
+	tracking_enabled: boolean;
 	guest_tracking: boolean;
 	abandonment_threshold: number;
 	scan_interval: number;
 	cleanup_days: number;
 	converted_cleanup_days: number;
+	log_retention_days: number;
 	recovery_email_enabled: boolean;
 	admin_recovery_email: boolean;
 	admin_notification_email: string;
@@ -167,6 +161,7 @@ export type BulkAction = 'delete' | 'status';
 export interface CartsQuery {
 	status: string;
 	email: string;
+	search?: string;
 	page: number;
 	per_page: number;
 	orderby: string;

@@ -250,5 +250,4 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 </body>
 </html>
 <?php
-// Rendering is complete; nothing further should run on this request.
 exit;

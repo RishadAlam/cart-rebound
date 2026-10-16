@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-#
-# Generate the translation template at languages/cart-rebound.pot using WP-CLI.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

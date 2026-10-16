@@ -1,9 +1,4 @@
 <?php
-/**
- * Settings unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -28,6 +23,28 @@ final class SettingsTest extends TestCase {
 		$this->assertSame( 30, $all['cleanup_days'] );
 		$this->assertSame( 365, $all['converted_cleanup_days'] );
 		$this->assertFalse( $all['recovery_email_enabled'] );
+		$this->assertTrue( $all['tracking_enabled'] );
+		$this->assertSame( 0, $all['log_retention_days'] );
+	}
+
+	public function test_tracking_can_be_switched_off_and_logs_kept_forever(): void {
+		$this->stub_option_writes();
+
+		$result = ( new Settings() )->update(
+			array(
+				'tracking_enabled'   => false,
+				'log_retention_days' => '0',
+			)
+		);
+
+		$this->assertFalse( $result['tracking_enabled'] );
+		$this->assertSame( 0, $result['log_retention_days'] );
+	}
+
+	public function test_negative_log_retention_means_keep_forever(): void {
+		$this->stub_option_writes();
+
+		$this->assertSame( 0, ( new Settings() )->update( array( 'log_retention_days' => -5 ) )['log_retention_days'] );
 	}
 
 	public function test_get_prefers_stored_value_over_default(): void {

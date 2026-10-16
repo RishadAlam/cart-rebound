@@ -1,9 +1,4 @@
 <?php
-/**
- * Routing integration tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -21,9 +16,6 @@ use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
-/**
- * Exercises the Router → Kernel → Controller pipeline end to end.
- */
 final class RoutingTest extends TestCase {
 
 	private function make_router(): Router {

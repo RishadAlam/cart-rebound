@@ -1,11 +1,3 @@
-/**
- * Multi-select built from removable chips plus the searchable Combobox.
- *
- * Selection order is meaningful — chips render left to right in the order they
- * were added, and the caller is free to treat that as display order. Reordering
- * is by removing and re-adding rather than drag: a keyboard user can do the same
- * thing, and a two-item swap is faster than aiming at a drag handle.
- */
 import { __, sprintf } from '@wordpress/i18n';
 import { Combobox, type ComboOption } from './Combobox';
 

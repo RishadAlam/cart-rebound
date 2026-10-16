@@ -57,22 +57,18 @@ final class AssetServiceProvider extends ServiceProvider {
 
 		$route = $menu->route_for_hook( $hook_suffix );
 
-		// Make the WordPress media library available so the template editor can
-		// open the media frame to insert images.
 		if ( function_exists( 'wp_enqueue_media' ) ) {
 			wp_enqueue_media();
 		}
 
 		$version   = $this->app->version();
 		$base_file = $this->app->base_path( 'cart-rebound.php' );
-		$boot_data = $this->boot_data( $route );
+		$boot_data = $this->boot_data( $route, $menu->route_pages() );
 
 		/**
 		 * Filter whether the compiled admin assets should be loaded.
 		 *
 		 * Development tooling can enqueue its own local assets and return false.
-		 * The callback is supplied only through Composer's development autoloader
-		 * and is absent from release archives.
 		 *
 		 * @since 0.1.0
 		 *
@@ -161,8 +157,7 @@ final class AssetServiceProvider extends ServiceProvider {
 
 		$css = ( isset( $entry['css'] ) && is_array( $entry['css'] ) ) ? $entry['css'] : array();
 
-		// With cssCodeSplit disabled Vite emits the stylesheet as a standalone
-		// manifest asset instead of nesting it under the JavaScript entry.
+		// With cssCodeSplit disabled, Vite emits the stylesheet as its own manifest entry, not under the JS entry.
 		foreach ( $manifest as $item ) {
 			$file = is_array( $item ) && isset( $item['file'] ) && is_string( $item['file'] )
 				? $item['file']
@@ -181,24 +176,20 @@ final class AssetServiceProvider extends ServiceProvider {
 	/**
 	 * Build the `window.CartRebound` bootstrap script.
 	 *
-	 * Also seeds the hash router with the submenu's route before the app module
-	 * evaluates, so each WordPress submenu item deep-links straight to its tab.
-	 * An existing hash (in-app navigation) is respected.
-	 *
 	 * @since 0.1.0
 	 *
-	 * @param string $route The SPA route this page should open on.
+	 * @param string                                           $route The SPA route this page should open on.
+	 * @param array<string, array{url: string, title: string}> $pages Admin URL and title of each route's submenu page.
 	 * @return string
 	 */
-	private function boot_data( string $route ): string {
+	private function boot_data( string $route, array $pages ): string {
 		$currency = function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '';
 
 		$data = array(
 			'apiUrl'       => esc_url_raw( rest_url( 'cart-rebound/v1' ) ),
 			'nonce'        => wp_create_nonce( 'wp_rest' ),
 			'initialRoute' => $route,
-			// Ships the store's price display settings so the admin renders money
-			// exactly as the storefront does instead of guessing with Intl.
+			'pages'        => $pages,
 			'currency'     => array(
 				'code'              => $currency,
 				'symbol'            => function_exists( 'get_woocommerce_currency_symbol' )
@@ -212,13 +203,7 @@ final class AssetServiceProvider extends ServiceProvider {
 		);
 
 		$json = wp_json_encode( $data );
-		$js   = 'window.CartRebound = ' . ( false === $json ? '{}' : $json ) . ';';
 
-		if ( '/' !== $route ) {
-			$hash = wp_json_encode( '#' . $route );
-			$js  .= 'if(!window.location.hash||"#/"===window.location.hash){window.location.hash=' . ( false === $hash ? '"#/"' : $hash ) . ';}';
-		}
-
-		return $js;
+		return 'window.CartRebound = ' . ( false === $json ? '{}' : $json ) . ';';
 	}
 }

@@ -17,10 +17,6 @@ use WP_REST_Request;
 /**
  * Base class for sanitising + validating REST input.
  *
- * Subclasses declare {@see rules()} and optionally override {@see authorize()}.
- * Controllers call {@see validate()} and receive either a clean associative
- * array of sanitised values or a WP_Error carrying field-level messages.
- *
  * @since 0.1.0
  */
 abstract class FormRequest {
@@ -80,9 +76,8 @@ abstract class FormRequest {
 	 * @return array<string, mixed>|WP_Error Sanitised values, or a WP_Error on failure.
 	 */
 	public function validate() {
-		// Authorization is re-checked on every call (never cached), so a reused
-		// request instance cannot return previously-validated data after the
-		// caller's permission has changed.
+		// Never cache authorization: a reused request must not return validated data
+		// after the caller's permission has changed.
 		if ( ! $this->authorize() ) {
 			return new WP_Error(
 				'cart_rebound_forbidden',
@@ -152,11 +147,6 @@ abstract class FormRequest {
 	/**
 	 * Read a raw (unvalidated) parameter from the underlying REST request.
 	 *
-	 * For payloads the rule engine cannot express — e.g. arrays such as a bulk
-	 * id list — a controller may read them directly after validating the rest of
-	 * the request. A {@see FormRequest} does not extend WP_REST_Request, so this
-	 * is the supported accessor for the wrapped request's params.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param string $key Parameter name.
@@ -222,11 +212,6 @@ abstract class FormRequest {
 
 	/**
 	 * Measure a value's length for min/max rules.
-	 *
-	 * Strings are measured by character length and arrays by element count.
-	 * Other types (int, float, bool) are not length-constrained — use the
-	 * `integer`/`numeric` rules for those — so they return null and skip the
-	 * check rather than being measured by a surprising string-cast length.
 	 *
 	 * @since 0.1.0
 	 *

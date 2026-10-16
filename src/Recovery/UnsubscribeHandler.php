@@ -11,17 +11,12 @@ namespace CartRebound\Recovery;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
 
 /**
  * Intercepts a tokenised unsubscribe link and suppresses the address.
- *
- * The unguessable recovery token is the credential (no nonce applies, like the
- * recovery link). To avoid the well-known problem of mail clients and security
- * scanners auto-following links, a GET only renders a confirmation the shopper
- * submits; suppression happens on the resulting POST and the address is only
- * reported as unsubscribed when it was actually added to the suppression list.
  *
  * @since 0.1.0
  */
@@ -36,14 +31,24 @@ final class UnsubscribeHandler {
 	private $links;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param RecoveryLink $links Recovery link builder.
+	 * @param RecoveryLink    $links  Recovery link builder.
+	 * @param EventDispatcher $events Event dispatcher.
 	 */
-	public function __construct( RecoveryLink $links ) {
-		$this->links = $links;
+	public function __construct( RecoveryLink $links, EventDispatcher $events ) {
+		$this->links  = $links;
+		$this->events = $events;
 	}
 
 	/**
@@ -65,15 +70,20 @@ final class UnsubscribeHandler {
 		}
 
 		if ( ! $this->is_post() ) {
-			// A GET may be a mail-client / scanner prefetch, which must never
-			// unsubscribe anyone — only offer a confirmation the shopper submits.
+			// A GET may be a mail-client or scanner prefetch: never unsubscribe on it, only offer a confirmation.
 			$this->render( 'confirm', $token );
 		}
 
 		$row   = CartSession::query()->where( 'recovery_token', '=', $token )->first();
 		$email = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
 
-		if ( '' !== $email && Unsubscribe::suppress( $email ) ) {
+		$result = '' !== $email ? Unsubscribe::suppress( $email ) : '';
+
+		if ( Unsubscribe::ADDED === $result && is_array( $row ) ) {
+			$this->events->unsubscribed( $row );
+		}
+
+		if ( '' !== $result ) {
 			$this->render( 'done', $token );
 		}
 
@@ -83,9 +93,8 @@ final class UnsubscribeHandler {
 	/**
 	 * Render the standalone, theme-independent unsubscribe page and stop.
 	 *
-	 * All dynamic values are escaped inside the view; only the trusted static
-	 * markup and CSS live there, so this bypasses wp_die() (whose wp_kses would
-	 * strip the styled layout) and outputs a complete document directly.
+	 * Bypasses wp_die(), whose wp_kses would strip the styled layout; the view escapes every
+	 * dynamic value.
 	 *
 	 * @since 0.1.0
 	 *
@@ -99,7 +108,6 @@ final class UnsubscribeHandler {
 			: '';
 
 		if ( '' === $view || ! is_readable( $view ) ) {
-			// Fall back to a bare status page if the view is somehow missing.
 			wp_die(
 				esc_html__( 'Unsubscribe', 'cart-rebound' ),
 				esc_html__( 'Unsubscribe', 'cart-rebound' ),
@@ -119,7 +127,7 @@ final class UnsubscribeHandler {
 		$field_token = RecoveryLink::QUERY_TOKEN;
 		$home_url    = home_url( '/' );
 
-		require $view; // The view calls exit; execution stops here.
+		require $view;
 		exit;
 	}
 

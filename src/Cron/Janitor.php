@@ -12,6 +12,7 @@ namespace CartRebound\Cron;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Data\CartDataCleaner;
+use CartRebound\Data\LogRepository;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\QueryBuilder;
 use CartRebound\Support\Settings;
@@ -54,16 +55,26 @@ final class Janitor {
 	private $cleaner;
 
 	/**
+	 * Activity log store.
+	 *
+	 * @since 1.1.2
+	 * @var LogRepository
+	 */
+	private $logs;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
 	 * @param Settings        $settings Settings store.
 	 * @param CartDataCleaner $cleaner  Privacy-aware cart deletion service.
+	 * @param LogRepository   $logs     Activity log store.
 	 */
-	public function __construct( Settings $settings, CartDataCleaner $cleaner ) {
+	public function __construct( Settings $settings, CartDataCleaner $cleaner, LogRepository $logs ) {
 		$this->settings = $settings;
 		$this->cleaner  = $cleaner;
+		$this->logs     = $logs;
 	}
 
 	/**
@@ -107,23 +118,23 @@ final class Janitor {
 				->where( 'completed_at', '<', $converted_cutoff )
 		);
 
-		// Orders placed but never paid (e.g. cheque / bank transfer left unpaid)
-		// stay in pending payment; retire them on the converted-retention window
-		// so the table stays bounded.
+		// Unpaid orders (e.g. cheque / bank transfer) stay in pending payment forever;
+		// retire them on the converted-retention window so the table stays bounded.
 		$deleted += $this->purge(
 			CartSession::query()
 				->where( 'status', '=', CartSession::STATUS_PENDING_PAYMENT )
 				->where( 'last_activity', '<', $converted_cutoff )
 		);
 
-		// A paid conversion that was later reversed (refund/cancel) drops to `lost`
-		// with no abandonment clock, so the abandoned/lost sweep above (keyed on
-		// abandoned_at) can miss it; retire lost carts on last activity as well.
+		// A refunded/cancelled conversion drops to `lost` without abandoned_at, so the
+		// abandoned_at sweep above misses it; retire lost carts on last activity too.
 		$deleted += $this->purge(
 			CartSession::query()
 				->where( 'status', '=', CartSession::STATUS_LOST )
 				->where( 'last_activity', '<', $unrecovered_cutoff )
 		);
+
+		$this->logs->delete_older_than( (int) $this->settings->get( 'log_retention_days' ) );
 
 		return $deleted;
 	}

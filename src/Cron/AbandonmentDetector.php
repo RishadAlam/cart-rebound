@@ -19,9 +19,7 @@ use CartRebound\Support\Settings;
 /**
  * Flips idle active carts to `abandoned` and dispatches the abandonment event.
  *
- * The idle threshold lives in the WHERE clause (not the cron cadence), so a
- * changed threshold takes effect on the next scan with no rescheduling. Each row
- * is marked before its event fires so it can never be selected twice.
+ * Each row is marked before its event fires so it can never be selected twice.
  *
  * @since 0.1.0
  */
@@ -126,11 +124,6 @@ final class AbandonmentDetector {
 	/**
 	 * Manually abandon a single cart by id (admin action).
 	 *
-	 * Reuses the exact detector transition so a hand-abandoned cart fires the
-	 * abandonment event, bumps the lifetime counter, and queues the recovery
-	 * email just like an auto-detected one. No-ops on an unknown row or one that
-	 * is already abandoned (so the event can never double-fire).
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param int $cart_id Cart id.
@@ -155,12 +148,8 @@ final class AbandonmentDetector {
 	/**
 	 * Abandon a cart from the scan, but only while it is still idle and active.
 	 *
-	 * The batch is read first and flipped afterwards, so a shopper can return in
-	 * between (their cart is re-touched, bumping last_activity, or it converts /
-	 * empties). This re-checks those exact conditions in the WHERE clause of the
-	 * flip itself — an atomic compare-and-set — so a cart that became active
-	 * again is never force-marked abandoned, and the event/email only fire when a
-	 * row was genuinely transitioned.
+	 * The flip re-checks idleness in its WHERE clause (compare-and-set), so a shopper who
+	 * returned mid-batch is never marked abandoned.
 	 *
 	 * @since 0.1.0
 	 *
@@ -169,27 +158,25 @@ final class AbandonmentDetector {
 	 * @return void
 	 */
 	private function abandon_if_still_idle( array $row, string $cutoff ): void {
-		$id = (int) ( $row['id'] ?? 0 );
+		$id     = (int) ( $row['id'] ?? 0 );
+		$fields = $this->abandoned_fields();
 
 		$flipped = CartSession::query()
 			->where( 'id', '=', $id )
 			->where( 'status', '=', CartSession::STATUS_ACTIVE )
 			->where( 'items_count', '>', 0 )
 			->where( 'last_activity', '<', $cutoff )
-			->update_where( $this->abandoned_fields() );
+			->update_where( $fields );
 
 		if ( $flipped < 1 ) {
 			return;
 		}
 
-		$this->notify( $row, $id );
+		$this->notify( $row, $fields );
 	}
 
 	/**
 	 * Flip a single row to abandoned unconditionally, then notify.
-	 *
-	 * Used by the manual admin action ({@see abandon()}), which intentionally
-	 * overrides the idle check — an admin may abandon a cart on demand.
 	 *
 	 * @since 0.1.0
 	 *
@@ -197,11 +184,11 @@ final class AbandonmentDetector {
 	 * @return void
 	 */
 	private function mark_abandoned( array $row ): void {
-		$id = (int) ( $row['id'] ?? 0 );
+		$fields = $this->abandoned_fields();
 
-		CartSession::update( $id, $this->abandoned_fields() );
-
-		$this->notify( $row, $id );
+		if ( CartSession::update( (int) ( $row['id'] ?? 0 ), $fields ) ) {
+			$this->notify( $row, $fields );
+		}
 	}
 
 	/**
@@ -224,12 +211,16 @@ final class AbandonmentDetector {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row The cart row.
-	 * @param int                  $id  The cart id.
+	 * @param array<string, mixed> $row    The cart row as read before the flip.
+	 * @param array<string, mixed> $fields The abandonment columns that were written.
 	 * @return void
 	 */
-	private function notify( array $row, int $id ): void {
-		$this->events->abandoned( $row );
+	private function notify( array $row, array $fields ): void {
+		$id      = (int) ( $row['id'] ?? 0 );
+		$flipped = array_merge( $row, $fields );
+
+		$this->events->status_changed( $flipped, (string) ( $row['status'] ?? '' ) );
+		$this->events->abandoned( $flipped );
 
 		if ( $this->settings->get( 'recovery_email_enabled' ) && '' !== (string) ( $row['email'] ?? '' ) ) {
 			$delay = max( 1, (int) $this->settings->get( 'email_delay_minutes' ) );

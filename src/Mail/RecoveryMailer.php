@@ -11,6 +11,7 @@ namespace CartRebound\Mail;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
 use CartRebound\Recovery\RecoveryLink;
@@ -21,8 +22,7 @@ use WP_Error;
 /**
  * Sends the optional single recovery email, scheduled a delay after abandonment.
  *
- * Skips carts that already converted or were already emailed; restores the
- * wp_mail content type after sending so it never leaks to other mail.
+ * Restores the wp_mail content type after sending so it never leaks to other mail.
  *
  * @since 0.1.0
  */
@@ -60,6 +60,14 @@ final class RecoveryMailer {
 	private $templates;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
 	 * Human-readable reason the most recent on-demand send failed.
 	 *
 	 * @since 0.1.0
@@ -72,14 +80,16 @@ final class RecoveryMailer {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param Settings      $settings  Settings store.
-	 * @param RecoveryLink  $links     Recovery link builder.
-	 * @param TemplateStore $templates Email template store.
+	 * @param Settings        $settings  Settings store.
+	 * @param RecoveryLink    $links     Recovery link builder.
+	 * @param TemplateStore   $templates Email template store.
+	 * @param EventDispatcher $events    Event dispatcher.
 	 */
-	public function __construct( Settings $settings, RecoveryLink $links, TemplateStore $templates ) {
+	public function __construct( Settings $settings, RecoveryLink $links, TemplateStore $templates, EventDispatcher $events ) {
 		$this->settings  = $settings;
 		$this->links     = $links;
 		$this->templates = $templates;
+		$this->events    = $events;
 	}
 
 	/**
@@ -119,8 +129,6 @@ final class RecoveryMailer {
 			return;
 		}
 
-		// Suppression is a DB lookup, so it runs last — after the free row-field
-		// guards have already rejected the common no-op cases.
 		if ( Unsubscribe::is_suppressed( $email ) ) {
 			return;
 		}
@@ -128,28 +136,31 @@ final class RecoveryMailer {
 		$template = $this->templates->default();
 		$sent     = $this->dispatch( $email, $row, $template );
 
-		if ( $sent ) {
-			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		if ( ! $sent ) {
+			$this->events->email_failed( $row, $template, 'automatic' );
 
-			/**
-			 * Fires after a recovery email is sent (drives the activity log).
-			 *
-			 * @since 0.1.0
-			 *
-			 * @param int                  $cart_id  The cart id.
-			 * @param array<string, mixed> $row      The cart row.
-			 * @param array<string, mixed> $template The template that was sent.
-			 */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+			return;
 		}
+
+		CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		$this->events->email_sent( array_merge( $row, array( 'email_sent' => 1 ) ), $template, 'automatic' );
+
+		/**
+		 * Fires after a recovery email is sent (drives the activity log).
+		 *
+		 * Prefer `cart_rebound_recovery_email_sent`, which carries the flat payload.
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param int                  $cart_id  The cart id.
+		 * @param array<string, mixed> $row      The cart row.
+		 * @param array<string, mixed> $template The template that was sent.
+		 */
+		do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
 	}
 
 	/**
 	 * Email the site admin that a tracked cart was recovered into a paid order.
-	 *
-	 * A no-op unless the `admin_recovery_email` setting is enabled. Sends a
-	 * plain-text summary to the WordPress admin address; independent of the
-	 * shopper-facing recovery email toggle and never throws.
 	 *
 	 * @since 0.1.0
 	 *
@@ -162,7 +173,6 @@ final class RecoveryMailer {
 			return;
 		}
 
-		// Use the address the merchant configured, falling back to the site admin.
 		$recipient = (string) $this->settings->get( 'admin_notification_email', '' );
 
 		if ( '' === $recipient || ! is_email( $recipient ) ) {
@@ -219,11 +229,6 @@ final class RecoveryMailer {
 	/**
 	 * Send the recovery email right now, on demand (admin "send email" action).
 	 *
-	 * Unlike {@see send()} this ignores the scheduled-delay guards — the
-	 * enabled toggle, the abandoned-only rule, and the already-sent flag — so an
-	 * admin can (re)send at will. It still refuses to mail an empty cart or an
-	 * address that is missing / invalid.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param int    $cart_id     Cart id.
@@ -249,9 +254,6 @@ final class RecoveryMailer {
 			return $this->fail( __( 'This cart has no items to recover.', 'cart-rebound' ) );
 		}
 
-		// Never re-pitch a cart that already converted to an order: recovered and
-		// completed carts are order-linked, and mailing "you left something in
-		// your cart" (with a coupon) to a paid customer is wrong.
 		if ( (int) ( $row['order_id'] ?? 0 ) > 0 ) {
 			return $this->fail( __( 'This cart is already linked to an order.', 'cart-rebound' ) );
 		}
@@ -264,21 +266,23 @@ final class RecoveryMailer {
 		$template = is_array( $chosen ) ? $chosen : $this->templates->default();
 		$sent     = $this->dispatch( $email, $row, $template );
 
-		if ( $sent ) {
-			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		if ( ! $sent ) {
+			$this->events->email_failed( $row, $template, 'manual' );
 
-			/** This action is documented in src/Mail/RecoveryMailer.php */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+			return false;
 		}
 
-		return $sent;
+		CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		$this->events->email_sent( array_merge( $row, array( 'email_sent' => 1 ) ), $template, 'manual' );
+
+		/** This action is documented in src/Mail/RecoveryMailer.php */
+		do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+
+		return true;
 	}
 
 	/**
 	 * Send a test render of a template to an address (admin "send test" action).
-	 *
-	 * Uses representative sample cart data so an admin can see exactly what a
-	 * shopper would receive, without touching a real cart.
 	 *
 	 * @since 0.1.0
 	 *
@@ -312,8 +316,8 @@ final class RecoveryMailer {
 	/**
 	 * Capture the detailed error emitted by WordPress when wp_mail() fails.
 	 *
-	 * This callback is attached only for the duration of this mailer's own send,
-	 * so unrelated site email failures can never leak into the admin response.
+	 * Attached only for this mailer's own send, so unrelated site email failures never leak
+	 * into the admin response.
 	 *
 	 * @since 0.1.0
 	 *
@@ -334,9 +338,6 @@ final class RecoveryMailer {
 
 	/**
 	 * Render a template against sample data for an on-screen preview.
-	 *
-	 * Uses the real subject/body token substitution and the real email shell,
-	 * so the preview matches what a shopper would receive.
 	 *
 	 * @since 0.1.0
 	 *
@@ -404,8 +405,7 @@ final class RecoveryMailer {
 	private function subject( array $template, array $row ): string {
 		$tokens = $this->tokens( $row, $template );
 
-		// A subject line cannot carry markup, so the two list tokens fall back to
-		// the plain comma-separated product names.
+		// A subject line cannot carry markup, so the list tokens fall back to plain names.
 		$tokens['{products}']       = $tokens['{product_names}'];
 		$tokens['{products_table}'] = $tokens['{product_names}'];
 
@@ -419,8 +419,7 @@ final class RecoveryMailer {
 	/**
 	 * Every merge tag and its plain-text value for a cart.
 	 *
-	 * Values are unescaped here; callers escape per context — {@see subject()}
-	 * uses them as text, {@see build_body()} escapes each one for HTML.
+	 * Values are unescaped; callers escape per context.
 	 *
 	 * @since 0.1.0
 	 *
@@ -562,10 +561,6 @@ final class RecoveryMailer {
 	/**
 	 * The display name for a cart line.
 	 *
-	 * The snapshot stores the name as it was when the cart was captured, but a
-	 * line written before that field existed — or captured while the product was
-	 * unavailable — has none, so fall back to the live product.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $line Cart line.
@@ -683,9 +678,8 @@ final class RecoveryMailer {
 		$recovery_url    = $tokens['{recovery_url}'];
 		$unsubscribe_url = $tokens['{unsubscribe_url}'];
 
-		// Paragraph-wrap the authored body *before* substitution: wpautop closes
-		// an open <p> when it meets block markup, which would leave a stray
-		// </p> inside the injected product table.
+		// Run wpautop before substitution: it closes an open <p> at block markup,
+		// which would leave a stray </p> inside the injected product table.
 		$content = str_replace(
 			array_keys( $replacements ),
 			array_values( $replacements ),
@@ -736,8 +730,7 @@ final class RecoveryMailer {
 	/**
 	 * Build the cart as a table, laid out per the template's table options.
 	 *
-	 * Inline styles only, and a plain table layout, because email clients drop
-	 * stylesheets and most of the modern box model.
+	 * Inline styles and a plain table layout only, because email clients drop stylesheets.
 	 *
 	 * @since 0.1.0
 	 *

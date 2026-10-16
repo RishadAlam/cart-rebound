@@ -1,9 +1,4 @@
 <?php
-/**
- * Console command unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 

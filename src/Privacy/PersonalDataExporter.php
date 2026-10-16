@@ -107,10 +107,6 @@ final class PersonalDataExporter {
 			$bindings = array( $logs_table, $sessions_table, $email, $limit, $offset );
 		}
 
-		/*
-		 * Both table identifiers and every value are bound through prepare().
-		 * This is a paginated read over the plugin's custom tables.
-		 */
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL is assembled from the two literal prepared templates above.
 		$prepared_sql = $wpdb->prepare( $sql, $bindings );
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom-table privacy export; query was prepared above.
@@ -225,8 +221,8 @@ final class PersonalDataExporter {
 	/**
 	 * Resolve the WordPress account currently using an email address.
 	 *
-	 * Matching by user id as well as email ensures historical carts remain
-	 * exportable after a registered shopper changes their account email.
+	 * Matching by user id keeps historical carts exportable after the shopper changes their
+	 * account email.
 	 *
 	 * @since 0.1.0
 	 *

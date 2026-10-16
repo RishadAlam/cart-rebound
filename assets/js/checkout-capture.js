@@ -1,12 +1,3 @@
-/**
- * Cart Rebound — front-end guest checkout capture beacon.
- *
- * Posts the email/name/phone a guest types at checkout to the capture endpoint
- * so the cart row is back-filled before the order is submitted. Handles both the
- * classic checkout (`#billing_email`) and the block checkout (`#email`), whose
- * fields use different ids; the block path is also captured server-side via the
- * Store API as a no-JS fallback.
- */
 ( function () {
 	'use strict';
 
@@ -18,10 +9,7 @@
 
 	var timer = null;
 
-	// Each identity field can live under a classic id or a block id — first hit
-	// wins. On the block checkout the address fields are prefixed by the form
-	// that is shown: `billing-*` only when a separate billing address is used,
-	// otherwise the shared `shipping-*` form, so both are tried.
+	// Block checkout uses `billing-*` ids only with a separate billing address, else `shipping-*`.
 	var FIELDS = {
 		email: [ 'billing_email', 'email' ],
 		first_name: [ 'billing_first_name', 'billing-first_name', 'shipping-first_name' ],
@@ -76,7 +64,6 @@
 		timer = window.setTimeout( send, 600 );
 	}
 
-	// True for any classic (`billing_*`) or block (`billing-*`, `email`) identity field.
 	function isIdentityField( target ) {
 		if ( ! target || ! target.id ) {
 			return false;

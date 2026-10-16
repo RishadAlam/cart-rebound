@@ -11,16 +11,13 @@ namespace CartRebound\Tracking;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Support\Settings;
 use WC_Product;
 
 /**
  * Captures the live WooCommerce cart into a tracked row and back-fills identity.
- *
- * One row per stable session key (enforced by a UNIQUE index); when a key's row
- * has reached a terminal status its key is archived so a fresh cart cycle starts
- * a new row without losing the prior order/revenue attribution.
  *
  * @since 0.1.0
  */
@@ -43,16 +40,34 @@ final class CartTracker {
 	private $settings;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
+	 * Whether cart writes are currently ignored.
+	 *
+	 * @since 1.1.2
+	 * @var bool
+	 */
+	private $paused = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param SessionManager $sessions Session key resolver.
-	 * @param Settings       $settings Settings store.
+	 * @param SessionManager  $sessions Session key resolver.
+	 * @param Settings        $settings Settings store.
+	 * @param EventDispatcher $events   Event dispatcher.
 	 */
-	public function __construct( SessionManager $sessions, Settings $settings ) {
+	public function __construct( SessionManager $sessions, Settings $settings, EventDispatcher $events ) {
 		$this->sessions = $sessions;
 		$this->settings = $settings;
+		$this->events   = $events;
 	}
 
 	/**
@@ -63,7 +78,7 @@ final class CartTracker {
 	 * @return void
 	 */
 	public function track(): void {
-		if ( ! $this->tracking_allowed() ) {
+		if ( $this->paused || ! $this->tracking_allowed() ) {
 			return;
 		}
 
@@ -74,6 +89,35 @@ final class CartTracker {
 		}
 
 		$this->upsert( $key, $this->snapshot() );
+	}
+
+	/**
+	 * Whether the "Track carts" switch is on.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return bool
+	 */
+	public function is_enabled(): bool {
+		return (bool) $this->settings->get( 'tracking_enabled' );
+	}
+
+	/**
+	 * Run a callback with cart tracking paused.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param callable $callback Work to run untracked.
+	 * @return mixed The callback's return value.
+	 */
+	public function without_tracking( callable $callback ) {
+		$this->paused = true;
+
+		try {
+			return $callback();
+		} finally {
+			$this->paused = false;
+		}
 	}
 
 	/**
@@ -107,9 +151,17 @@ final class CartTracker {
 			return;
 		}
 
+		$captured_email = (string) ( $data['email'] ?? '' );
+		$stored_email   = (string) ( $existing['email'] ?? '' );
+		$email_changed  = '' !== $captured_email && $captured_email !== $stored_email;
+
 		$data['last_activity'] = gmdate( 'Y-m-d H:i:s' );
 
 		CartSession::update( (int) ( $existing['id'] ?? 0 ), $data );
+
+		if ( $email_changed ) {
+			$this->events->captured( array_merge( $existing, $data ) );
+		}
 	}
 
 	/**
@@ -131,18 +183,8 @@ final class CartTracker {
 			$status = (string) ( $existing['status'] ?? '' );
 
 			if ( ! $this->is_terminal( $status ) ) {
-				// WooCommerce empties the cart the moment an order is placed (it
-				// fires `woocommerce_cart_emptied` / `woocommerce_cart_updated`
-				// with a now-empty cart). While an order is awaiting payment for
-				// this session that empty snapshot must not wipe the tracked
-				// contents/total: the row is about to be linked to the order, and
-				// a not-yet-paid order still needs its items to drive recovery — so
-				// the last non-empty snapshot and its abandonment clock stay put.
-				//
-				// An empty cart with NO order in flight is a genuine discard (the
-				// shopper removed every item), so it falls through to the normal
-				// update below and the row is zeroed as before, keeping a
-				// deliberately-emptied cart out of the abandonment funnel.
+				// WooCommerce empties the cart when an order is placed; while that order awaits
+				// payment, keep the last snapshot so the unpaid order can still drive recovery.
 				if ( $is_empty && $this->order_in_progress() ) {
 					return $id;
 				}
@@ -150,30 +192,25 @@ final class CartTracker {
 				$update = array_merge( $data, array( 'last_activity' => $now ) );
 
 				if ( CartSession::STATUS_ABANDONED === $status ) {
-					// Shopper is active again — return the cart to the active funnel
-					// so the detector can re-fire. `abandoned_at` deliberately stays:
-					// it is the historical "this cart was once abandoned" marker that
-					// OrderLinker reads to attribute a later paid order as recovered
-					// rather than as a straight-through completion, and that the
-					// revenue chart and product report bucket their abandonments on.
+					// `abandoned_at` deliberately stays: OrderLinker reads it to attribute a later paid
+					// order as recovered, and the revenue and product reports bucket on it.
 					$update['status']               = CartSession::STATUS_ACTIVE;
 					$update['abandonment_notified'] = 0;
 				}
 
-				CartSession::update( $id, $update );
+				if ( CartSession::update( $id, $update ) ) {
+					$this->events->status_changed( array_merge( $existing, $update ), $status );
+				}
 
 				return $id;
 			}
 
 			// Free the UNIQUE session_key slot while staying within varchar(64).
-			// The archived key is deterministic and cannot collide with the live key.
 			CartSession::update( $id, array( 'session_key' => hash( 'sha256', $key . '|archived|' . $id ) ) );
 		}
 
-		// Never open a brand-new row for an empty cart: WooCommerce fires
-		// `woocommerce_cart_updated` on ordinary page loads (shop, product,
-		// account) where the cart holds nothing, which would otherwise litter
-		// the list with 0-item rows. Existing rows are still updated above.
+		// WooCommerce fires `woocommerce_cart_updated` with an empty cart on ordinary
+		// page loads, so never open a new row for one.
 		if ( $is_empty ) {
 			return 0;
 		}
@@ -193,7 +230,16 @@ final class CartTracker {
 
 		$id = CartSession::create( $insert );
 
-		return is_int( $id ) ? $id : 0;
+		if ( ! is_int( $id ) ) {
+			return 0;
+		}
+
+		$created = array_merge( $insert, array( 'id' => $id ) );
+
+		$this->events->created( $created );
+		$this->events->captured( $created );
+
+		return $id;
 	}
 
 	/**
@@ -310,7 +356,7 @@ final class CartTracker {
 	 * @return bool
 	 */
 	private function tracking_allowed(): bool {
-		if ( ! function_exists( 'WC' ) ) {
+		if ( ! function_exists( 'WC' ) || ! $this->settings->get( 'tracking_enabled' ) ) {
 			return false;
 		}
 
@@ -324,13 +370,8 @@ final class CartTracker {
 	/**
 	 * Whether a checkout order was placed earlier in this request.
 	 *
-	 * WooCommerce empties the cart during payment processing, which fires the
-	 * tracking hooks with an empty cart. Both the classic and the Store API
-	 * (block) checkout fire their `*_order_processed` action before that point,
-	 * so a fired action tells an order-placement empty apart from a shopper who
-	 * deliberately removed every item (no checkout action has run). This is used
-	 * instead of the session's `order_awaiting_payment`, which the classic
-	 * checkout sets but the Store API does not.
+	 * Uses the `*_order_processed` actions, not the session's `order_awaiting_payment`, which
+	 * the Store API checkout never sets.
 	 *
 	 * @since 0.1.0
 	 *

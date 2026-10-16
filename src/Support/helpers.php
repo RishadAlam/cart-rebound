@@ -2,10 +2,6 @@
 /**
  * Global helper functions.
  *
- * Loaded with an explicit require_once from the plugin bootstrap (cart-rebound.php);
- * the function_exists() guard keeps the include idempotent. Helpers are thin
- * convenience wrappers around the container; all real logic lives in classes.
- *
  * @package CartRebound
  */
 

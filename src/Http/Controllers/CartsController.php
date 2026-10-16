@@ -82,6 +82,7 @@ final class CartsController extends Controller {
 		$args = array(
 			'status'   => $this->status_arg( $request->get_param( 'status' ) ),
 			'email'    => sanitize_text_field( (string) $request->get_param( 'email' ) ),
+			'search'   => sanitize_text_field( (string) $request->get_param( 'search' ) ),
 			'page'     => (int) $request->get_param( 'page' ),
 			'per_page' => (int) $request->get_param( 'per_page' ),
 			'orderby'  => sanitize_key( (string) $request->get_param( 'orderby' ) ),
@@ -140,10 +141,6 @@ final class CartsController extends Controller {
 
 	/**
 	 * Manually change a cart's lifecycle status.
-	 *
-	 * A manual move to `abandoned` runs through the detector so the abandonment
-	 * event fires and a recovery email is queued; every other status is a plain
-	 * data transition.
 	 *
 	 * @since 0.1.0
 	 *
@@ -241,16 +238,12 @@ final class CartsController extends Controller {
 				return false;
 			}
 
-			// Already abandoned: a successful no-op (mirrors update_status()),
-			// not a failure — so bulk counts and the single response stay honest.
 			if ( CartSession::STATUS_ABANDONED === (string) $cart['status'] ) {
 				return true;
 			}
 
-			// Fire the abandonment event + queue the recovery email only for a
-			// cart that has NOT converted. Regressing a paid, order-linked cart
-			// must never email the customer or inflate the abandoned counter, so
-			// it falls through to a silent status change.
+			// Regressing an order-linked cart must never email the customer or inflate the
+			// abandoned counter, so it falls through to a silent status change.
 			if ( 0 === (int) $cart['order_id'] ) {
 				return $this->detector->abandon( $id );
 			}

@@ -2,10 +2,6 @@
 /**
  * Migration: create the cart sessions table.
  *
- * Stores one row per tracked cart (logged-in or guest), its snapshot, lifecycle
- * status, recovery token, and order/recovery attribution. Schema work runs once
- * on activation via the Migrator — never per request.
- *
  * @package CartRebound
  */
 

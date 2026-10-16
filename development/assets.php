@@ -10,10 +10,7 @@
 
 declare( strict_types=1 );
 
-// This file is eagerly evaluated through Composer's `files` autoloader, so it
-// must `return` (never `exit`) when WordPress is absent: an `exit` here would
-// kill any CLI process that loads the autoloader — PHPCS, PHPUnit, PHPStan —
-// the moment it starts. Direct web access still executes no plugin code.
+// Composer's `files` autoloader loads this eagerly, so `return`, never `exit`, or PHPCS/PHPUnit/PHPStan die.
 if ( ! defined( 'ABSPATH' ) ) {
 	return;
 }

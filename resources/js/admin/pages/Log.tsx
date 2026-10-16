@@ -1,11 +1,9 @@
-/**
- * Log page — a filterable, paginated view of the plugin's activity log.
- */
 import { useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
+import { AdminLink } from '../components/AdminLink';
 import { Combobox } from '../components/Combobox';
 import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
-import { useClearLog, useLogs } from '../hooks/useApi';
+import { useClearLog, useLogs, useSettings } from '../hooks/useApi';
 import type { LogEntry } from '../types/api';
 
 const LEVELS = ['', 'info', 'success', 'warning', 'error'];
@@ -100,6 +98,8 @@ export const Log = () => {
 		per_page: perPage,
 	});
 	const clear = useClearLog();
+	const { data: settings } = useSettings();
+	const retention = settings?.log_retention_days;
 
 	const items = data?.items ?? [];
 	const isEmpty = !isLoading && !isError && items.length === 0;
@@ -265,6 +265,29 @@ export const Log = () => {
 					</>
 				)}
 			</div>
+
+			{retention !== undefined && (
+				<p className="cr-footnote">
+					{retention > 0
+						? sprintf(
+								/* translators: %d: number of days log entries are kept. */
+								_n(
+									'Entries older than %d day are deleted automatically.',
+									'Entries older than %d days are deleted automatically.',
+									retention,
+									'cart-rebound'
+								),
+								retention
+							)
+						: __(
+								'Entries are kept until you clear the log.',
+								'cart-rebound'
+							)}{' '}
+					<AdminLink to="/settings">
+						{__('Change', 'cart-rebound')}
+					</AdminLink>
+				</p>
+			)}
 		</div>
 	);
 };

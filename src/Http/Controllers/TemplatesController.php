@@ -115,9 +115,6 @@ final class TemplatesController extends Controller {
 	/**
 	 * Render a preview of a template against sample data.
 	 *
-	 * Accepts the current (possibly unsaved) editor fields so an admin can
-	 * preview edits before saving.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param WP_REST_Request $request The request.

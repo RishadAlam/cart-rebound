@@ -14,10 +14,6 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Typed getter/updater over a single `cart_rebound_settings` option.
  *
- * The framework ships no settings primitive (its Config layer reads PHP config
- * files, not user options), so this is a thin, defaulted wrapper around
- * get_option()/update_option() with per-field sanitisation.
- *
  * @since 0.1.0
  */
 final class Settings {
@@ -38,11 +34,13 @@ final class Settings {
 	 */
 	public function defaults(): array {
 		return array(
+			'tracking_enabled'         => true,
 			'guest_tracking'           => false,
 			'abandonment_threshold'    => 30,
 			'scan_interval'            => 5,
 			'cleanup_days'             => 30,
 			'converted_cleanup_days'   => 365,
+			'log_retention_days'       => 0,
 			'recovery_email_enabled'   => false,
 			'admin_recovery_email'     => false,
 			'admin_notification_email' => '',
@@ -116,11 +114,13 @@ final class Settings {
 	 */
 	private function sanitise( array $values ): array {
 		return array(
+			'tracking_enabled'         => ! empty( $values['tracking_enabled'] ),
 			'guest_tracking'           => ! empty( $values['guest_tracking'] ),
 			'abandonment_threshold'    => max( 1, (int) ( $values['abandonment_threshold'] ?? 30 ) ),
 			'scan_interval'            => max( 1, (int) ( $values['scan_interval'] ?? 5 ) ),
 			'cleanup_days'             => max( 1, (int) ( $values['cleanup_days'] ?? 30 ) ),
 			'converted_cleanup_days'   => max( 1, (int) ( $values['converted_cleanup_days'] ?? 365 ) ),
+			'log_retention_days'       => max( 0, (int) ( $values['log_retention_days'] ?? 0 ) ),
 			'recovery_email_enabled'   => ! empty( $values['recovery_email_enabled'] ),
 			'admin_recovery_email'     => ! empty( $values['admin_recovery_email'] ),
 			'admin_notification_email' => sanitize_email( (string) ( $values['admin_notification_email'] ?? '' ) ),
@@ -137,9 +137,6 @@ final class Settings {
 
 	/**
 	 * Sanitise the "counts as paid" WooCommerce order-status list.
-	 *
-	 * Falls back to WooCommerce's paid defaults when nothing valid is supplied so
-	 * a converting cart can always be attributed.
 	 *
 	 * @since 0.1.0
 	 *
@@ -161,8 +158,6 @@ final class Settings {
 				continue;
 			}
 
-			// Reject anything WooCommerce does not actually register, so the
-			// stored list can never accumulate statuses no order will ever reach.
 			if ( array() !== $known && ! in_array( $key, $known, true ) ) {
 				continue;
 			}
@@ -176,8 +171,7 @@ final class Settings {
 	/**
 	 * The bare order-status slugs WooCommerce currently registers.
 	 *
-	 * Returns an empty array when WooCommerce is unavailable, which callers treat
-	 * as "cannot validate" rather than "nothing is valid".
+	 * Empty when WooCommerce is unavailable, which callers treat as "cannot validate".
 	 *
 	 * @since 1.1.2
 	 *

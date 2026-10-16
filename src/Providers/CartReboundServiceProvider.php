@@ -99,6 +99,10 @@ final class CartReboundServiceProvider extends ServiceProvider {
 	 * @return void
 	 */
 	public function merge_guest_cart_on_login( string $user_login, WP_User $user ): void {
+		if ( ! $this->app->make( Settings::class )->get( 'tracking_enabled' ) ) {
+			return;
+		}
+
 		$this->app->make( SessionManager::class )->merge_guest_into_user( (int) $user->ID );
 	}
 }

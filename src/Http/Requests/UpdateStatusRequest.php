@@ -14,8 +14,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Validates the cart id (URL) + target status (body) for a manual status change.
  *
- * The status vocabulary itself is enforced in the controller against
- * {@see \CartRebound\Models\CartSession::STATUSES}.
+ * The status vocabulary is enforced in the controller against {@see
+ * \CartRebound\Models\CartSession::STATUSES}.
  *
  * @since 0.1.0
  */

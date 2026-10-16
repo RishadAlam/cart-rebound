@@ -24,10 +24,6 @@ use WP_REST_Request;
 /**
  * Fluent wrapper around register_rest_route().
  *
- * Routes are collected as {@see Route} objects and registered in bulk on the
- * `rest_api_init` hook. The permission callback always runs the middleware
- * pipeline, so no route is ever publicly callable by accident.
- *
  * @since 0.1.0
  */
 final class Router {
@@ -284,12 +280,6 @@ final class Router {
 	/**
 	 * Resolve a single controller-method parameter.
 	 *
-	 * Priority: a {@see FormRequest} is constructed and validated (its WP_Error
-	 * is returned on failure); a `WP_REST_Request` receives the request; any
-	 * other class is built by the container; an untyped/builtin parameter
-	 * receives the request. Union/intersection types are scanned in the same
-	 * priority order, so a FormRequest is never skipped.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param ReflectionParameter $parameter The parameter to resolve.
@@ -328,8 +318,7 @@ final class Router {
 	/**
 	 * Extract the non-builtin class names declared by a parameter's type.
 	 *
-	 * Handles single named types as well as PHP 8 union/intersection types
-	 * (detected via getTypes() so the code still parses on PHP 7.4).
+	 * Detected via getTypes() so the code still parses on PHP 7.4.
 	 *
 	 * @since 0.1.0
 	 *
@@ -361,8 +350,8 @@ final class Router {
 	/**
 	 * Convert an uncaught exception into a generic 500 response.
 	 *
-	 * The exception message is never exposed to the client; details are written
-	 * to the error log only when WP_DEBUG is enabled.
+	 * The exception message is never exposed to the client; details are logged only under
+	 * WP_DEBUG.
 	 *
 	 * @since 0.1.0
 	 *

@@ -3,14 +3,6 @@
 
 declare(strict_types=1);
 
-/**
- * Keep all maintained release version sources synchronized.
- *
- * Usage:
- *   composer bump-version 0.2.0
- *   composer bump-version -- 0.2.0 --dry-run
- */
-
 function fail(string $message): void
 {
 	fwrite(STDERR, "Error: {$message}\n");

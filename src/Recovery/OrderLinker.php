@@ -22,10 +22,6 @@ use WC_Order;
 /**
  * Links an order to its originating cart by explicit meta — never fuzzy totals.
  *
- * Stamps the resolved cart id onto the order at creation, then resolves the cart
- * to `recovered` (abandoned cart or arrived via a recovery link) or `completed`
- * (a cart that converted without ever being abandoned).
- *
  * @since 0.1.0
  */
 final class OrderLinker {
@@ -138,21 +134,15 @@ final class OrderLinker {
 
 				$order->save();
 
-				// Move the cart to "pending payment" as soon as the order exists —
-				// before it is paid — so the post-checkout empty-cart events keep its
-				// captured items and it drops out of the active/abandoned funnel (no
-				// recovery email for a shopper who already ordered). The paid
-				// transition to recovered/completed happens later in link().
-				$this->mark_order_placed( $resolved['id'], $order_id );
+				// Mark pending payment before the order is paid so post-checkout empty-cart events keep
+				// its items and no recovery email goes out; the paid transition happens in link().
+				$this->mark_order_placed( $resolved['id'], $order );
 			}
 
-			// The recovery binding is single-use; drop it so a later unrelated
-			// order can't be mis-attributed to this recovery cart.
+			// The recovery binding is single-use, so a later unrelated order can't be mis-attributed to this cart.
 			$this->clear_recovery_binding();
 		}
 
-		// Only transition the cart once the order is actually paid — a pending or
-		// never-paid order must not prematurely complete/recover the cart.
 		if ( $order->has_status( $this->paid_statuses() ) ) {
 			$this->link( $order );
 		}
@@ -202,9 +192,6 @@ final class OrderLinker {
 	/**
 	 * WooCommerce order statuses that count as a paid conversion.
 	 *
-	 * Configurable via the `paid_order_statuses` setting (default
-	 * processing + completed) and the `cart_rebound_paid_order_statuses` filter.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @return array<int, string>
@@ -237,12 +224,6 @@ final class OrderLinker {
 	/**
 	 * Undo a cart's conversion when its order is cancelled, fails, or is refunded.
 	 *
-	 * - A pending-payment cart (order placed, never paid) returns to `active` with
-	 *   its items intact so it can be recovered like any abandoned cart.
-	 * - A recovered/completed cart (a paid order that was reversed) drops to `lost`
-	 *   with its recovered revenue cleared, so reporting never counts money that
-	 *   was refunded. Other states are left untouched.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @param int $order_id Order id.
@@ -270,30 +251,30 @@ final class OrderLinker {
 		$status = (string) ( $row['status'] ?? '' );
 
 		if ( CartSession::STATUS_PENDING_PAYMENT === $status ) {
-			// `abandoned_at` is kept: if this cart had been abandoned before the
-			// (now reversed) order, a later paid order still has to attribute as
-			// recovered instead of as a straight-through completion.
-			CartSession::update(
-				$cart_id,
-				array(
-					'status'               => CartSession::STATUS_ACTIVE,
-					'order_id'             => 0,
-					'abandonment_notified' => 0,
-				)
+			// Keep `abandoned_at` so a later paid order still attributes as recovered.
+			$reopened = array(
+				'status'               => CartSession::STATUS_ACTIVE,
+				'order_id'             => 0,
+				'abandonment_notified' => 0,
 			);
+
+			if ( CartSession::update( $cart_id, $reopened ) ) {
+				$this->events->status_changed( array_merge( $row, $reopened ), $status );
+			}
 
 			return;
 		}
 
 		if ( $this->already_converted( $status ) ) {
-			CartSession::update(
-				$cart_id,
-				array(
-					'status'           => CartSession::STATUS_LOST,
-					'recovered_amount' => 0,
-					'order_id'         => 0,
-				)
+			$lost = array(
+				'status'           => CartSession::STATUS_LOST,
+				'recovered_amount' => 0,
+				'order_id'         => 0,
 			);
+
+			if ( CartSession::update( $cart_id, $lost ) ) {
+				$this->events->status_changed( array_merge( $row, $lost ), $status );
+			}
 
 			$order->add_order_note(
 				sprintf(
@@ -307,12 +288,6 @@ final class OrderLinker {
 
 	/**
 	 * Resolve the stamped cart once its order is paid (idempotent).
-	 *
-	 * A previously abandoned/lost cart — or one that arrived through a recovery
-	 * link — becomes `recovered`; anything else converted straight through. Either
-	 * way the just-converted cart never needs its pending recovery email, so that
-	 * scheduled job is cancelled, an order note is written, and the visitor's
-	 * tracking session is retired so their next cart opens a fresh row.
 	 *
 	 * @since 0.1.0
 	 *
@@ -328,25 +303,20 @@ final class OrderLinker {
 
 		$row = CartSession::find( $cart_id );
 
-		// Idempotent on the paid lifecycle states, not on order_id: the id is
-		// stamped at order creation (see mark_order_placed()), so a pending-payment
-		// row still needs its paid transition here.
+		// Idempotent on paid states, not order_id: the id is stamped at order creation,
+		// so a pending-payment row still needs its paid transition here.
 		if ( ! is_array( $row ) || $this->already_converted( (string) ( $row['status'] ?? '' ) ) ) {
 			return;
 		}
 
-		// The cart converted: drop any recovery email still queued for it.
 		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
 
-		// A cart that was ever abandoned (its abandoned_at survives the
-		// pending-payment transition) — or that arrived via a recovery link —
-		// counts as recovered; a pristine cart converted straight through.
 		$via_link      = '1' === (string) $order->get_meta( self::META_RECOVERED );
 		$was_abandoned = '' !== (string) ( $row['abandoned_at'] ?? '' );
 		$is_recovered  = $via_link || $was_abandoned;
 
 		if ( ! $is_recovered ) {
-			$this->complete( $order, $cart_id );
+			$this->complete( $order, $row );
 			$this->sessions->clear();
 
 			return;
@@ -360,7 +330,7 @@ final class OrderLinker {
 			'recovered_at'     => gmdate( 'Y-m-d H:i:s' ),
 		);
 
-		CartSession::update( $cart_id, $recovered );
+		$saved = CartSession::update( $cart_id, $recovered );
 
 		$order->add_order_note(
 			sprintf(
@@ -371,9 +341,11 @@ final class OrderLinker {
 			)
 		);
 
-		// The payload is the row we already hold plus the columns just written —
-		// no need to re-read the row we just saved.
 		$fresh = array_merge( $row, $recovered );
+
+		if ( $saved ) {
+			$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
+		}
 
 		$this->events->recovered( $fresh, $order, $via_link ? 'email_link' : 'direct' );
 		$this->mailer->notify_admin( $fresh, $order );
@@ -384,25 +356,23 @@ final class OrderLinker {
 	/**
 	 * Resolve a cart that converted to a paid order without being abandoned.
 	 *
-	 * Kept as `completed` (not deleted) so a straight-through paid conversion
-	 * stays visible in the list and its revenue is counted, mirroring the
-	 * recovered path for abandoned carts.
-	 *
 	 * @since 0.1.0
 	 *
-	 * @param WC_Order $order   The paid order.
-	 * @param int      $cart_id The cart id.
+	 * @param WC_Order             $order The paid order.
+	 * @param array<string, mixed> $row   The cart row.
 	 * @return void
 	 */
-	private function complete( WC_Order $order, int $cart_id ): void {
-		CartSession::update(
-			$cart_id,
-			array(
-				'status'       => CartSession::STATUS_COMPLETED,
-				'order_id'     => $order->get_id(),
-				'completed_at' => gmdate( 'Y-m-d H:i:s' ),
-			)
+	private function complete( WC_Order $order, array $row ): void {
+		$cart_id   = (int) ( $row['id'] ?? 0 );
+		$completed = array(
+			'status'       => CartSession::STATUS_COMPLETED,
+			'order_id'     => $order->get_id(),
+			'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 		);
+
+		if ( CartSession::update( $cart_id, $completed ) ) {
+			$this->events->status_changed( array_merge( $row, $completed ), (string) ( $row['status'] ?? '' ) );
+		}
 
 		$order->add_order_note(
 			sprintf(
@@ -416,18 +386,13 @@ final class OrderLinker {
 	/**
 	 * Stamp a newly placed order onto its cart row as pending payment.
 	 *
-	 * Runs as soon as the order is created (before payment) so the cart keeps its
-	 * captured items through the post-checkout empty-cart events and leaves the
-	 * active/abandoned funnel. Only an open cart is moved; a row already resolved
-	 * (paid/lost) or already linked to an order is left untouched.
-	 *
 	 * @since 0.1.0
 	 *
-	 * @param int $cart_id  Cart id.
-	 * @param int $order_id Order id.
+	 * @param int      $cart_id Cart id.
+	 * @param WC_Order $order   The order just placed.
 	 * @return void
 	 */
-	private function mark_order_placed( int $cart_id, int $order_id ): void {
+	private function mark_order_placed( int $cart_id, WC_Order $order ): void {
 		$row = CartSession::find( $cart_id );
 
 		if ( ! is_array( $row ) ) {
@@ -444,16 +409,23 @@ final class OrderLinker {
 			return;
 		}
 
-		CartSession::update(
-			$cart_id,
-			array(
-				'status'   => CartSession::STATUS_PENDING_PAYMENT,
-				'order_id' => $order_id,
-			)
+		$placed = array(
+			'status'   => CartSession::STATUS_PENDING_PAYMENT,
+			'order_id' => $order->get_id(),
 		);
 
-		// They placed an order — drop any recovery email still queued for this cart.
+		$saved = CartSession::update( $cart_id, $placed );
+
 		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
+
+		if ( ! $saved ) {
+			return;
+		}
+
+		$linked = array_merge( $row, $placed );
+
+		$this->events->status_changed( $linked, (string) ( $row['status'] ?? '' ) );
+		$this->events->order_linked( $linked, $order );
 	}
 
 	/**
@@ -491,7 +463,7 @@ final class OrderLinker {
 
 		$open = array( CartSession::STATUS_ACTIVE, CartSession::STATUS_ABANDONED );
 
-		$key = $this->sessions->resolve_session_key();
+		$key = $this->sessions->existing_session_key();
 
 		if ( '' !== $key ) {
 			$row = CartSession::query()
@@ -513,8 +485,7 @@ final class OrderLinker {
 		if ( $customer_id > 0 ) {
 			/**
 			 * Recency window (in days) for matching a customer's earlier cart to a
-			 * new order by customer id. Guards against crediting an ancient cart to
-			 * an unrelated later purchase from the same account.
+			 * new order by customer id.
 			 *
 			 * @since 0.1.0
 			 *

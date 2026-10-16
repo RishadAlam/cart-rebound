@@ -1,9 +1,4 @@
 <?php
-/**
- * Query builder unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -74,6 +69,32 @@ final class QueryBuilderTest extends TestCase {
 		$this->assertSame( 42, $id );
 		$this->assertSame( 'wp_cart_rebound_examples', $this->wpdb->inserted['table'] );
 		$this->assertSame( array( 'title' => 'Hi' ), $this->wpdb->inserted['data'] );
+	}
+
+	public function test_where_any_builds_an_or_group_alongside_other_conditions(): void {
+		ExampleModel::query()
+			->where( 'status', '=', 'active' )
+			->where_any(
+				array(
+					array( 'title', 'LIKE', '%hi%' ),
+					array( 'id', '=', 7 ),
+				)
+			)
+			->get();
+
+		$call = $this->wpdb->prepared[0];
+
+		$this->assertSame( 'SELECT * FROM %i WHERE %i = %s AND (%i LIKE %s OR %i = %s)', $call['query'] );
+		$this->assertSame(
+			array( 'wp_cart_rebound_examples', 'status', 'active', 'title', '%hi%', 'id', 7 ),
+			$call['args']
+		);
+	}
+
+	public function test_where_any_rejects_an_unknown_operator(): void {
+		$this->expectException( \InvalidArgumentException::class );
+
+		ExampleModel::query()->where_any( array( array( 'title', 'REGEXP', 'x' ) ) );
 	}
 
 	public function test_where_in_builds_placeholder_list(): void {

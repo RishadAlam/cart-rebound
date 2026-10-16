@@ -1,14 +1,4 @@
-/**
- * Dual-series revenue chart for the dashboard.
- *
- * Hand-rolled SVG rather than a charting dependency: the surface is only two
- * smoothed area/line pairs, so drawing it directly keeps a ~100 kB library out
- * of the admin bundle and lets the curves use the app's own design tokens.
- *
- * Curves are Catmull-Rom splines converted to cubic béziers. A sharp drop can
- * make a spline overshoot past the baseline, so the plot is clipped to its own
- * rect instead of letting the fill bleed into the axis.
- */
+// Catmull-Rom splines can overshoot the baseline, so the plot is clipped to its rect.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
@@ -26,11 +16,6 @@ interface Pt {
 	y: number;
 }
 
-/**
- * Round an axis step up to a readable 1/2/5 × 10ⁿ increment.
- * @param max   Largest value in the series.
- * @param ticks Number of intervals on the axis.
- */
 const niceStep = (max: number, ticks: number): number => {
 	const raw = max / ticks;
 	const exponent = Math.floor(Math.log10(raw));
@@ -52,10 +37,6 @@ const niceStep = (max: number, ticks: number): number => {
 	return 10 * base;
 };
 
-/**
- * Short axis notation — 1200 becomes "1.2K".
- * @param value Raw amount.
- */
 const compact = (value: number): string => {
 	if (value >= 1000000) {
 		return `${Math.round(value / 100000) / 10}M`;
@@ -68,11 +49,8 @@ const compact = (value: number): string => {
 	return String(Math.round(value));
 };
 
-/**
- * Format a bucket date. Buckets are UTC days, so the formatter is pinned to UTC
- * to stop a local timezone shifting a point onto the previous day.
- * @param iso Date in Y-m-d form.
- */
+// Buckets are UTC days; pinning the formatter to UTC stops a local timezone
+// shifting a point onto the previous day.
 const shortDate = (iso: string): string => {
 	const parts = iso.split('-');
 	const year = Number(parts[0] ?? 0);
@@ -86,10 +64,6 @@ const shortDate = (iso: string): string => {
 	}).format(new Date(Date.UTC(year, month - 1, day)));
 };
 
-/**
- * Build a smoothed path through the given points.
- * @param pts Plotted coordinates.
- */
 const smoothPath = (pts: Pt[]): string => {
 	const first = pts[0];
 
@@ -127,7 +101,6 @@ const smoothPath = (pts: Pt[]): string => {
 	return d;
 };
 
-/** Track the container width so the SVG can be drawn at real pixel size. */
 const useWidth = () => {
 	const ref = useRef<HTMLDivElement>(null);
 	const [width, setWidth] = useState(0);
@@ -342,7 +315,6 @@ export const RevenueChart = ({
 							</clipPath>
 						</defs>
 
-						{/* Horizontal gridlines + value axis. */}
 						{Array.from({ length: TICKS + 1 }, (_unused, tick) => {
 							const value = step * tick;
 							const y = yAt(value);
@@ -381,7 +353,6 @@ export const RevenueChart = ({
 							/>
 						</g>
 
-						{/* Date axis — thinned so labels never collide. */}
 						{points.map((point, index) => {
 							if (
 								index % labelEvery !== 0 &&

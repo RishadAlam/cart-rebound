@@ -2,9 +2,6 @@
 /**
  * Migration: create the activity log table.
  *
- * Stores one row per notable plugin event (cart abandoned, recovered, recovery
- * email sent, cleanup) so the admin can see what the plugin has been doing.
- *
  * @package CartRebound
  */
 

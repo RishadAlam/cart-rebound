@@ -24,8 +24,9 @@ replace them:
   `abandoned` and queues the recovery email.
 - **`Mail\RecoveryMailer`** (hook `cart_rebound_send_recovery_email`) +
   **`Mail\TemplateStore`** — renders/sends a single templated email.
-- **`Events\EventDispatcher`** — fires `cart_rebound_abandoned`,
-  `cart_rebound_recovered`, `cart_rebound_email_sent` for integrations.
+- **`Events\EventDispatcher`** — fires lifecycle actions for integrations:
+  cart created/captured, abandoned, recovery email sent/failed, coupon sent,
+  link clicked, order linked, recovered, unsubscribed, and status changes.
 - **`Recovery\RecoveryLink` / `RecoveryHandler`** — tokenised cart-restore links.
 - **REST namespace `cart-rebound/v1`** (see `routes/api.php`) — already exposes a
   `/capture` endpoint; Pro adds routes here.

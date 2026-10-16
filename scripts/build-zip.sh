@@ -1,13 +1,4 @@
 #!/usr/bin/env bash
-#
-# Build a production-ready plugin archive at build/cart-rebound.zip.
-#
-# Steps: build the front-end assets and translation template, install
-# production-only Composer dependencies, stage the explicit runtime allowlist,
-# zip it, then restore the development dependencies.
-#
-# QA is run separately by the `production-zip` npm script, which invokes this
-# after `qa:all` passes. Run `bash scripts/build-zip.sh` directly to skip QA.
 set -euo pipefail
 
 SLUG="cart-rebound"
@@ -36,8 +27,6 @@ echo "▶ Staging plugin files"
 rm -rf "${BUILD}"
 mkdir -p "${STAGE}"
 
-# Copy an explicit runtime allowlist so new repository tooling can never leak
-# into the submission archive. resources/views is required by recovery emails.
 RUNTIME_PATHS=(
 	"cart-rebound.php"
 	"uninstall.php"

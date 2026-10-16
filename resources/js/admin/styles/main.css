@@ -1,29 +1,72 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Older WordPress defines these only inside the block editor; :where() lets
+   core's own rules win. Values mirror core's wp-base-styles. */
+:where(body.admin-color-light) {
+	--wp-admin-theme-color: #007cba;
+	--wp-admin-theme-color--rgb: 0, 124, 186;
+	--wp-admin-theme-color-darker-10: #006ba1;
+}
 
-/* ============================================================
-   Cart Rebound — admin design system
-   Scoped under .cr-app so it never leaks into or fights wp-admin.
-   ============================================================ */
+:where(body.admin-color-modern) {
+	--wp-admin-theme-color: #3858e9;
+	--wp-admin-theme-color--rgb: 56, 88, 233;
+	--wp-admin-theme-color-darker-10: #2145e6;
+}
+
+:where(body.admin-color-blue) {
+	--wp-admin-theme-color: #437aa8;
+	--wp-admin-theme-color--rgb: 67, 122, 168;
+	--wp-admin-theme-color-darker-10: #3c6d96;
+}
+
+:where(body.admin-color-coffee) {
+	--wp-admin-theme-color: #916745;
+	--wp-admin-theme-color--rgb: 145, 103, 69;
+	--wp-admin-theme-color-darker-10: #805b3d;
+}
+
+:where(body.admin-color-ectoplasm) {
+	--wp-admin-theme-color: #646c3e;
+	--wp-admin-theme-color--rgb: 100, 108, 62;
+	--wp-admin-theme-color-darker-10: #555c35;
+}
+
+:where(body.admin-color-midnight) {
+	--wp-admin-theme-color: #cf4339;
+	--wp-admin-theme-color--rgb: 207, 67, 57;
+	--wp-admin-theme-color-darker-10: #c0382f;
+}
+
+:where(body.admin-color-ocean) {
+	--wp-admin-theme-color: #567958;
+	--wp-admin-theme-color--rgb: 86, 121, 88;
+	--wp-admin-theme-color-darker-10: #4b6a4d;
+}
+
+:where(body.admin-color-sunrise) {
+	--wp-admin-theme-color: #ad631e;
+	--wp-admin-theme-color--rgb: 173, 99, 30;
+	--wp-admin-theme-color-darker-10: #97571a;
+}
 
 .cr-app {
-	--cr-bg: oklch(0.985 0.003 256);
-	--cr-surface: oklch(1 0 0);
-	--cr-panel: oklch(0.971 0.004 256);
-	--cr-border: oklch(0.916 0.006 256);
-	--cr-border-strong: oklch(0.86 0.008 256);
-	--cr-ink: oklch(0.27 0.02 264);
-	--cr-ink-soft: oklch(0.4 0.02 264);
-	--cr-muted: oklch(0.52 0.018 264);
+	--cr-bg: #f6f7f7;
+	--cr-surface: #fff;
+	--cr-panel: #f0f0f1;
+	--cr-border: #dcdcde;
+	--cr-border-strong: #c3c4c7;
+	--cr-border-control: #8c8f94;
+	--cr-ink: #1d2327;
+	--cr-ink-soft: #3c434a;
+	--cr-muted: #646970;
 
-	/* 0.53 rather than 0.55: the accent is used as text on --cr-accent-soft
-	   (pending-payment badge, coupon chip, active template row), and 0.55 lands at
-	   4.37:1 there — under the 4.5:1 WCAG AA floor for this 12px type. */
-	--cr-accent: oklch(0.53 0.16 264);
-	--cr-accent-hover: oklch(0.47 0.16 264);
-	--cr-accent-ink: oklch(0.99 0 0);
-	--cr-accent-soft: oklch(0.955 0.03 264);
+	/* Text uses darker-10: the base theme color is ~4:1 on --cr-accent-soft in
+	   several schemes, under WCAG AA for 12px type. */
+	--cr-accent: var(--wp-admin-theme-color, #3858e9);
+	--cr-accent-hover: var(--wp-admin-theme-color-darker-10, #2145e6);
+	--cr-accent-text: var(--wp-admin-theme-color-darker-10, #2145e6);
+	--cr-accent-rgb: var(--wp-admin-theme-color--rgb, 56, 88, 233);
+	--cr-accent-ink: #fff;
+	--cr-accent-soft: rgba(var(--cr-accent-rgb), 0.08);
 	--cr-success: oklch(0.5 0.12 155);
 	--cr-success-soft: oklch(0.95 0.04 155);
 	--cr-warning: oklch(0.5 0.1 70);
@@ -36,24 +79,31 @@
 	--cr-radius-sm: 8px;
 	--cr-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.05);
 	--cr-shadow: 0 1px 3px oklch(0 0 0 / 0.08), 0 1px 2px oklch(0 0 0 / 0.04);
-	--cr-ring: 0 0 0 3px oklch(0.53 0.16 264 / 0.25);
+	--cr-ring: 0 0 0 3px rgba(var(--cr-accent-rgb), 0.3);
 	--cr-ease: cubic-bezier(0.23, 1, 0.32, 1);
+
+	--cr-font:
+		-apple-system, blinkmacsystemfont, "Segoe UI", roboto, oxygen-sans,
+		ubuntu, cantarell, "Helvetica Neue", sans-serif;
+	--cr-font-mono: consolas, monaco, monospace;
+	--cr-text-xs: 11px;
+	--cr-text-s: 12px;
+	--cr-text-m: 13px;
+	--cr-text-control: 14px;
+	--cr-text-l: 15px;
+	--cr-text-xl: 20px;
+	--cr-text-2xl: 23px;
 
 	box-sizing: border-box;
 	max-width: 1120px;
 	padding: 8px 20px 56px;
 	color: var(--cr-ink);
-	font-family:
-		-apple-system, blinkmacsystemfont, "Segoe UI", roboto, oxygen, ubuntu,
-		cantarell, "Helvetica Neue", sans-serif;
-	font-size: 14px;
+	font-family: var(--cr-font);
+	font-size: var(--cr-text-m);
 	line-height: 1.5;
 	-webkit-font-smoothing: antialiased;
 }
 
-/* Data-dense pages (dashboard, carts, log) fill the admin width so tables and
-   charts can breathe. Form pages keep the default measure — stretching a
-   label/input row across a wide monitor only makes it harder to scan. */
 .cr-app.is-wide {
 	max-width: none;
 }
@@ -64,7 +114,6 @@
 	box-sizing: border-box;
 }
 
-/* ---- Header ---- */
 .cr-header {
 	margin-bottom: 4px;
 }
@@ -72,18 +121,16 @@
 .cr-header__title {
 	margin: 0;
 	color: var(--cr-ink);
-	font-size: 23px;
-	font-weight: 600;
-	letter-spacing: -0.015em;
+	font-size: var(--cr-text-2xl);
+	font-weight: 400;
 }
 
 .cr-header__subtitle {
 	margin: 5px 0 0;
 	color: var(--cr-muted);
-	font-size: 14px;
+	font-size: var(--cr-text-m);
 }
 
-/* ---- Tabs ---- */
 .cr-tabs {
 	display: flex;
 	gap: 2px;
@@ -98,7 +145,7 @@
 	border-bottom: 2px solid transparent;
 	background: none;
 	color: var(--cr-muted);
-	font-size: 14px;
+	font-size: var(--cr-text-control);
 	font-weight: 500;
 	text-decoration: none;
 	cursor: pointer;
@@ -112,7 +159,7 @@
 }
 
 .cr-tab.is-active {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	border-bottom-color: var(--cr-accent);
 }
 
@@ -122,8 +169,6 @@
 	box-shadow: var(--cr-ring);
 }
 
-/* Tabs nested inside a card (template editor panes) sit flush with the card
-   edge, so the pane below reads as the tab's own surface. */
 .cr-tabs.is-inset {
 	margin: 14px 0 0;
 	gap: 4px;
@@ -131,10 +176,9 @@
 
 .cr-tabs.is-inset .cr-tab {
 	padding: 8px 12px;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
-/* ---- Cards & sections ---- */
 .cr-card {
 	background: var(--cr-surface);
 	border: 1px solid var(--cr-border);
@@ -150,7 +194,6 @@
 	border-top: 1px solid var(--cr-border);
 }
 
-/* Hidden panes must not leave their border behind. */
 .cr-section[hidden] {
 	display: none;
 }
@@ -158,7 +201,7 @@
 .cr-section__title {
 	margin: 0 0 4px;
 	color: var(--cr-ink);
-	font-size: 15px;
+	font-size: var(--cr-text-l);
 	font-weight: 600;
 }
 
@@ -166,10 +209,9 @@
 	margin: 0 0 18px;
 	max-width: 64ch;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
-/* ---- Stats ---- */
 .cr-stats {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
@@ -187,17 +229,16 @@
 .cr-stat__label {
 	margin: 0 0 10px;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	font-weight: 500;
 }
 
 .cr-stat__value {
 	margin: 0;
 	color: var(--cr-ink);
-	font-size: 28px;
+	font-size: var(--cr-text-2xl);
 	font-weight: 600;
 	line-height: 1.05;
-	letter-spacing: -0.02em;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -207,17 +248,16 @@
 }
 
 .cr-stat.is-accent .cr-stat__value {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 }
 
-/* ---- Badges ---- */
 .cr-badge {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
 	padding: 2px 10px;
 	border-radius: 999px;
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 	line-height: 1.6;
 	text-transform: capitalize;
@@ -242,7 +282,7 @@
 }
 
 .cr-badge.is-pending-payment {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	background: var(--cr-accent-soft);
 }
 
@@ -261,7 +301,6 @@
 	background: var(--cr-panel);
 }
 
-/* ---- Buttons ---- */
 .cr-btn {
 	display: inline-flex;
 	align-items: center;
@@ -270,7 +309,7 @@
 	padding: 8px 14px;
 	border: 1px solid transparent;
 	border-radius: var(--cr-radius-sm);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	font-weight: 500;
 	line-height: 1;
 	text-decoration: none;
@@ -328,16 +367,11 @@
 
 .cr-btn.is-sm {
 	padding: 6px 10px;
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
-/* ---- Form controls ---- */
-
-/*
- * Element-qualified selectors intentionally outrank WordPress admin's global
- * input[type="…"] rules, keeping text/number/email controls aligned with the
- * Combobox trigger.
- */
+/* Element-qualified selectors outrank wp-admin's global input[type="…"]
+ * rules, keeping controls aligned with the Combobox trigger. */
 input.cr-input,
 textarea.cr-input,
 select.cr-select {
@@ -350,7 +384,7 @@ select.cr-select {
 	border-radius: var(--cr-radius-sm);
 	background: var(--cr-surface);
 	color: var(--cr-ink);
-	font-size: 14px;
+	font-size: var(--cr-text-control);
 	line-height: 1.4;
 	appearance: none;
 	transition:
@@ -388,7 +422,7 @@ input.cr-input.is-compact,
 select.cr-select.is-compact {
 	width: auto;
 	padding: 6px 10px;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 textarea.cr-input {
@@ -404,7 +438,6 @@ select.cr-select:disabled {
 	cursor: not-allowed;
 }
 
-/* ---- Toggle switch ---- */
 .cr-switch {
 	position: relative;
 	display: inline-flex;
@@ -428,7 +461,7 @@ select.cr-select:disabled {
 	width: 38px;
 	height: 22px;
 	border-radius: 999px;
-	background: var(--cr-border-strong);
+	background: var(--cr-border-control);
 	transition: background-color 160ms var(--cr-ease);
 	pointer-events: none;
 }
@@ -458,7 +491,20 @@ select.cr-select:disabled {
 	box-shadow: var(--cr-ring);
 }
 
-/* ---- Fields ---- */
+.cr-switch input[type="checkbox"]:disabled {
+	opacity: 0;
+	cursor: not-allowed;
+}
+
+.cr-switch input:disabled + .cr-switch__track {
+	opacity: 0.45;
+}
+
+.cr-field--row.is-disabled .cr-field__label,
+.cr-field--row.is-disabled .cr-field__hint {
+	opacity: 0.55;
+}
+
 .cr-field {
 	margin-bottom: 20px;
 }
@@ -471,14 +517,14 @@ select.cr-select:disabled {
 	display: block;
 	margin-bottom: 6px;
 	color: var(--cr-ink);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	font-weight: 600;
 }
 
 .cr-field__hint {
 	margin: 6px 0 0;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
 .cr-checks {
@@ -492,7 +538,7 @@ select.cr-select:disabled {
 	align-items: center;
 	gap: 8px;
 	color: var(--cr-ink);
-	font-size: 14px;
+	font-size: var(--cr-text-control);
 	cursor: pointer;
 }
 
@@ -503,12 +549,10 @@ select.cr-select:disabled {
 	cursor: pointer;
 }
 
-/* Small group label inside a pane — quieter than a section title, loud enough
-   to break six switch rows into things you can scan. */
 .cr-subhead {
 	margin: 22px 0 12px;
 	color: var(--cr-muted);
-	font-size: 11px;
+	font-size: var(--cr-text-xs);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
@@ -525,7 +569,7 @@ select.cr-select:disabled {
 .cr-input.is-sm,
 .cr-select.is-sm {
 	padding: 6px 10px;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-field--row {
@@ -550,8 +594,6 @@ select.cr-select:disabled {
 	gap: 18px;
 }
 
-/* Hints wrap to different heights, which pushed the inputs of a two-up row out
-   of line. Subgrid puts label / hint / control on shared rows instead. */
 @supports (grid-template-rows: subgrid) {
 	.cr-field__grid {
 		grid-template-rows: auto auto auto;
@@ -571,7 +613,6 @@ select.cr-select:disabled {
 		margin-bottom: 0;
 	}
 
-	/* Row spacing now comes from the grid, so the parts stop adding their own. */
 	.cr-field__grid > .cr-field > .cr-field__label {
 		margin-bottom: 0;
 	}
@@ -581,7 +622,6 @@ select.cr-select:disabled {
 	}
 }
 
-/* ---- Toolbar ---- */
 .cr-toolbar {
 	display: flex;
 	flex-wrap: wrap;
@@ -592,7 +632,7 @@ select.cr-select:disabled {
 
 .cr-toolbar__label {
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	font-weight: 500;
 }
 
@@ -600,7 +640,86 @@ select.cr-select:disabled {
 	flex: 1;
 }
 
-/* ---- Table ---- */
+.cr-search {
+	position: relative;
+	flex: 0 1 340px;
+	min-width: 220px;
+}
+
+.cr-search > svg {
+	position: absolute;
+	top: 50%;
+	left: 10px;
+	width: 15px;
+	height: 15px;
+	color: var(--cr-muted);
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+
+.cr-search input.cr-search__input {
+	width: 100%;
+	padding-right: 32px;
+	padding-left: 32px;
+}
+
+.cr-search__input::-webkit-search-cancel-button {
+	appearance: none;
+}
+
+.cr-search__clear {
+	position: absolute;
+	top: 50%;
+	right: 4px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 0;
+	border-radius: 6px;
+	background: none;
+	color: var(--cr-muted);
+	transform: translateY(-50%);
+	cursor: pointer;
+	transition:
+		color 140ms var(--cr-ease),
+		background-color 140ms var(--cr-ease);
+}
+
+.cr-search__clear svg {
+	width: 14px;
+	height: 14px;
+}
+
+.cr-search__clear:hover {
+	color: var(--cr-ink);
+	background: var(--cr-panel);
+}
+
+.cr-search__clear:focus-visible {
+	outline: none;
+	box-shadow: var(--cr-ring);
+}
+
+.cr-empty .cr-btn {
+	margin-top: 8px;
+}
+
+.cr-footnote {
+	margin: 12px 2px 0;
+	color: var(--cr-muted);
+	font-size: var(--cr-text-s);
+}
+
+@media (max-width: 782px) {
+	.cr-search {
+		flex-basis: 100%;
+		order: -1;
+	}
+}
+
 .cr-table-wrap {
 	overflow-x: auto;
 }
@@ -608,7 +727,7 @@ select.cr-select:disabled {
 .cr-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-table th {
@@ -661,14 +780,13 @@ select.cr-select:disabled {
 	white-space: nowrap;
 }
 
-/* ---- Selection column ---- */
-.cr-table th.cr-check,
-.cr-table td.cr-check {
+.cr-table .cr-col-check {
 	width: 34px;
 	padding-right: 0;
 }
 
-.cr-check input[type="checkbox"] {
+.cr-check input[type="checkbox"],
+.cr-col-check input[type="checkbox"] {
 	width: 15px;
 	height: 15px;
 	margin: 0;
@@ -680,7 +798,6 @@ select.cr-select:disabled {
 	background: var(--cr-accent-soft);
 }
 
-/* ---- Sortable headers ---- */
 .cr-sort {
 	display: inline-flex;
 	align-items: center;
@@ -696,12 +813,16 @@ select.cr-select:disabled {
 	transition: color 140ms var(--cr-ease);
 }
 
+.cr-table .cr-sort {
+	vertical-align: middle;
+}
+
 .cr-sort.is-right {
 	flex-direction: row-reverse;
 }
 
 .cr-sort.is-active {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 }
 
 .cr-sort:hover {
@@ -715,17 +836,16 @@ select.cr-select:disabled {
 }
 
 .cr-sort__arrow {
-	font-size: 11px;
+	font-size: var(--cr-text-xs);
 	line-height: 1;
 }
 
-/* ---- Inline status pill select ---- */
 .cr-status {
 	max-width: 150px;
 	padding: 3px 26px 3px 11px;
 	border: 1px solid transparent;
 	border-radius: 999px;
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 	line-height: 1.6;
 	text-transform: capitalize;
@@ -750,7 +870,7 @@ select.cr-select:disabled {
 }
 
 .cr-status--pending-payment {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	background-color: var(--cr-accent-soft);
 }
 
@@ -785,7 +905,6 @@ select.cr-select:disabled {
 	gap: 6px;
 }
 
-/* ---- Status guide ---- */
 .cr-guide {
 	margin-bottom: 12px;
 	border: 1px solid var(--cr-border);
@@ -798,7 +917,7 @@ select.cr-select:disabled {
 	align-items: center;
 	gap: 8px;
 	padding: 10px 14px;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	font-weight: 500;
 	color: var(--cr-ink-soft);
 	cursor: pointer;
@@ -851,7 +970,7 @@ select.cr-select:disabled {
 
 .cr-guide__meaning {
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	line-height: 1.5;
 }
 
@@ -871,13 +990,13 @@ select.cr-select:disabled {
 .cr-guide__arrow,
 .cr-guide__sep {
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-guide__note {
 	margin: 10px 0 0;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	line-height: 1.5;
 }
 
@@ -887,7 +1006,6 @@ select.cr-select:disabled {
 	}
 }
 
-/* ---- Loading spinner ---- */
 .cr-spinner {
 	flex: none;
 	animation: cr-spin 0.7s linear infinite;
@@ -904,10 +1022,9 @@ select.cr-select:disabled {
 	align-items: center;
 	gap: 6px;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
-/* ---- Icon action buttons ---- */
 .cr-iconbtn {
 	display: inline-flex;
 	align-items: center;
@@ -957,7 +1074,6 @@ select.cr-select:disabled {
 	color: var(--cr-danger);
 }
 
-/* ---- Bulk action bar ---- */
 .cr-bulkbar {
 	display: flex;
 	flex-wrap: wrap;
@@ -971,8 +1087,8 @@ select.cr-select:disabled {
 }
 
 .cr-bulkbar__count {
-	color: var(--cr-accent);
-	font-size: 13px;
+	color: var(--cr-accent-text);
+	font-size: var(--cr-text-m);
 	font-weight: 600;
 }
 
@@ -980,12 +1096,17 @@ select.cr-select:disabled {
 	flex: 1;
 }
 
+.cr-notice.is-warning {
+	margin-bottom: 4px;
+	color: var(--cr-warning);
+	background: var(--cr-warning-soft);
+}
+
 .cr-notice.is-success {
 	color: var(--cr-success);
 	background: var(--cr-success-soft);
 }
 
-/* ---- Recover dialog ---- */
 .cr-dialog {
 	width: min(440px, calc(100vw - 32px));
 	padding: 0;
@@ -996,10 +1117,8 @@ select.cr-select:disabled {
 	box-shadow: 0 12px 40px oklch(0 0 0 / 0.18);
 	opacity: 1;
 
-	/* Rest at transform:none — a non-none transform would make position:fixed
-	   descendants (the Combobox popover) resolve against the dialog, not the
-	   viewport, mispositioning/clipping them. The entrance still animates from
-	   the scale(0.96) start below. */
+	/* Any non-none transform makes position:fixed descendants (Combobox popover)
+	   resolve against the dialog instead of the viewport. */
 	transform: none;
 	transition:
 		opacity 200ms var(--cr-ease),
@@ -1021,7 +1140,7 @@ select.cr-select:disabled {
 }
 
 .cr-dialog::backdrop {
-	background: oklch(0.2 0.02 264 / 0.4);
+	background: oklch(0.24 0 0 / 0.4);
 }
 
 .cr-dialog__body {
@@ -1030,15 +1149,14 @@ select.cr-select:disabled {
 
 .cr-dialog__title {
 	margin: 0 0 6px;
-	font-size: 16px;
+	font-size: var(--cr-text-l);
 	font-weight: 600;
-	letter-spacing: -0.01em;
 }
 
 .cr-dialog__desc {
 	margin: 0 0 18px;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	line-height: 1.5;
 }
 
@@ -1057,12 +1175,11 @@ select.cr-select:disabled {
 	width: min(760px, calc(100vw - 32px));
 }
 
-/* ---- Cart detail ---- */
 .cr-linkbtn {
 	padding: 0;
 	border: 0;
 	background: none;
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	font: inherit;
 	font-variant-numeric: tabular-nums;
 	cursor: pointer;
@@ -1072,8 +1189,6 @@ select.cr-select:disabled {
 	text-decoration: underline;
 }
 
-/* One treatment serves both the button that opens a cart and the anchor that
-   deep-links into WooCommerce, so drop the anchor's default underline. */
 a.cr-linkbtn {
 	text-decoration: none;
 }
@@ -1084,7 +1199,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* The detail dialog is a column: pinned header, scrolling body, pinned foot. */
 .cr-detail {
 	display: flex;
 	flex-direction: column;
@@ -1109,8 +1223,8 @@ a.cr-linkbtn {
 	height: 40px;
 	border-radius: 999px;
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
-	font-size: 16px;
+	color: var(--cr-accent-text);
+	font-size: var(--cr-text-l);
 	font-weight: 600;
 }
 
@@ -1122,9 +1236,8 @@ a.cr-linkbtn {
 .cr-detail__name {
 	margin: 0;
 	color: var(--cr-ink);
-	font-size: 16px;
+	font-size: var(--cr-text-l);
 	font-weight: 600;
-	letter-spacing: -0.01em;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -1133,7 +1246,7 @@ a.cr-linkbtn {
 .cr-detail__sub {
 	margin: 2px 0 0;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-variant-numeric: tabular-nums;
 }
 
@@ -1156,13 +1269,13 @@ a.cr-linkbtn {
 .cr-detail__meta dt {
 	margin-bottom: 3px;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
 .cr-detail__meta dd {
 	margin: 0;
 	color: var(--cr-ink);
-	font-size: 14px;
+	font-size: var(--cr-text-m);
 	font-weight: 500;
 	word-break: break-word;
 }
@@ -1174,7 +1287,7 @@ a.cr-linkbtn {
 .cr-detail__blocktitle {
 	margin: 0 0 10px;
 	color: var(--cr-ink-soft);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
@@ -1183,7 +1296,7 @@ a.cr-linkbtn {
 .cr-detail__items {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-detail__items th,
@@ -1196,7 +1309,7 @@ a.cr-linkbtn {
 .cr-detail__items thead th {
 	padding-top: 0;
 	color: var(--cr-muted);
-	font-size: 11px;
+	font-size: var(--cr-text-xs);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -1229,7 +1342,7 @@ a.cr-linkbtn {
 
 .cr-detail__couponlabel {
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
 .cr-chip {
@@ -1238,8 +1351,8 @@ a.cr-linkbtn {
 	padding: 3px 10px;
 	border-radius: 999px;
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
-	font-size: 12px;
+	color: var(--cr-accent-text);
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 }
@@ -1268,7 +1381,7 @@ a.cr-linkbtn {
 	justify-content: space-between;
 	gap: 16px;
 	padding: 7px 0;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-detail__timeline li::before {
@@ -1301,7 +1414,6 @@ a.cr-linkbtn {
 	border-top: 1px solid var(--cr-border);
 }
 
-/* ---- Onboarding wizard (dedicated two-pane native dialog) ---- */
 .cr-onb {
 	display: flex;
 	flex-direction: column;
@@ -1314,12 +1426,12 @@ a.cr-linkbtn {
 	background: var(--cr-surface);
 	color: var(--cr-ink);
 	box-shadow:
-		0 24px 48px -12px oklch(0.27 0.02 264 / 0.28),
-		0 8px 20px -8px oklch(0.27 0.02 264 / 0.16);
+		0 24px 48px -12px oklch(0.24 0 0 / 0.28),
+		0 8px 20px -8px oklch(0.24 0 0 / 0.16);
 }
 
 .cr-onb::backdrop {
-	background: oklch(0.25 0.02 264 / 0.4);
+	background: oklch(0.24 0 0 / 0.4);
 }
 
 .cr-onb[open] {
@@ -1340,7 +1452,6 @@ a.cr-linkbtn {
 	min-height: 0;
 }
 
-/* -- Left rail: brand + step tracker -- */
 .cr-onb__rail {
 	display: flex;
 	flex-direction: column;
@@ -1354,10 +1465,9 @@ a.cr-linkbtn {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	color: var(--cr-accent);
-	font-size: 14px;
+	color: var(--cr-accent-text);
+	font-size: var(--cr-text-m);
 	font-weight: 600;
-	letter-spacing: -0.01em;
 }
 
 .cr-onb__mark {
@@ -1387,7 +1497,7 @@ a.cr-linkbtn {
 	padding: 7px 8px;
 	border-radius: var(--cr-radius-sm);
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	transition:
 		background 160ms var(--cr-ease),
 		color 160ms var(--cr-ease);
@@ -1414,7 +1524,7 @@ a.cr-linkbtn {
 	border: 1px solid var(--cr-border-strong);
 	background: var(--cr-surface);
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 	transition:
 		background 160ms var(--cr-ease),
@@ -1432,10 +1542,9 @@ a.cr-linkbtn {
 .cr-onb__railnote {
 	margin: auto 0 0;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
-/* -- Right pane: step content -- */
 .cr-onb__main {
 	display: flex;
 	flex-direction: column;
@@ -1444,8 +1553,6 @@ a.cr-linkbtn {
 	padding: 28px 30px;
 }
 
-/* Give the pane real presence when there's vertical room; on short or zoomed
-   viewports it shrinks and scrolls instead of clipping the footer. */
 @media (min-height: 540px) {
 	.cr-onb__main {
 		min-height: 366px;
@@ -1472,15 +1579,14 @@ a.cr-linkbtn {
 	margin-bottom: 16px;
 	border-radius: 11px;
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 }
 
 .cr-onb__title {
 	margin: 0 0 6px;
 	color: var(--cr-ink);
-	font-size: 20px;
+	font-size: var(--cr-text-xl);
 	font-weight: 600;
-	letter-spacing: -0.015em;
 	text-wrap: balance;
 }
 
@@ -1488,7 +1594,7 @@ a.cr-linkbtn {
 	margin: 0 0 20px;
 	max-width: 46ch;
 	color: var(--cr-muted);
-	font-size: 14px;
+	font-size: var(--cr-text-m);
 	line-height: 1.55;
 }
 
@@ -1511,7 +1617,7 @@ a.cr-linkbtn {
 	position: relative;
 	padding-left: 26px;
 	color: var(--cr-ink-soft);
-	font-size: 14px;
+	font-size: var(--cr-text-m);
 	line-height: 1.5;
 }
 
@@ -1536,14 +1642,14 @@ a.cr-linkbtn {
 .cr-onb__label {
 	display: block;
 	color: var(--cr-ink);
-	font-size: 14px;
+	font-size: var(--cr-text-m);
 	font-weight: 500;
 }
 
 .cr-onb__hint {
 	margin: 4px 0 0;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	line-height: 1.45;
 }
 
@@ -1560,7 +1666,7 @@ a.cr-linkbtn {
 
 .cr-onb__unit {
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-onb__delay {
@@ -1619,17 +1725,15 @@ a.cr-linkbtn {
 	}
 }
 
-/* ---- Email preview ---- */
 .cr-savebar__spacer {
 	flex: 1;
 }
 
 .cr-savebar__state {
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
-/* The preview reads like a message in an inbox: sender row, then the render. */
 .cr-preview__mail {
 	margin: 4px 0 12px;
 	border: 1px solid var(--cr-border);
@@ -1657,7 +1761,7 @@ a.cr-linkbtn {
 	border-radius: 999px;
 	background: var(--cr-accent);
 	color: var(--cr-accent-ink);
-	font-size: 15px;
+	font-size: var(--cr-text-l);
 	font-weight: 600;
 }
 
@@ -1673,22 +1777,21 @@ a.cr-linkbtn {
 	gap: 6px;
 	margin: 0;
 	color: var(--cr-ink);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	font-weight: 600;
 }
 
 .cr-preview__addr {
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 400;
 }
 
 .cr-preview__subjectline {
 	margin: 2px 0 0;
 	color: var(--cr-ink);
-	font-size: 15px;
+	font-size: var(--cr-text-l);
 	font-weight: 600;
-	letter-spacing: -0.01em;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -1701,7 +1804,7 @@ a.cr-linkbtn {
 	border-radius: 999px;
 	border: 1px solid var(--cr-border-strong);
 	color: var(--cr-muted);
-	font-size: 11px;
+	font-size: var(--cr-text-xs);
 	font-weight: 500;
 }
 
@@ -1710,7 +1813,7 @@ a.cr-linkbtn {
 	width: 100%;
 	height: min(56vh, 480px);
 	border: 0;
-	background: oklch(0.985 0.003 256);
+	background: var(--cr-bg);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1731,22 +1834,25 @@ a.cr-linkbtn {
 	}
 }
 
-/* ---- Pagination ---- */
 .cr-pagination {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: 14px;
+	gap: 10px 14px;
 	padding: 14px 16px;
 	border-top: 1px solid var(--cr-border);
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-pagination__spacer {
 	flex: 1;
 }
 
-/* ---- Save bar ---- */
+.cr-pagination > .cr-toolbar__label {
+	white-space: nowrap;
+}
+
 .cr-savebar {
 	display: flex;
 	flex-wrap: wrap;
@@ -1758,8 +1864,6 @@ a.cr-linkbtn {
 	border-radius: 0 0 var(--cr-radius) var(--cr-radius);
 }
 
-/* Saving is reachable from anywhere in a long template rather than only from
-   the bottom of the page. */
 .cr-savebar.is-sticky {
 	position: sticky;
 	bottom: 0;
@@ -1769,11 +1873,10 @@ a.cr-linkbtn {
 
 .cr-saved {
 	color: var(--cr-success);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	font-weight: 500;
 }
 
-/* ---- States: loading skeleton & empty ---- */
 .cr-skeleton {
 	position: relative;
 	overflow: hidden;
@@ -1781,9 +1884,8 @@ a.cr-linkbtn {
 	background: var(--cr-panel);
 }
 
-/* The sweep runs on a transform rather than background-position: Chrome cannot
-   composite background-position, so a skeleton table put ~50 shimmer animations
-   on the main thread and showed up as the page's only layout-shift culprit. */
+/* Animate transform, not background-position: Chrome can't composite the
+   latter, so ~50 shimmers ran on the main thread. */
 .cr-skeleton::after {
 	position: absolute;
 	background: linear-gradient(
@@ -1814,14 +1916,14 @@ a.cr-linkbtn {
 .cr-empty__title {
 	margin: 0 0 6px;
 	color: var(--cr-ink);
-	font-size: 15px;
+	font-size: var(--cr-text-l);
 	font-weight: 600;
 }
 
 .cr-notice {
 	padding: 14px 16px;
 	border-radius: var(--cr-radius-sm);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-notice.is-error {
@@ -1829,15 +1931,14 @@ a.cr-linkbtn {
 	background: var(--cr-danger-soft);
 }
 
-/* ---- Tags ---- */
 .cr-tag {
 	display: inline-flex;
 	align-items: center;
 	padding: 1px 8px;
 	border-radius: 999px;
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
-	font-size: 11px;
+	color: var(--cr-accent-text);
+	font-size: var(--cr-text-xs);
 	font-weight: 600;
 	white-space: nowrap;
 }
@@ -1847,7 +1948,6 @@ a.cr-linkbtn {
 	color: var(--cr-muted);
 }
 
-/* ---- Log level badges + inline code ---- */
 .cr-logbadge {
 	display: inline-flex;
 	align-items: center;
@@ -1856,7 +1956,7 @@ a.cr-linkbtn {
 	border-radius: 999px;
 	color: var(--cr-muted);
 	background: var(--cr-panel);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 	line-height: 1.6;
 	text-transform: capitalize;
@@ -1895,11 +1995,10 @@ a.cr-linkbtn {
 	border-radius: 5px;
 	background: var(--cr-panel);
 	color: var(--cr-ink-soft);
-	font-family: ui-monospace, sfmono-regular, menlo, monospace;
-	font-size: 12px;
+	font-family: var(--cr-font-mono);
+	font-size: var(--cr-text-s);
 }
 
-/* ---- Merge-tag legend ---- */
 .cr-tokens {
 	margin-top: 10px;
 	padding: 10px 14px;
@@ -1908,8 +2007,6 @@ a.cr-linkbtn {
 	background: var(--cr-panel);
 }
 
-/* Closed by default: the reference is for the first template, the picker in the
-   toolbar is for every one after it. */
 .cr-tokens__title {
 	display: flex;
 	align-items: center;
@@ -1917,15 +2014,13 @@ a.cr-linkbtn {
 	margin: 0;
 	padding: 2px 0;
 	color: var(--cr-ink-soft);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 	cursor: pointer;
 	list-style: none;
 	transition: color 120ms var(--cr-ease);
 }
 
-/* The default disclosure marker sits on the text baseline and cannot be
-   styled consistently across browsers, so draw our own. */
 .cr-tokens__title::-webkit-details-marker {
 	display: none;
 }
@@ -1982,7 +2077,7 @@ a.cr-linkbtn {
 .cr-tokens__list dd {
 	margin: 0;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	line-height: 1.5;
 }
 
@@ -1990,7 +2085,6 @@ a.cr-linkbtn {
 	margin-top: 10px;
 }
 
-/* ---- Templates (master / detail) ---- */
 .cr-templates {
 	display: grid;
 	grid-template-columns: 240px 1fr;
@@ -2011,7 +2105,7 @@ a.cr-linkbtn {
 .cr-templates__empty {
 	margin: 4px 10px 8px;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
 .cr-templates__listhead {
@@ -2020,7 +2114,7 @@ a.cr-linkbtn {
 	justify-content: space-between;
 	padding: 6px 8px 10px;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -2037,7 +2131,7 @@ a.cr-linkbtn {
 	border-radius: var(--cr-radius-sm);
 	background: none;
 	color: var(--cr-ink);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	text-align: left;
 	cursor: pointer;
 	transition: background-color 140ms var(--cr-ease);
@@ -2049,7 +2143,7 @@ a.cr-linkbtn {
 
 .cr-templates__item.is-active {
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	font-weight: 600;
 }
 
@@ -2075,14 +2169,14 @@ a.cr-linkbtn {
 .cr-templates__sub {
 	overflow: hidden;
 	color: var(--cr-muted);
-	font-size: 11px;
+	font-size: var(--cr-text-xs);
 	font-weight: 400;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
 .cr-templates__item.is-active .cr-templates__sub {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	opacity: 0.75;
 }
 
@@ -2090,8 +2184,6 @@ a.cr-linkbtn {
 	min-width: 0;
 }
 
-/* The editor header carries identity and the pane switcher; the panes below
-   own their own padding, so it stops short of a full section's spacing. */
 .cr-templates__head {
 	padding: 20px 24px 0;
 	border-bottom: 1px solid var(--cr-border);
@@ -2125,13 +2217,11 @@ a.cr-linkbtn {
 		grid-template-columns: 1fr;
 	}
 
-	/* Stacked, the list is above the editor — pinning it would cover the form. */
 	.cr-templates__list {
 		position: static;
 	}
 }
 
-/* ---- Rich text editor ---- */
 .cr-rte {
 	overflow: hidden;
 	background: var(--cr-surface);
@@ -2144,8 +2234,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* Visual / HTML switch — the editor's own view, so it sits inside the frame
-   above the toolbar rather than floating beside the field label. */
 .cr-rte__modes {
 	display: flex;
 	align-items: center;
@@ -2167,7 +2255,7 @@ a.cr-linkbtn {
 	border-radius: 6px;
 	background: none;
 	color: var(--cr-ink-soft);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 	line-height: 1.6;
 	cursor: pointer;
@@ -2192,7 +2280,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* Raw HTML view — a plain code surface, no email canvas. */
 .cr-rte__code {
 	display: block;
 	width: 100%;
@@ -2201,8 +2288,8 @@ a.cr-linkbtn {
 	border: 0;
 	background: var(--cr-surface);
 	color: var(--cr-ink);
-	font-family: ui-monospace, sfmono-regular, menlo, monospace;
-	font-size: 13px;
+	font-family: var(--cr-font-mono);
+	font-size: var(--cr-text-m);
 	line-height: 1.7;
 	tab-size: 2;
 	resize: vertical;
@@ -2248,7 +2335,7 @@ a.cr-linkbtn {
 	border-radius: 6px;
 	background: none;
 	color: var(--cr-ink-soft);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	cursor: pointer;
 	transition:
 		background-color 120ms var(--cr-ease),
@@ -2262,7 +2349,7 @@ a.cr-linkbtn {
 
 .cr-rte__btn.is-active {
 	background: var(--cr-accent-soft);
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 }
 
 .cr-rte__btn:focus-visible {
@@ -2298,7 +2385,6 @@ a.cr-linkbtn {
 	flex: 1;
 }
 
-/* Contextual image toolbar (shown while an image is selected). */
 .cr-rte__imagebar {
 	display: flex;
 	flex-wrap: wrap;
@@ -2310,12 +2396,11 @@ a.cr-linkbtn {
 }
 
 .cr-rte__imagebar-label {
-	color: var(--cr-accent);
-	font-size: 12px;
+	color: var(--cr-accent-text);
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 }
 
-/* Email canvas — the body renders on an email-like white sheet. */
 .cr-rte__canvas {
 	max-height: 520px;
 	padding: 20px;
@@ -2357,8 +2442,8 @@ a.cr-linkbtn {
 	margin: 0 0 14px;
 }
 
-/* Tailwind preflight strips list markers; the email body is rendered without
-   it, so restore them here or the editor lies about what will be sent. */
+/* Preflight strips list markers but the sent email keeps them; restore so the
+   editor matches what will be sent. */
 .cr-rte__content ul,
 .cr-rte__content ol {
 	margin: 0 0 14px;
@@ -2384,9 +2469,8 @@ a.cr-linkbtn {
 }
 
 .cr-rte__content blockquote {
-	margin: 0 0 14px;
-	padding: 4px 0 4px 14px;
-	border-left: 3px solid var(--cr-border-strong);
+	margin: 0 0 14px 24px;
+	padding: 0;
 	color: var(--cr-ink-soft);
 }
 
@@ -2397,7 +2481,7 @@ a.cr-linkbtn {
 }
 
 .cr-rte__content a {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 }
 
 .cr-rte__content img {
@@ -2412,11 +2496,6 @@ a.cr-linkbtn {
 	color: var(--cr-muted);
 }
 
-/* ---- Chip multi-select ---- */
-
-/* A plain row: the chosen items as pills, then the control that adds another.
-   No container of its own — the chips are the field. Everything in the row is
-   30px tall so the pills and the picker share one line. */
 .cr-chips {
 	display: flex;
 	flex-wrap: wrap;
@@ -2427,7 +2506,7 @@ a.cr-linkbtn {
 .cr-chips__empty {
 	margin: 0;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-chips__list {
@@ -2450,7 +2529,7 @@ a.cr-linkbtn {
 	border: 1px solid var(--cr-border-strong);
 	border-radius: 999px;
 	background: var(--cr-surface);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	line-height: 1;
 }
 
@@ -2491,9 +2570,6 @@ a.cr-linkbtn {
 	cursor: not-allowed;
 }
 
-/* The picker sits in the same row as the chips, so it matches their height and
-   pill shape and stays quiet until hovered — it adds to the row, it is not a
-   second control beside it. */
 .cr-chips .cr-combo {
 	display: flex;
 	width: auto;
@@ -2506,7 +2582,7 @@ a.cr-linkbtn {
 	border-radius: 999px;
 	background: none;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 }
 
@@ -2515,7 +2591,6 @@ a.cr-linkbtn {
 	color: var(--cr-ink);
 }
 
-/* ---- Combobox (searchable select) ---- */
 .cr-combo {
 	position: relative;
 	display: inline-block;
@@ -2536,7 +2611,7 @@ a.cr-linkbtn {
 	border-radius: var(--cr-radius-sm);
 	background: var(--cr-surface);
 	color: var(--cr-ink);
-	font-size: 14px;
+	font-size: var(--cr-text-control);
 	line-height: 1.4;
 	text-align: left;
 	cursor: pointer;
@@ -2547,7 +2622,7 @@ a.cr-linkbtn {
 
 .cr-combo.is-compact .cr-combo__trigger {
 	padding: 6px 10px;
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-combo__trigger:hover:not(:disabled) {
@@ -2585,7 +2660,7 @@ a.cr-linkbtn {
 	gap: 4px;
 	padding: 4px 10px;
 	border-color: transparent;
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 	text-transform: capitalize;
 }
@@ -2611,7 +2686,7 @@ a.cr-linkbtn {
 }
 
 .cr-combo__trigger--pending-payment {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	background: var(--cr-accent-soft);
 }
 
@@ -2650,7 +2725,7 @@ a.cr-linkbtn {
 	border-radius: 6px;
 	background: var(--cr-surface);
 	color: var(--cr-ink);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
 .cr-combo__search:focus {
@@ -2673,7 +2748,7 @@ a.cr-linkbtn {
 	border-radius: 6px;
 	background: none;
 	color: var(--cr-ink);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	text-align: left;
 	white-space: nowrap;
 	overflow: hidden;
@@ -2686,7 +2761,7 @@ a.cr-linkbtn {
 }
 
 .cr-combo__option.is-selected {
-	color: var(--cr-accent);
+	color: var(--cr-accent-text);
 	font-weight: 600;
 }
 
@@ -2697,11 +2772,10 @@ a.cr-linkbtn {
 .cr-combo__empty {
 	padding: 12px;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	text-align: center;
 }
 
-/* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
 	.cr-skeleton::after {
 		animation: none;
@@ -2724,22 +2798,16 @@ a.cr-linkbtn {
 	}
 }
 
-/* ============================================================
-   Dashboard — overview metrics, revenue trend, supporting reports.
-   ============================================================ */
-
 .cr-dash {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
 }
 
-/* Used across the admin for de-emphasised table text. */
 .cr-muted {
 	color: var(--cr-muted);
 }
 
-/* ---- Card headers shared by the overview and trend panels ---- */
 .cr-overview {
 	padding: 20px 22px 22px;
 }
@@ -2755,7 +2823,7 @@ a.cr-linkbtn {
 .cr-overview__title {
 	margin: 0;
 	color: var(--cr-ink);
-	font-size: 15px;
+	font-size: var(--cr-text-l);
 	font-weight: 600;
 }
 
@@ -2763,10 +2831,9 @@ a.cr-linkbtn {
 	margin: 4px 0 0;
 	max-width: 64ch;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 }
 
-/* ---- Headline metric strip ---- */
 .cr-metrics {
 	display: grid;
 	grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -2805,7 +2872,7 @@ a.cr-linkbtn {
 .cr-metric__label {
 	min-width: 0;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 	line-height: 1.35;
 }
@@ -2813,10 +2880,9 @@ a.cr-linkbtn {
 .cr-metric__value {
 	margin: 8px 0 0;
 	color: var(--cr-ink);
-	font-size: 22px;
+	font-size: var(--cr-text-xl);
 	font-weight: 600;
 	line-height: 1.1;
-	letter-spacing: -0.02em;
 	font-variant-numeric: tabular-nums;
 	overflow-wrap: anywhere;
 }
@@ -2829,7 +2895,6 @@ a.cr-linkbtn {
 	color: var(--cr-success);
 }
 
-/* ---- Info hint bubble ---- */
 .cr-hint {
 	position: relative;
 	display: inline-flex;
@@ -2876,7 +2941,7 @@ a.cr-linkbtn {
 	color: var(--cr-accent-ink);
 	border-radius: var(--cr-radius-sm);
 	box-shadow: 0 8px 20px oklch(0 0 0 / 0.18);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 400;
 	line-height: 1.45;
 	text-align: left;
@@ -2894,7 +2959,6 @@ a.cr-linkbtn {
 	transform: translate(-50%, 0);
 }
 
-/* ---- Range selector ---- */
 .cr-range {
 	display: inline-flex;
 	flex: none;
@@ -2911,7 +2975,7 @@ a.cr-linkbtn {
 	border-radius: 999px;
 	background: none;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 	cursor: pointer;
@@ -2935,7 +2999,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* ---- Revenue trend ---- */
 .cr-trend {
 	padding: 20px 22px 16px;
 }
@@ -2960,7 +3023,7 @@ a.cr-linkbtn {
 	align-items: center;
 	gap: 7px;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	font-weight: 500;
 }
 
@@ -2991,7 +3054,7 @@ a.cr-linkbtn {
 
 .cr-chart__axis {
 	fill: var(--cr-muted);
-	font-size: 11px;
+	font-size: var(--cr-text-xs);
 	font-variant-numeric: tabular-nums;
 }
 
@@ -3047,7 +3110,7 @@ a.cr-linkbtn {
 	color: var(--cr-accent-ink);
 	border-radius: var(--cr-radius-sm);
 	box-shadow: 0 8px 20px oklch(0 0 0 / 0.2);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 	transform: translateX(-50%);
 	pointer-events: none;
 }
@@ -3073,7 +3136,7 @@ a.cr-linkbtn {
 	justify-content: center;
 	gap: 4px;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	text-align: center;
 }
 
@@ -3084,11 +3147,10 @@ a.cr-linkbtn {
 
 .cr-chart__blanktitle {
 	color: var(--cr-ink);
-	font-size: 14px;
+	font-size: var(--cr-text-m);
 	font-weight: 600;
 }
 
-/* ---- Supporting report tables ---- */
 .cr-reports {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3118,24 +3180,23 @@ a.cr-linkbtn {
 .cr-report__title {
 	margin: 0;
 	color: var(--cr-ink);
-	font-size: 14px;
+	font-size: var(--cr-text-m);
 	font-weight: 600;
 }
 
 .cr-report__sub {
 	margin: 3px 0 0;
 	color: var(--cr-muted);
-	font-size: 12px;
+	font-size: var(--cr-text-s);
 }
 
 .cr-report__empty {
 	padding: 28px 18px;
 	color: var(--cr-muted);
-	font-size: 13px;
+	font-size: var(--cr-text-m);
 	text-align: center;
 }
 
-/* Align the table gutters with the report header padding. */
 .cr-report .cr-table th:first-child,
 .cr-report .cr-table td:first-child {
 	padding-left: 18px;
@@ -3151,8 +3212,8 @@ a.cr-linkbtn {
 	flex: none;
 	align-items: center;
 	gap: 5px;
-	color: var(--cr-accent);
-	font-size: 12px;
+	color: var(--cr-accent-text);
+	font-size: var(--cr-text-s);
 	font-weight: 600;
 	text-decoration: none;
 }

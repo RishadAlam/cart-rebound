@@ -14,9 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Validates the action name for a bulk operation on the cart list.
  *
- * The `ids` list and the (action-dependent) `status` are validated in the
- * controller: `ids` because {@see FormRequest} has no array rule, and `status`
- * because it is only required for the `status` action.
+ * The `ids` list and the action-dependent `status` are validated in the controller.
  *
  * @since 0.1.0
  */

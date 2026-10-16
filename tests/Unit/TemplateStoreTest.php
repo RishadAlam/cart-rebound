@@ -1,9 +1,4 @@
 <?php
-/**
- * Email template store unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -75,6 +70,15 @@ final class TemplateStoreTest extends TestCase {
 		$this->assertSame( 'Default', $all[0]['name'] );
 		$this->assertTrue( $all[0]['is_default'] );
 		$this->assertArrayHasKey( TemplateStore::OPTION, $this->options );
+	}
+
+	public function test_seeded_default_has_the_same_shape_as_a_stored_template(): void {
+		$store  = $this->store();
+		$seeded = $store->all()[0];
+		$reread = $store->all()[0];
+
+		$this->assertSame( TemplateStore::table_defaults(), $seeded['table'] );
+		$this->assertSame( array_keys( $reread ), array_keys( $seeded ) );
 	}
 
 	public function test_create_keeps_the_existing_default(): void {

@@ -48,9 +48,7 @@ final class AppServiceProvider extends ServiceProvider {
 	 * @return void
 	 */
 	public function boot(): void {
-		// Translations are loaded automatically by WordPress (by plugin slug)
-		// since 4.6, so no load_plugin_textdomain() call is needed — and
-		// calling it is flagged by Plugin Check for wordpress.org plugins.
+		// No load_plugin_textdomain(): WordPress loads translations by slug and Plugin Check flags the call.
 
 		if ( defined( 'WP_CLI' ) ) {
 			$this->app->make( CommandLoader::class )->register();

@@ -1,10 +1,3 @@
-/**
- * First-run setup wizard.
- *
- * A short, skippable guided setup shown until the merchant completes or skips
- * it. It writes the handful of settings that get recovery working, then flips
- * the `onboarding_complete` flag so it never shows again.
- */
 import {
 	useEffect,
 	useRef,
@@ -129,8 +122,7 @@ const CheckIcon = () => (
 	</svg>
 );
 
-// The plugin mark — the shopping cart from .wordpress-org/icon.svg (Heroicons,
-// MIT), drawn in the current text colour so the accent tile shows through.
+// The shopping cart from .wordpress-org/icon.svg (Heroicons, MIT).
 const BrandMark = () => (
 	<svg
 		viewBox="0 0 24 24"
@@ -186,8 +178,6 @@ export const OnboardingWizard = () => {
 		}
 	}, [settings, form]);
 
-	// Open as a native modal (focus trap + Esc handled for free) once the dialog
-	// is actually rendered — i.e. settings loaded and setup not yet complete.
 	useEffect(() => {
 		const el = ref.current;
 

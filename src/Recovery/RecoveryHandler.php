@@ -11,15 +11,15 @@ namespace CartRebound\Recovery;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
+use CartRebound\Tracking\CartTracker;
 use CartRebound\Tracking\SessionManager;
 
 /**
  * Intercepts a tokenised recovery link, rebuilds the cart, and redirects to checkout.
  *
- * The unguessable token is the credential (no nonce applies, like a password-reset
- * link); the cart row id is bound into the WooCommerce session so {@see OrderLinker}
- * can attribute the resulting order as recovered.
+ * The unguessable token is the credential; no nonce applies, like a password-reset link.
  *
  * @since 0.1.0
  */
@@ -41,14 +41,34 @@ final class RecoveryHandler {
 	private $sessions;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
+	 * Cart tracker.
+	 *
+	 * @since 1.1.2
+	 * @var CartTracker
+	 */
+	private $tracker;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.1.2
 	 *
-	 * @param SessionManager $sessions Session key resolver.
+	 * @param SessionManager  $sessions Session key resolver.
+	 * @param EventDispatcher $events   Event dispatcher.
+	 * @param CartTracker     $tracker  Cart tracker.
 	 */
-	public function __construct( SessionManager $sessions ) {
+	public function __construct( SessionManager $sessions, EventDispatcher $events, CartTracker $tracker ) {
 		$this->sessions = $sessions;
+		$this->events   = $events;
+		$this->tracker  = $tracker;
 	}
 
 	/**
@@ -82,18 +102,25 @@ final class RecoveryHandler {
 			return;
 		}
 
-		// Adopt the recovered row into this browser's tracking session BEFORE the
-		// cart is rebuilt. CartTracker runs on the cart writes below, and without
-		// this it would open a second row for the same cart — leaving the original
-		// sitting in `abandoned` while the duplicate collected its own recovery
-		// email for the shopper who just clicked this link.
+		// Adopt the row before the rebuild: CartTracker runs on those writes and would open a duplicate row.
 		$this->adopt_session( (int) ( $row['id'] ?? 0 ) );
 
-		if ( ! $this->restore_cart( $row ) ) {
+		$restored = $this->tracker->without_tracking(
+			function () use ( $row ): bool {
+				return $this->restore_cart( $row );
+			}
+		);
+
+		if ( ! $restored ) {
 			return;
 		}
 
+		$this->tracker->track();
 		$this->prefill_customer( $row );
+
+		$fresh = CartSession::find( (int) ( $row['id'] ?? 0 ) );
+
+		$this->events->link_clicked( is_array( $fresh ) ? $fresh : $row );
 
 		if ( function_exists( 'WC' ) && null !== WC()->session ) {
 			WC()->session->set( self::SESSION_CART_ID, (int) ( $row['id'] ?? 0 ) );
@@ -105,13 +132,10 @@ final class RecoveryHandler {
 		exit;
 	}
 
-
 	/**
 	 * Re-key the recovered row onto this visitor's tracking session.
 	 *
-	 * Any row already holding the key is archived first — the same deterministic
-	 * rename {@see \CartRebound\Tracking\CartTracker} uses — so the UNIQUE index
-	 * is respected and no tracked history is destroyed.
+	 * Any row already holding the key is archived first so the UNIQUE index is respected.
 	 *
 	 * @since 1.1.2
 	 *
@@ -119,7 +143,7 @@ final class RecoveryHandler {
 	 * @return void
 	 */
 	private function adopt_session( int $cart_id ): void {
-		if ( $cart_id <= 0 ) {
+		if ( $cart_id <= 0 || ! $this->tracker->is_enabled() ) {
 			return;
 		}
 
@@ -150,10 +174,6 @@ final class RecoveryHandler {
 	/**
 	 * Seed the checkout with the contact details captured on the tracked cart.
 	 *
-	 * A recovery link is a one-click return: the shopper should not have to retype
-	 * the address the store already emailed them at. Only empty fields are filled,
-	 * so a logged-in customer's saved details are never overwritten.
-	 *
 	 * @since 1.1.2
 	 *
 	 * @param array<string, mixed> $row The cart row.
@@ -179,8 +199,7 @@ final class RecoveryHandler {
 		}
 
 		// Both address books are seeded: the block checkout compares them to decide
-		// whether to keep "use the same address for billing" ticked, and filling
-		// only one side would split the form into two addresses to complete.
+		// whether to keep "use the same address for billing" ticked.
 		$names = array(
 			'first_name' => array( 'billing_first_name', 'shipping_first_name' ),
 			'last_name'  => array( 'billing_last_name', 'shipping_last_name' ),
@@ -261,10 +280,7 @@ final class RecoveryHandler {
 
 		if ( is_array( $coupons ) ) {
 			foreach ( $coupons as $code ) {
-				// Coupons captured weeks ago are often gone by the time the link is
-				// clicked. Re-applying a deleted code makes WooCommerce print a red
-				// "coupon does not exist" block, which is the first thing a
-				// returning shopper would see — so only live codes are restored.
+				// Restore only live codes: WooCommerce shows a "coupon does not exist" error for a deleted one.
 				if ( is_string( $code ) && '' !== $code && $this->coupon_exists( $code ) ) {
 					$cart->apply_coupon( $code );
 				}

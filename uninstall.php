@@ -12,14 +12,11 @@ $cart_rebound_autoloader = __DIR__ . '/vendor/autoload.php';
 if ( is_readable( $cart_rebound_autoloader ) ) {
 	require_once $cart_rebound_autoloader;
 
-	// The main plugin file is not loaded during uninstall, so initialise the
-	// application with its base path before resolving services.
+	// The main plugin file is not loaded during uninstall, so set the base path here.
 	CartRebound\Core\Application::get_instance( plugin_dir_path( __FILE__ ) );
 	CartRebound\Core\Plugin::uninstall();
 } else {
-	// Fallback: the autoloader is missing (e.g. a truncated install), but we
-	// still must honor the uninstall contract — leave no data behind. This
-	// mirrors Plugin::uninstall() using direct $wpdb calls.
+	// No autoloader (e.g. truncated install): mirror Plugin::uninstall() with direct $wpdb calls.
 	global $wpdb;
 
 	$cart_rebound_scheduled_hooks = array(
@@ -30,8 +27,7 @@ if ( is_readable( $cart_rebound_autoloader ) ) {
 
 	foreach ( $cart_rebound_scheduled_hooks as $cart_rebound_scheduled_hook ) {
 		if ( function_exists( 'as_unschedule_all_actions' ) ) {
-			// Namespaced hooks are unique to this plugin. Omitting args/group clears
-			// recurring jobs and one-off email jobs carrying a cart-id argument.
+			// Omit args/group so one-off email jobs carrying a cart-id argument are cleared too.
 			as_unschedule_all_actions( $cart_rebound_scheduled_hook );
 		}
 

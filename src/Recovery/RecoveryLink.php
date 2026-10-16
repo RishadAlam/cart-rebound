@@ -14,8 +14,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Builds tokenised cart-recovery URLs.
  *
- * The URL carries only the unguessable recovery token (never the session key),
- * pointing at the WooCommerce cart page where {@see RecoveryHandler} intercepts it.
+ * The URL carries only the recovery token, never the session key.
  *
  * @since 0.1.0
  */

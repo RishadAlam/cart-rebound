@@ -52,9 +52,6 @@ final class CartRepository {
 	/**
 	 * Memoised admin URL prefix an order is edited under.
 	 *
-	 * Resolved once per request: whether HPOS is enabled cannot change midway,
-	 * and presenting a page of carts would otherwise repeat the check per row.
-	 *
 	 * @since 0.1.0
 	 * @var string|null
 	 */
@@ -99,6 +96,7 @@ final class CartRepository {
 	 *
 	 *     @type string|array<int, string> $status   Status filter.
 	 *     @type string                    $email    Email substring filter.
+	 *     @type string                    $search   Words matched against email, name and phone; a number also matches the cart or order id.
 	 *     @type int                       $page     1-based page number.
 	 *     @type int                       $per_page Page size (max 100).
 	 *     @type string                    $orderby  Sort column (whitelisted).
@@ -161,7 +159,6 @@ final class CartRepository {
 		global $wpdb;
 		$table = ( new CartSession() )->get_table();
 
-		// Single GROUP BY query instead of one COUNT(*) per status.
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
 			$wpdb->prepare( 'SELECT status, COUNT(*) AS cnt FROM %i GROUP BY status', $table ),
@@ -180,7 +177,6 @@ final class CartRepository {
 
 		$revenue = CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->sum( 'recovered_amount' );
 
-		// Still-open money: what the carts sitting in `abandoned` are worth.
 		$recoverable = CartSession::query()->where( 'status', '=', CartSession::STATUS_ABANDONED )->sum( 'cart_total' );
 
 		// Use purge-immune lifetime counters: the Janitor deletes unrecovered
@@ -202,11 +198,6 @@ final class CartRepository {
 
 	/**
 	 * Daily recovery time series for the dashboard chart.
-	 *
-	 * Points are bucketed on the UTC date a cart was abandoned (recoverable) or
-	 * recovered (recovered) — the same UTC basis the rest of the plugin stores
-	 * and renders. The window is zero-filled so quiet days still produce a point
-	 * and the chart keeps an even time axis.
 	 *
 	 * @since 0.1.0
 	 *
@@ -240,12 +231,6 @@ final class CartRepository {
 
 	/**
 	 * Per-product abandonment/recovery tallies for the dashboard report.
-	 *
-	 * Line items live in the JSON cart snapshot rather than their own table, so
-	 * the tally runs in PHP over a bounded slice of rows. Each cart counts at
-	 * most once per distinct product, and the scan stops at
-	 * {@see self::REPORT_SCAN_LIMIT} rows so a busy store cannot blow the
-	 * request budget.
 	 *
 	 * @since 0.1.0
 	 *
@@ -283,8 +268,6 @@ final class CartRepository {
 			$abandoned_at = (string) ( $row['abandoned_at'] ?? '' );
 			$recovered_at = (string) ( $row['recovered_at'] ?? '' );
 
-			// Datetimes are stored as 'Y-m-d H:i:s', so a string compare is a
-			// chronological compare — no parsing needed per row.
 			$was_abandoned = '' !== $abandoned_at && $abandoned_at >= $since;
 			$was_recovered = '' !== $recovered_at && $recovered_at >= $since;
 
@@ -348,8 +331,6 @@ final class CartRepository {
 	private function daily_totals( string $table, string $column, string $amount, string $start ): array {
 		global $wpdb;
 
-		// A NULL timestamp never satisfies `>=`, so unabandoned/unrecovered rows
-		// drop out without an extra IS NOT NULL clause.
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
@@ -402,7 +383,6 @@ final class CartRepository {
 
 		$row = CartSession::find( $cart_id );
 
-		// Idempotent: never re-attribute a cart that is already linked to an order.
 		if ( ! is_array( $row ) || (int) ( $row['order_id'] ?? 0 ) > 0 ) {
 			return false;
 		}
@@ -426,7 +406,10 @@ final class CartRepository {
 
 		if ( $updated ) {
 			$fresh = CartSession::find( $cart_id );
-			$this->events->recovered( is_array( $fresh ) ? $fresh : $row, $order, 'direct' );
+			$fresh = is_array( $fresh ) ? $fresh : $row;
+
+			$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
+			$this->events->recovered( $fresh, $order, 'direct' );
 		}
 
 		return $updated;
@@ -435,10 +418,8 @@ final class CartRepository {
 	/**
 	 * Manually set a cart's lifecycle status, applying the matching timestamps.
 	 *
-	 * This is the pure-data transition used for every status except a manual
-	 * abandon that should notify (that path runs through
-	 * {@see \CartRebound\Cron\AbandonmentDetector::abandon()} so the event fires
-	 * and the follow-up email is queued). No integration event is dispatched here.
+	 * A manual abandon that should notify goes through {@see
+	 * \CartRebound\Cron\AbandonmentDetector::abandon()} instead.
 	 *
 	 * @since 0.1.0
 	 *
@@ -466,7 +447,6 @@ final class CartRepository {
 
 		switch ( $status ) {
 			case CartSession::STATUS_ACTIVE:
-				// Return the row to the live funnel so the detector can re-fire.
 				$data['abandoned_at']         = null;
 				$data['abandonment_notified'] = 0;
 				break;
@@ -477,8 +457,7 @@ final class CartRepository {
 				$data['abandonment_notified'] = 1;
 				break;
 			case CartSession::STATUS_LOST:
-				// Janitor uses abandoned_at as the unrecovered-retention clock.
-				// A manually lost active cart may not have one yet.
+				// Janitor uses abandoned_at as the retention clock; a manually lost active cart may not have one yet.
 				if ( '' === (string) ( $row['abandoned_at'] ?? '' ) ) {
 					$data['abandoned_at'] = $now;
 				}
@@ -495,7 +474,13 @@ final class CartRepository {
 				break;
 		}
 
-		return CartSession::update( $cart_id, $data );
+		$updated = CartSession::update( $cart_id, $data );
+
+		if ( $updated ) {
+			$this->events->status_changed( array_merge( $row, $data ), (string) ( $row['status'] ?? '' ) );
+		}
+
+		return $updated;
 	}
 
 	/**
@@ -544,13 +529,50 @@ final class CartRepository {
 			$query->where( 'status', '=', $status );
 		}
 
+		global $wpdb;
+
 		$email = isset( $args['email'] ) ? (string) $args['email'] : '';
 
 		if ( '' !== $email ) {
-			$query->where( 'email', 'LIKE', '%' . $email . '%' );
+			$query->where( 'email', 'LIKE', '%' . $wpdb->esc_like( $email ) . '%' );
+		}
+
+		$words = preg_split( '/\s+/', trim( (string) ( $args['search'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY );
+
+		foreach ( is_array( $words ) ? $words : array() as $word ) {
+			$query->where_any( $this->search_conditions( $word ) );
 		}
 
 		return $query;
+	}
+
+	/**
+	 * Conditions one search word can match.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param string $word A single search word.
+	 * @return array<int, array{0: string, 1: string, 2: mixed}>
+	 */
+	private function search_conditions( string $word ): array {
+		global $wpdb;
+
+		$like       = '%' . $wpdb->esc_like( $word ) . '%';
+		$conditions = array(
+			array( 'email', 'LIKE', $like ),
+			array( 'first_name', 'LIKE', $like ),
+			array( 'last_name', 'LIKE', $like ),
+			array( 'phone', 'LIKE', $like ),
+		);
+
+		$number = ltrim( $word, '#' );
+
+		if ( '' !== $number && ctype_digit( $number ) && (int) $number > 0 ) {
+			$conditions[] = array( 'id', '=', (int) $number );
+			$conditions[] = array( 'order_id', '=', (int) $number );
+		}
+
+		return $conditions;
 	}
 
 	/**
@@ -608,11 +630,6 @@ final class CartRepository {
 
 	/**
 	 * Resolve the admin URL prefix orders are edited under.
-	 *
-	 * HPOS moves orders off the posts table onto their own admin screen, so the
-	 * edit link differs per store. Deriving it from the flag keeps presenting a
-	 * page of carts cheap — calling get_edit_order_url() instead would mean
-	 * loading every linked order just to read a URL off it.
 	 *
 	 * @since 0.1.0
 	 *

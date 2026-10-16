@@ -1,11 +1,3 @@
-/**
- * Carts page — filterable, sortable, paginated list of tracked carts.
- *
- * Each row keeps a calm surface: an inline color-coded status select and three
- * icon actions (recover, send email, delete). The heavier "mark recovered"
- * order picker lives in a native <dialog> so it escapes the table's horizontal
- * scroll container instead of being clipped by it.
- */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
@@ -45,7 +37,6 @@ const COLUMN_COUNT = 9;
 
 type Feedback = { type: 'success' | 'error'; message: string };
 
-// Column key → the backend sort column it maps to.
 const SORTABLE = {
 	id: 'id',
 	email: 'email',
@@ -61,7 +52,6 @@ const messageOf = (error: unknown): string =>
 		? error.message
 		: __('Something went wrong.', 'cart-rebound');
 
-// Each cart status paired with a plain-language meaning for the status guide.
 const STATUS_GUIDE: Array<[string, string]> = [
 	[
 		'active',
@@ -247,15 +237,35 @@ const TrashIcon = () => (
 	</svg>
 );
 
+const SearchIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<circle cx="7" cy="7" r="4.3" stroke="currentColor" strokeWidth="1.4" />
+		<path
+			d="m10.3 10.3 3.2 3.2"
+			stroke="currentColor"
+			strokeWidth="1.4"
+			strokeLinecap="round"
+		/>
+	</svg>
+);
+
+const CloseIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<path
+			d="m4.5 4.5 7 7m0-7-7 7"
+			stroke="currentColor"
+			strokeWidth="1.4"
+			strokeLinecap="round"
+		/>
+	</svg>
+);
+
+const SEARCH_DELAY = 300;
+
 const Dash = () => <span className="cr-muted">—</span>;
 
-/**
- * The linked order number, deep-linking into WooCommerce when we have a URL for
- * it. The URL is built server-side because only PHP knows whether the store is
- * on HPOS, which changes where orders are edited.
- * @param root0
- * @param root0.cart
- */
+// The order URL is built server-side: only PHP knows whether the store is on
+// HPOS, which changes where orders are edited.
 const OrderLink = ({ cart }: { cart: Cart }) => {
 	if (cart.order_id <= 0) {
 		return <Dash />;
@@ -305,13 +315,8 @@ const Spinner = ({ size = 15 }: { size?: number }) => (
 	</svg>
 );
 
-/**
- * A failed dialog action has to report inside the dialog: the page-level notice
- * sits behind the modal backdrop, where the shopper-facing error would never be
- * seen before it auto-dismissed.
- * @param root0
- * @param root0.error
- */
+// Dialog errors render inside the dialog: the page-level notice sits behind the
+// modal backdrop and would auto-dismiss unseen.
 const DialogError = ({ error }: { error: unknown }) =>
 	error ? (
 		<div className="cr-notice is-error cr-dialog__error" role="alert">
@@ -465,7 +470,7 @@ const CartRow = ({
 
 	return (
 		<tr className={selected ? 'is-selected' : undefined}>
-			<td className="cr-check">
+			<td className="cr-col-check">
 				<input
 					type="checkbox"
 					checked={selected}
@@ -833,7 +838,6 @@ const RecoverDialog = ({
 		} else if (el.open) {
 			el.close();
 		}
-		// Only re-run when the target cart changes; `mark` is a stable mutation.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [cart]);
 
@@ -862,9 +866,6 @@ const RecoverDialog = ({
 	};
 
 	return (
-		// Backdrop click-to-close is a mouse nicety; keyboard dismissal (Esc) is
-		// handled natively by <dialog> via onClose, so the a11y interaction rules
-		// don't apply here.
 		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
 		<dialog
 			ref={ref}
@@ -999,7 +1000,6 @@ const SendDialog = ({
 		} else if (el.open) {
 			el.close();
 		}
-		// Only re-run when the target cart changes, not on template refetch.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [cart]);
 
@@ -1025,7 +1025,6 @@ const SendDialog = ({
 	};
 
 	return (
-		// Backdrop click-to-close is a mouse nicety; Esc is handled natively.
 		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
 		<dialog
 			ref={ref}
@@ -1131,6 +1130,8 @@ const SkeletonRows = () => (
 
 export const Carts = () => {
 	const [status, setStatus] = useState('');
+	const [query, setQuery] = useState('');
+	const [search, setSearch] = useState('');
 	const [page, setPage] = useState(1);
 	const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
 	const [sort, setSort] = useState<{ by: string; order: SortOrder }>({
@@ -1147,6 +1148,7 @@ export const Carts = () => {
 	const { data, isLoading, isFetching, isError } = useCarts({
 		status,
 		email: '',
+		search,
 		page,
 		per_page: perPage,
 		orderby: sort.by,
@@ -1157,13 +1159,8 @@ export const Carts = () => {
 	const bulk = useBulkCarts();
 
 	const items = useMemo(() => data?.items ?? [], [data]);
-	// One store currency for the whole page: every row, dialog, and order label
-	// reads the same code instead of trusting per-row values.
 	const currency = data?.currency ?? '';
 
-	// A selection only makes sense for rows currently on screen, so prune it to
-	// the visible ids on every list change — filter/page/sort switch, or a
-	// refetch after a row action removed or moved rows.
 	useEffect(() => {
 		const visible = new Set(items.map((cart) => cart.id));
 
@@ -1181,6 +1178,23 @@ export const Carts = () => {
 	}, [selected]);
 
 	useEffect(() => {
+		const next = query.trim();
+
+		if (next === search) {
+			return;
+		}
+
+		const timer = window.setTimeout(() => {
+			setSearch(next);
+			setPage(1);
+		}, SEARCH_DELAY);
+
+		return () => {
+			window.clearTimeout(timer);
+		};
+	}, [query, search]);
+
+	useEffect(() => {
 		if (!feedback) {
 			return;
 		}
@@ -1195,6 +1209,18 @@ export const Carts = () => {
 	}, [feedback]);
 
 	const isEmpty = !isLoading && !isError && !!data && items.length === 0;
+	const isFiltered = search !== '' || status !== '';
+
+	const clearSearch = () => {
+		setQuery('');
+		setSearch('');
+		setPage(1);
+	};
+
+	const clearFilters = () => {
+		clearSearch();
+		setStatus('');
+	};
 	const allChecked = items.length > 0 && selected.size === items.length;
 
 	const toggleAll = (checked: boolean) => {
@@ -1267,8 +1293,7 @@ export const Carts = () => {
 					});
 				},
 				onError: (error: unknown) => {
-					// Reset the select so the same status can be retried (an
-					// unchanged <option> emits no onChange event).
+					// Reset so the same status can be retried: an unchanged <option> emits no onChange.
 					setBulkStatus('');
 					setFeedback({ type: 'error', message: messageOf(error) });
 				},
@@ -1339,6 +1364,38 @@ export const Carts = () => {
 						)}
 					</span>
 				)}
+				<div className="cr-search" role="search">
+					<SearchIcon />
+					<input
+						type="search"
+						className="cr-input is-compact cr-search__input"
+						value={query}
+						placeholder={__(
+							'Search email, name, phone or #id',
+							'cart-rebound'
+						)}
+						aria-label={__('Search carts', 'cart-rebound')}
+						onChange={(event) => {
+							setQuery(event.target.value);
+						}}
+						onKeyDown={(event) => {
+							if (event.key === 'Escape' && query !== '') {
+								event.preventDefault();
+								clearSearch();
+							}
+						}}
+					/>
+					{query !== '' && (
+						<button
+							type="button"
+							className="cr-search__clear"
+							aria-label={__('Clear search', 'cart-rebound')}
+							onClick={clearSearch}
+						>
+							<CloseIcon />
+						</button>
+					)}
+				</div>
 			</div>
 
 			<StatusGuide />
@@ -1423,7 +1480,40 @@ export const Carts = () => {
 					</div>
 				)}
 
-				{isEmpty && (
+				{isEmpty && isFiltered && (
+					<div className="cr-empty">
+						<p className="cr-empty__title">
+							{search !== ''
+								? sprintf(
+										/* translators: %s: the search text. */
+										__(
+											'No carts match “%s”',
+											'cart-rebound'
+										),
+										search
+									)
+								: __(
+										'No carts match this filter',
+										'cart-rebound'
+									)}
+						</p>
+						<p>
+							{__(
+								'Try a different email, name, phone number or cart ID.',
+								'cart-rebound'
+							)}
+						</p>
+						<button
+							type="button"
+							className="cr-btn is-ghost is-sm"
+							onClick={clearFilters}
+						>
+							{__('Clear filters', 'cart-rebound')}
+						</button>
+					</div>
+				)}
+
+				{isEmpty && !isFiltered && (
 					<div className="cr-empty">
 						<p className="cr-empty__title">
 							{__('No carts yet', 'cart-rebound')}
@@ -1443,7 +1533,7 @@ export const Carts = () => {
 							<table className="cr-table">
 								<thead>
 									<tr>
-										<th className="cr-check">
+										<th className="cr-col-check">
 											<input
 												type="checkbox"
 												checked={allChecked}
@@ -1506,7 +1596,9 @@ export const Carts = () => {
 											onSort={onSort}
 											align="right"
 										/>
-										<th>{__('Actions', 'cart-rebound')}</th>
+										<th style={{ textAlign: 'right' }}>
+											{__('Actions', 'cart-rebound')}
+										</th>
 									</tr>
 								</thead>
 								<tbody>

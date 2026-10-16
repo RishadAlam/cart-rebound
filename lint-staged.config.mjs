@@ -1,13 +1,6 @@
-/**
- * lint-staged configuration.
- *
- * For TS/TSX we filter out files ESLint is configured to ignore (e.g.
- * vite.config.ts, *.d.ts) before linting, otherwise ESLint emits a
- * "File ignored" warning that trips `--max-warnings=0`. Prettier still formats
- * every matched file. PHP files run through PHP-CS-Fixer then PHPCS.
- */
 import { ESLint } from 'eslint';
 
+// ESLint warns "File ignored" on ignored paths, which trips `--max-warnings=0`.
 const keepLintable = async ( files ) => {
 	const eslint = new ESLint();
 	const results = await Promise.all(

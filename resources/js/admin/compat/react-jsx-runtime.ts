@@ -1,8 +1,5 @@
-/**
- * Compatibility bridge for packages compiled with React's automatic JSX
- * runtime. WordPress 6.2 exposes React itself, but does not guarantee the
- * separate `react-jsx-runtime` script handle used by newer core releases.
- */
+// WordPress 6.2 exposes React but not the separate `react-jsx-runtime` handle that
+// newer core ships, so packages built for the automatic JSX runtime need this bridge.
 import * as React from 'react';
 export type { JSX } from 'react';
 

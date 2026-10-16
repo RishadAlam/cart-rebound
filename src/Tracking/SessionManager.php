@@ -11,15 +11,13 @@ namespace CartRebound\Tracking;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 
 /**
  * Resolves a stable, unguessable key that identifies a visitor's cart.
  *
- * The key is generated specifically for Cart Rebound, mirrored into both a
- * first-party cookie and the WooCommerce session, and never derived from a
- * predictable WordPress user or WooCommerce customer id. On login a guest row
- * is merged into the user's identity.
+ * The key is never derived from a predictable WordPress user or WooCommerce customer id.
  *
  * @since 0.1.0
  */
@@ -45,6 +43,25 @@ final class SessionManager {
 	 * @var int
 	 */
 	private const KEY_LENGTH = 64;
+
+	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
+	 * Constructor.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param EventDispatcher $events Event dispatcher.
+	 */
+	public function __construct( EventDispatcher $events ) {
+		$this->events = $events;
+	}
 
 	/**
 	 * Resolve the stable session key for the current visitor.
@@ -106,32 +123,28 @@ final class SessionManager {
 		}
 
 		CartSession::update( (int) ( $row['id'] ?? 0 ), $update );
+
+		if ( isset( $update['email'] ) ) {
+			$this->events->captured( array_merge( $row, $update ) );
+		}
 	}
 
 	/**
 	 * Forget the current visitor's tracking session after their cart converts.
-	 *
-	 * Best-effort: drops the WooCommerce session slot and expires the first-party
-	 * cookie so the shopper's next cart opens a brand-new tracked row instead of
-	 * reusing the just-converted key. Safe to call in any context — it no-ops when
-	 * WooCommerce has no session or headers are already sent.
 	 *
 	 * @since 0.1.0
 	 *
 	 * @return void
 	 */
 	public function clear(): void {
-		// Only retire the session from the shopper's own front-end request. On a
-		// wp-admin order edit or a cron/webhook status change the current cookie
-		// and WooCommerce session belong to someone else (or no one), and
+		// In wp-admin or cron the cookie and WooCommerce session belong to someone else;
 		// CartTracker archives the converted key on the next cart regardless.
 		if ( is_admin() || wp_doing_cron() ) {
 			return;
 		}
 
 		// Once output has started the cookie can no longer be expired; bail before
-		// touching the WooCommerce session too, so the cookie and the session slot
-		// can never diverge (the cookie is read first on the next request).
+		// touching the WooCommerce session too, so the two never diverge.
 		if ( headers_sent() ) {
 			return;
 		}
@@ -157,18 +170,13 @@ final class SessionManager {
 	 * @return string
 	 */
 	private function woocommerce_session_key(): string {
-		if ( ! function_exists( 'WC' ) ) {
+		$wc = $this->woocommerce();
+
+		if ( null === $wc ) {
 			return '';
 		}
 
-		$wc = WC();
-
-		if ( ! is_object( $wc ) || null === $wc->session ) {
-			return '';
-		}
-
-		$stored = $wc->session->get( self::WC_SESSION_KEY );
-		$key    = is_string( $stored ) ? $this->validated_key( $stored ) : '';
+		$key = $this->stored_key( $wc );
 
 		if ( '' !== $key ) {
 			return $key;
@@ -178,6 +186,56 @@ final class SessionManager {
 		$wc->session->set( self::WC_SESSION_KEY, $key );
 
 		return $key;
+	}
+
+	/**
+	 * Get the visitor's existing session key without creating or storing one.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return string Empty string when the visitor has no key yet.
+	 */
+	public function existing_session_key(): string {
+		$cookie = $this->read_cookie();
+
+		if ( '' !== $cookie ) {
+			return $cookie;
+		}
+
+		$wc = $this->woocommerce();
+
+		return null === $wc ? '' : $this->stored_key( $wc );
+	}
+
+	/**
+	 * Get WooCommerce when its session is available.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return \WooCommerce|null
+	 */
+	private function woocommerce() {
+		if ( ! function_exists( 'WC' ) ) {
+			return null;
+		}
+
+		$wc = WC();
+
+		return is_object( $wc ) && null !== $wc->session ? $wc : null;
+	}
+
+	/**
+	 * Read and validate the key stored in the WooCommerce session.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param \WooCommerce $wc WooCommerce with an active session.
+	 * @return string Empty string when no valid key is stored.
+	 */
+	private function stored_key( $wc ): string {
+		$stored = $wc->session->get( self::WC_SESSION_KEY );
+
+		return is_string( $stored ) ? $this->validated_key( $stored ) : '';
 	}
 
 	/**
@@ -192,8 +250,6 @@ final class SessionManager {
 			return '';
 		}
 
-		// Identifier cookie; unslashed + strictly validated on use, no nonce
-		// applies to a read-only browser reference.
 		return $this->validated_key( sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE ] ) ) );
 	}
 
@@ -231,9 +287,8 @@ final class SessionManager {
 	/**
 	 * Build the cookie option array shared by the set and clear paths.
 	 *
-	 * Keeping one definition guarantees the expiring cookie carries the exact
-	 * path/secure/samesite scope the original was set with — a mismatch would
-	 * leave the browser holding the old cookie.
+	 * The expiring cookie must match the original's path/secure/samesite scope or the browser
+	 * keeps the old cookie.
 	 *
 	 * @since 0.1.0
 	 *

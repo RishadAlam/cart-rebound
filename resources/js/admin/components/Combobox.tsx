@@ -1,12 +1,5 @@
-/**
- * Accessible, searchable select — a modern replacement for a native <select>.
- *
- * The popover is `position: fixed` and positioned from the trigger's rect, so it
- * escapes overflow-clipping ancestors (e.g. the scrollable carts table) and
- * still renders above a <dialog> backdrop (it stays a descendant of the dialog).
- * Search is auto-enabled once the list is long enough; keyboard navigation,
- * type-to-filter, click-outside and Escape are all handled.
- */
+// The popover is `position: fixed` from the trigger's rect so it escapes overflow-clipping
+// ancestors (e.g. the carts table) and still renders above a <dialog> backdrop.
 import {
 	useCallback,
 	useEffect,
@@ -35,6 +28,7 @@ interface Position {
 const SEARCH_THRESHOLD = 7;
 
 export const Combobox = ({
+	id,
 	options,
 	value,
 	onChange,
@@ -46,6 +40,7 @@ export const Combobox = ({
 	tone,
 	pill = false,
 }: {
+	id?: string;
 	options: ComboOption[];
 	value: string;
 	onChange: (value: string) => void;
@@ -54,9 +49,7 @@ export const Combobox = ({
 	disabled?: boolean;
 	compact?: boolean;
 	searchable?: boolean;
-	// Colour the trigger (e.g. a lifecycle status); adds cr-combo__trigger--<tone>.
 	tone?: string;
-	// Render the trigger as a rounded pill.
 	pill?: boolean;
 }) => {
 	const [open, setOpen] = useState(false);
@@ -209,6 +202,7 @@ export const Combobox = ({
 		>
 			<button
 				ref={triggerRef}
+				id={id}
 				type="button"
 				className={`cr-combo__trigger${pill ? ' is-pill' : ''}${
 					tone ? ` cr-combo__trigger--${tone}` : ''

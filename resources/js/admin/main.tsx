@@ -1,8 +1,3 @@
-/**
- * Admin React entry point.
- *
- * Mounts the application into the root node rendered by the admin page.
- */
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { __ } from '@wordpress/i18n';

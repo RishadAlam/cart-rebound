@@ -118,7 +118,7 @@ final class CaptureServiceProvider extends ServiceProvider {
 
 		$settings = $this->app->make( Settings::class );
 
-		if ( ! $settings->get( 'guest_tracking' ) ) {
+		if ( ! $settings->get( 'tracking_enabled' ) || ! $settings->get( 'guest_tracking' ) ) {
 			return;
 		}
 

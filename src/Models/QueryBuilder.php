@@ -16,9 +16,8 @@ use InvalidArgumentException;
 /**
  * A minimal, safe query builder.
  *
- * Every query is assembled from literal fragments plus `%i` / `%s` / `%d`
- * placeholders and run through $wpdb->prepare(); no caller value is ever
- * concatenated into SQL.
+ * No caller value is ever concatenated into SQL; everything goes through $wpdb->prepare()
+ * placeholders.
  *
  * @since 0.1.0
  */
@@ -26,9 +25,6 @@ final class QueryBuilder {
 
 	/**
 	 * Allowed comparison operators mapped to their literal prepared fragment.
-	 *
-	 * This single map is the only source of truth for which operators are
-	 * supported (validated in {@see where()}) and how each compiles.
 	 *
 	 * @since 0.1.0
 	 * @var array<string, string>
@@ -116,6 +112,51 @@ final class QueryBuilder {
 	 * @throws InvalidArgumentException When the operator is unsupported or the value is not scalar.
 	 */
 	public function where( string $column, string $operator, $value ): QueryBuilder {
+		$this->wheres[] = $this->basic_condition( $column, $operator, $value );
+
+		return $this;
+	}
+
+	/**
+	 * Add a group of conditions joined by OR: `WHERE (a OR b OR …)`.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<int, array{0: string, 1: string, 2: mixed}> $conditions Each `[ column, operator, value ]`.
+	 * @return QueryBuilder
+	 *
+	 * @throws InvalidArgumentException When an operator is unsupported or a value is not scalar.
+	 */
+	public function where_any( array $conditions ): QueryBuilder {
+		$group = array();
+
+		foreach ( $conditions as $condition ) {
+			$group[] = $this->basic_condition( $condition[0], $condition[1], $condition[2] );
+		}
+
+		if ( array() !== $group ) {
+			$this->wheres[] = array(
+				'type'       => 'any',
+				'conditions' => $group,
+			);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Validate one comparison and return it as a basic WHERE entry.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param string $column   Column name.
+	 * @param string $operator Comparison operator (one of {@see OPERATORS}).
+	 * @param mixed  $value    Scalar (or null) value to compare against.
+	 * @return array{type: string, column: string, operator: string, value: mixed}
+	 *
+	 * @throws InvalidArgumentException When the operator is unsupported or the value is not scalar.
+	 */
+	private function basic_condition( string $column, string $operator, $value ): array {
 		$normalized = strtoupper( $operator );
 
 		if ( ! isset( self::FRAGMENTS[ $normalized ] ) ) {
@@ -130,21 +171,16 @@ final class QueryBuilder {
 			);
 		}
 
-		$this->wheres[] = array(
+		return array(
 			'type'     => 'basic',
 			'column'   => $column,
 			'operator' => $normalized,
 			'value'    => $value,
 		);
-
-		return $this;
 	}
 
 	/**
 	 * Add a `WHERE column IN (...)` condition.
-	 *
-	 * An empty value set produces a clause that matches nothing (a safe `1 = 0`),
-	 * never an invalid empty `IN ()`.
 	 *
 	 * @since 0.1.0
 	 *
@@ -340,8 +376,7 @@ final class QueryBuilder {
 	/**
 	 * Set the result offset.
 	 *
-	 * Only takes effect together with a positive {@see limit()} (SQL OFFSET
-	 * requires a LIMIT). Intended for page-based admin listings.
+	 * Only takes effect together with a positive {@see limit()} (SQL OFFSET requires a LIMIT).
 	 *
 	 * @since 0.1.0
 	 *
@@ -406,9 +441,6 @@ final class QueryBuilder {
 	/**
 	 * Delete every row matching the current constraints.
 	 *
-	 * Refuses to run without at least one WHERE condition, so it can never wipe
-	 * the whole table by accident.
-	 *
 	 * @since 0.1.0
 	 *
 	 * @return int Number of rows deleted.
@@ -436,12 +468,6 @@ final class QueryBuilder {
 
 	/**
 	 * Update every row matching the current constraints in one atomic statement.
-	 *
-	 * Unlike {@see update()} (which targets a single id), this compiles the WHERE
-	 * clause into the UPDATE so the change only lands on rows that still satisfy
-	 * the conditions — enabling compare-and-set flips such as "abandon this cart
-	 * only while it is still active". Refuses to run without a WHERE condition so
-	 * it can never rewrite the whole table by accident.
 	 *
 	 * @since 0.1.0
 	 *
@@ -504,6 +530,11 @@ final class QueryBuilder {
 				continue;
 			}
 
+			if ( 'any' === $where['type'] ) {
+				$clauses[] = $this->where_any_fragment( $where, $bindings );
+				continue;
+			}
+
 			$clauses[]  = $this->where_fragment( $where['operator'] );
 			$bindings[] = $where['column'];
 			$bindings[] = $where['value'];
@@ -536,6 +567,27 @@ final class QueryBuilder {
 		}
 
 		return '%i IN (' . $placeholders . ')';
+	}
+
+	/**
+	 * Build an `(a OR b …)` fragment and append its bindings.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $where    The OR group.
+	 * @param array<int, mixed>    $bindings Bindings collected so far (by reference).
+	 * @return string
+	 */
+	private function where_any_fragment( array $where, array &$bindings ): string {
+		$fragments = array();
+
+		foreach ( $where['conditions'] as $condition ) {
+			$fragments[] = $this->where_fragment( $condition['operator'] );
+			$bindings[]  = $condition['column'];
+			$bindings[]  = $condition['value'];
+		}
+
+		return '(' . implode( ' OR ', $fragments ) . ')';
 	}
 
 	/**

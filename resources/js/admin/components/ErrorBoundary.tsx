@@ -1,7 +1,3 @@
-/**
- * Error boundary so a render-time throw shows a styled fallback instead of a
- * blank admin screen.
- */
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { __ } from '@wordpress/i18n';
 
@@ -28,14 +24,13 @@ export class ErrorBoundary extends Component<Props, State> {
 	public override render(): ReactNode {
 		if (this.state.hasError) {
 			return (
-				<div
-					className="cart-rebound-error p-6 text-red-600"
-					role="alert"
-				>
-					{__(
-						'Something went wrong. Please reload the page.',
-						'cart-rebound'
-					)}
+				<div className="cr-app">
+					<div className="cr-notice is-error" role="alert">
+						{__(
+							'Something went wrong. Please reload the page.',
+							'cart-rebound'
+						)}
+					</div>
 				</div>
 			);
 		}

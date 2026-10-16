@@ -1,10 +1,3 @@
-/**
- * Templates page — manage the recovery-email templates.
- *
- * A master/detail layout: pick a template on the left, edit it (rich-text body,
- * subject, sender, coupon) on the right. Exactly one template is the default —
- * the one automatic abandonment emails use.
- */
 import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { ChipSelect } from '../components/ChipSelect';
@@ -29,8 +22,6 @@ import type {
 
 type Feedback = { type: 'success' | 'error'; message: string };
 
-// The editor is one form saved in one go; the panes only decide what is on
-// screen, so a long template never buries the fields that matter today.
 type Pane = 'message' | 'table' | 'delivery';
 
 const PANES: { id: Pane; label: string }[] = [
@@ -83,8 +74,6 @@ const IMAGE_SIZE_OPTIONS = [
 	{ value: '64', label: __('Roomy — 64px', 'cart-rebound') },
 ];
 
-// Merge tags, grouped shopper → cart → store, in the order the picker lists
-// them. TAGS drives the picker; TOKEN_DOCS explains each one under the editor.
 const TOKEN_DOCS = [
 	{
 		token: '{first_name}',
@@ -270,8 +259,6 @@ export const Templates = () => {
 	const [pane, setPane] = useState<Pane>('message');
 	const [query, setQuery] = useState('');
 	const [form, setForm] = useState<EmailTemplate>(BLANK);
-	// The template as it was last loaded or saved, so the save bar can say
-	// whether anything is actually pending.
 	const [baseline, setBaseline] = useState<EmailTemplate>(BLANK);
 	const [editorKey, setEditorKey] = useState(0);
 	const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -293,7 +280,6 @@ export const Templates = () => {
 		setEditorKey((key) => key + 1);
 	};
 
-	// Leaving a half-edited template silently loses the edits, so ask first.
 	const loadGuarded = (template: EmailTemplate, id: string) => {
 		if (id === selectedId) {
 			return;
@@ -315,19 +301,13 @@ export const Templates = () => {
 		load(template, id);
 	};
 
-	// Keep a valid template selected: pick the default on first load, and
-	// re-select after the current one disappears (e.g. was deleted, so the
-	// refetched list no longer contains selectedId). Skips the "new" draft.
 	useEffect(() => {
 		if (!templates || selectedId === 'new') {
 			return;
 		}
 
-		// A just-created template is selected before its id can appear in the
-		// cached list — the create invalidates the query, so the refetch is still
-		// in flight. Rescuing here would read that gap as "the selection vanished"
-		// and throw the editor onto the default template, one keystroke after the
-		// merchant created this one. Wait for the list to settle instead.
+		// A just-created template is selected before the invalidated list refetches;
+		// rescuing during that gap would throw the editor onto the default template.
 		if (isFetching) {
 			return;
 		}
@@ -418,7 +398,6 @@ export const Templates = () => {
 		}));
 	};
 
-	// Product-table booleans all render the same switch row.
 	const tableToggle = (
 		key: {
 			[
@@ -1367,7 +1346,6 @@ export const Templates = () => {
 				</section>
 			</div>
 
-			{/* Backdrop click-to-close is a mouse nicety; Esc is handled natively. */}
 			{/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */}
 			<dialog
 				ref={previewRef}

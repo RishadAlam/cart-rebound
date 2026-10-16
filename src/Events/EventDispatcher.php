@@ -17,9 +17,6 @@ use WC_Order;
 /**
  * Fires the plugin's public integration events with a flat, mappable payload.
  *
- * Automation tools (FlowMattic, Bit Integrations, etc.) hook these actions
- * instead of coupling to the plugin internals.
- *
  * @since 0.1.0
  */
 final class EventDispatcher {
@@ -96,6 +93,277 @@ final class EventDispatcher {
 	}
 
 	/**
+	 * Fire the cart-created event.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row The newly tracked cart row.
+	 * @return void
+	 */
+	public function created( array $row ): void {
+		if ( ! has_action( 'cart_rebound_cart_created' ) ) {
+			return;
+		}
+
+		/**
+		 * Fires when a new cart starts being tracked.
+		 *
+		 * Guest carts have no email until checkout captures it; listen to
+		 * `cart_rebound_cart_captured` for carts that can be recovered.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload.
+		 */
+		do_action( 'cart_rebound_cart_created', $this->base_payload( $row ) );
+	}
+
+	/**
+	 * Fire the cart-captured event.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row The cart row after the capture.
+	 * @return void
+	 */
+	public function captured( array $row ): void {
+		if ( '' === (string) ( $row['email'] ?? '' ) || ! has_action( 'cart_rebound_cart_captured' ) ) {
+			return;
+		}
+
+		/**
+		 * Fires when a cart first holds a contact email, or its email changes.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload.
+		 */
+		do_action( 'cart_rebound_cart_captured', $this->base_payload( $row ) );
+	}
+
+	/**
+	 * Fire the cart status-change events.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row      The cart row after the change.
+	 * @param string               $previous The status before the change.
+	 * @return void
+	 */
+	public function status_changed( array $row, string $previous ): void {
+		$status = (string) ( $row['status'] ?? '' );
+
+		if ( '' === $status || $status === $previous ) {
+			return;
+		}
+
+		if ( ! has_action( "cart_rebound_cart_status_{$status}" ) && ! has_action( 'cart_rebound_cart_status_changed' ) ) {
+			return;
+		}
+
+		$payload                    = $this->base_payload( $row );
+		$payload['previous_status'] = $previous;
+
+		/**
+		 * Fires when a cart moves into one specific status.
+		 *
+		 * The dynamic part is the new status: active, abandoned, pending-payment,
+		 * recovered, completed or lost.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload, including `previous_status`.
+		 */
+		do_action( "cart_rebound_cart_status_{$status}", $payload );
+
+		/**
+		 * Fires whenever a cart's status changes.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload, including `previous_status`.
+		 */
+		do_action( 'cart_rebound_cart_status_changed', $payload );
+	}
+
+	/**
+	 * Fire the recovery-email-sent events.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row      The cart row the email was sent for.
+	 * @param array<string, mixed> $template The template that was sent.
+	 * @param string               $trigger  'automatic' (scheduled) or 'manual' (sent from the admin).
+	 * @return void
+	 */
+	public function email_sent( array $row, array $template, string $trigger ): void {
+		if ( ! has_action( 'cart_rebound_recovery_email_sent' ) && ! has_action( 'cart_rebound_recovery_coupon_sent' ) ) {
+			return;
+		}
+
+		$payload                  = $this->base_payload( $row );
+		$payload['template_id']   = (string) ( $template['id'] ?? '' );
+		$payload['template_name'] = (string) ( $template['name'] ?? '' );
+		$payload['coupon_code']   = $this->prints_coupon( $template ) ? (string) ( $template['coupon'] ?? '' ) : '';
+		$payload['trigger']       = $trigger;
+		$payload['sent_at']       = gmdate( 'Y-m-d H:i:s' );
+
+		/**
+		 * Fires after a recovery email is handed to wp_mail successfully.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload plus template, coupon and trigger details.
+		 */
+		do_action( 'cart_rebound_recovery_email_sent', $payload );
+
+		if ( '' === $payload['coupon_code'] || ! has_action( 'cart_rebound_recovery_coupon_sent' ) ) {
+			return;
+		}
+
+		$payload['coupon_id'] = function_exists( 'wc_get_coupon_id_by_code' )
+			? (int) wc_get_coupon_id_by_code( $payload['coupon_code'] )
+			: 0;
+
+		/**
+		 * Fires after a recovery email carrying a coupon code is sent.
+		 *
+		 * The coupon is the existing WooCommerce coupon chosen on the template;
+		 * Cart Rebound does not generate coupons.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload The recovery-email payload plus `coupon_id`.
+		 */
+		do_action( 'cart_rebound_recovery_coupon_sent', $payload );
+	}
+
+	/**
+	 * Fire the recovery-email-failed event.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row      The cart row the email was for.
+	 * @param array<string, mixed> $template The template that failed to send.
+	 * @param string               $trigger  'automatic' (scheduled) or 'manual' (sent from the admin).
+	 * @return void
+	 */
+	public function email_failed( array $row, array $template, string $trigger ): void {
+		if ( ! has_action( 'cart_rebound_recovery_email_failed' ) ) {
+			return;
+		}
+
+		$payload                  = $this->base_payload( $row );
+		$payload['template_id']   = (string) ( $template['id'] ?? '' );
+		$payload['template_name'] = (string) ( $template['name'] ?? '' );
+		$payload['trigger']       = $trigger;
+
+		/**
+		 * Fires when wp_mail rejects a recovery email.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload plus template and trigger details.
+		 */
+		do_action( 'cart_rebound_recovery_email_failed', $payload );
+	}
+
+	/**
+	 * Fire the recovery-link-clicked event.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row The cart row the link restored.
+	 * @return void
+	 */
+	public function link_clicked( array $row ): void {
+		if ( ! has_action( 'cart_rebound_recovery_link_clicked' ) ) {
+			return;
+		}
+
+		$payload               = $this->base_payload( $row );
+		$payload['clicked_at'] = gmdate( 'Y-m-d H:i:s' );
+
+		/**
+		 * Fires when a shopper opens a recovery link and their cart is restored.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload plus `clicked_at`.
+		 */
+		do_action( 'cart_rebound_recovery_link_clicked', $payload );
+	}
+
+	/**
+	 * Fire the order-linked event.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row   The cart row after the order was stamped on it.
+	 * @param WC_Order             $order The order placed from the cart.
+	 * @return void
+	 */
+	public function order_linked( array $row, WC_Order $order ): void {
+		if ( ! has_action( 'cart_rebound_order_linked' ) ) {
+			return;
+		}
+
+		$payload                 = $this->base_payload( $row );
+		$payload['order_id']     = $order->get_id();
+		$payload['order_total']  = (float) $order->get_total();
+		$payload['order_status'] = (string) $order->get_status();
+
+		/**
+		 * Fires when an order is placed from a tracked cart, before it is paid.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload plus order details.
+		 */
+		do_action( 'cart_rebound_order_linked', $payload );
+	}
+
+	/**
+	 * Fire the unsubscribed event.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row The cart row whose unsubscribe link was used.
+	 * @return void
+	 */
+	public function unsubscribed( array $row ): void {
+		if ( ! has_action( 'cart_rebound_unsubscribed' ) ) {
+			return;
+		}
+
+		$payload                    = $this->base_payload( $row );
+		$payload['unsubscribed_at'] = gmdate( 'Y-m-d H:i:s' );
+
+		/**
+		 * Fires when a shopper unsubscribes from recovery emails.
+		 *
+		 * @since 1.1.2
+		 *
+		 * @param array<string, mixed> $payload Flat cart payload plus `unsubscribed_at`.
+		 */
+		do_action( 'cart_rebound_unsubscribed', $payload );
+	}
+
+	/**
+	 * Whether a template's subject or body prints the coupon code.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $template Email template.
+	 * @return bool
+	 */
+	private function prints_coupon( array $template ): bool {
+		$content = ( $template['subject'] ?? '' ) . ( $template['body'] ?? '' );
+
+		return false !== strpos( $content, '{coupon_code}' );
+	}
+
+	/**
 	 * Increment a lifetime counter option.
 	 *
 	 * @since 0.1.0
@@ -127,6 +395,8 @@ final class EventDispatcher {
 			'cart_total'       => (float) ( $row['cart_total'] ?? 0 ),
 			'currency'         => (string) ( $row['currency'] ?? '' ),
 			'cart_items_count' => (int) ( $row['items_count'] ?? 0 ),
+			'status'           => (string) ( $row['status'] ?? '' ),
+			'order_id'         => (int) ( $row['order_id'] ?? 0 ),
 			'products'         => $this->products( $row ),
 			'checkout_url'     => (string) ( $row['checkout_url'] ?? '' ),
 			'recovery_url'     => $this->links->url( (string) ( $row['recovery_token'] ?? '' ) ),

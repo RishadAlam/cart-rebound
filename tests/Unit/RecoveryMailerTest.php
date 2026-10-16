@@ -1,15 +1,11 @@
 <?php
-/**
- * Recovery mailer unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
 namespace CartRebound\Tests\Unit;
 
 use Brain\Monkey\Functions;
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Mail\RecoveryMailer;
 use CartRebound\Mail\TemplateStore;
 use CartRebound\Recovery\RecoveryLink;
@@ -38,7 +34,6 @@ final class RecoveryMailerTest extends TestCase {
 		);
 		Functions\when( 'sanitize_email' )->returnArg();
 
-		// Merge-tag values pull in a handful of formatting/site helpers.
 		Functions\when( 'number_format_i18n' )->alias(
 			static function ( $number, $decimals = 0 ) {
 				return number_format( (float) $number, (int) $decimals );
@@ -148,6 +143,8 @@ final class RecoveryMailerTest extends TestCase {
 		Functions\when( 'update_option' )->justReturn( true );
 		Functions\when( 'wp_generate_uuid4' )->justReturn( 'template-id' );
 		Functions\when( 'wpautop' )->returnArg();
+		Functions\when( 'sanitize_text_field' )->returnArg();
+		Functions\when( 'wp_kses_post' )->returnArg();
 		Functions\when( 'wc_get_cart_url' )->justReturn( 'https://shop.test/cart' );
 		Functions\when( 'add_query_arg' )->justReturn( 'https://shop.test/cart?recover' );
 		Functions\when( 'home_url' )->justReturn( 'https://shop.test/' );
@@ -165,7 +162,7 @@ final class RecoveryMailerTest extends TestCase {
 	private function mailer(): RecoveryMailer {
 		$settings = new Settings();
 
-		return new RecoveryMailer( $settings, new RecoveryLink(), new TemplateStore( $settings ) );
+		return new RecoveryMailer( $settings, new RecoveryLink(), new TemplateStore( $settings ), new EventDispatcher( new RecoveryLink() ) );
 	}
 }
 
@@ -184,8 +181,6 @@ class RecoveryMailerWpdb {
 	public function prepare( $query, $args = array() ) {
 		$flat = is_array( $args ) ? $args : array( $args );
 
-		// Interpolate %i/%s/%d in order so the target table name is visible to
-		// get_results() (which routes the suppression lookup to an empty result).
 		return (string) preg_replace_callback(
 			'/%[isd]/',
 			static function () use ( &$flat ) {
@@ -198,9 +193,6 @@ class RecoveryMailerWpdb {
 	public function get_results( $query, $output ) {
 		unset( $output );
 
-		// Route the suppression lookup (against the unsubscribes table specifically,
-		// not any query whose values merely contain the word) to a controllable
-		// result so fixtures decide whether an address is unsubscribed.
 		if ( is_string( $query ) && false !== strpos( $query, 'cart_rebound_unsubscribes' ) ) {
 			return $this->unsubscribed
 				? array( array( 'id' => 1, 'email' => 'shopper@example.com' ) )

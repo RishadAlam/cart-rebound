@@ -17,9 +17,6 @@ use CartRebound\Models\LogEntry;
 /**
  * Listens to the plugin's public events and records them in the activity log.
  *
- * Hooking the public actions (rather than writing from the emitters) keeps the
- * dispatcher/mailer free of logging concerns.
- *
  * @since 0.1.0
  */
 final class LogSubscriber {

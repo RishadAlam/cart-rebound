@@ -1,8 +1,3 @@
-/**
- * Settings page — edit and persist plugin settings.
- *
- * Tracking is always on while the plugin is active; there is no master toggle.
- */
 import {
 	useEffect,
 	useState,
@@ -10,7 +5,9 @@ import {
 	type FormEvent,
 	type ReactNode,
 } from 'react';
-import { __ } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
+import { AdminLink } from '../components/AdminLink';
+import { Combobox } from '../components/Combobox';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
 import type { Settings as SettingsData } from '../types/api';
 
@@ -22,12 +19,15 @@ type NumberKey =
 	| 'email_delay_minutes';
 
 type ToggleKey =
-	'guest_tracking' | 'recovery_email_enabled' | 'admin_recovery_email';
+	| 'tracking_enabled'
+	| 'guest_tracking'
+	| 'recovery_email_enabled'
+	| 'admin_recovery_email';
 
-// WooCommerce order statuses selectable as "counts as recovered". Reversed
-// states (refunded/cancelled/failed) and unpaid pending are intentionally
-// omitted; custom statuses can be added via the cart_rebound_paid_order_statuses
-// filter.
+const LOG_RETENTION_OPTIONS = [7, 14, 30, 60, 90, 180, 365];
+
+// Refunded/cancelled/failed and unpaid pending are omitted on purpose; custom
+// statuses come in via the cart_rebound_paid_order_statuses filter.
 const PAID_STATUS_OPTIONS: Array<{ key: string; label: string }> = [
 	{ key: 'on-hold', label: __('On hold', 'cart-rebound') },
 	{ key: 'processing', label: __('Processing', 'cart-rebound') },
@@ -129,12 +129,13 @@ export const Settings = () => {
 		update.mutate(form);
 	};
 
-	const toggle = (key: ToggleKey, id: string) => (
+	const toggle = (key: ToggleKey, id: string, disabled = false) => (
 		<span className="cr-switch">
 			<input
 				id={id}
 				type="checkbox"
 				checked={form[key]}
+				disabled={disabled}
 				onChange={onToggle(key)}
 			/>
 			<span className="cr-switch__track">
@@ -151,11 +152,32 @@ export const Settings = () => {
 				</h2>
 				<p className="cr-section__desc">
 					{__(
-						'Cart tracking runs automatically while the plugin is active. Choose whether logged-out (guest) carts are tracked too.',
+						'Choose which carts Cart Rebound records.',
 						'cart-rebound'
 					)}
 				</p>
 				<div className="cr-field--row">
+					<div>
+						<label
+							htmlFor="cr-tracking"
+							className="cr-field__label"
+						>
+							{__('Track carts', 'cart-rebound')}
+						</label>
+						<p className="cr-field__hint">
+							{__(
+								'Record carts and the contact details shoppers enter at checkout.',
+								'cart-rebound'
+							)}
+						</p>
+					</div>
+					{toggle('tracking_enabled', 'cr-tracking')}
+				</div>
+				<div
+					className={`cr-field--row${
+						form.tracking_enabled ? '' : ' is-disabled'
+					}`}
+				>
 					<div>
 						<label htmlFor="cr-guest" className="cr-field__label">
 							{__('Track guest carts', 'cart-rebound')}
@@ -167,8 +189,20 @@ export const Settings = () => {
 							)}
 						</p>
 					</div>
-					{toggle('guest_tracking', 'cr-guest')}
+					{toggle(
+						'guest_tracking',
+						'cr-guest',
+						!form.tracking_enabled
+					)}
 				</div>
+				{!form.tracking_enabled && (
+					<div className="cr-notice is-warning" role="status">
+						{__(
+							'Tracking is paused. No new carts, checkout emails or tracking cookies are recorded. Carts already tracked keep their scheduled recovery emails.',
+							'cart-rebound'
+						)}
+					</div>
+				)}
 			</div>
 
 			<div className="cr-section">
@@ -254,6 +288,52 @@ export const Settings = () => {
 							min={1}
 							value={form.converted_cleanup_days}
 							onChange={onNumber('converted_cleanup_days')}
+						/>
+					</Field>
+					<Field
+						id="cr-log-retention"
+						label={__('Delete log entries after', 'cart-rebound')}
+						hint={__(
+							'Older entries on the Log screen are removed by the daily cleanup.',
+							'cart-rebound'
+						)}
+					>
+						<Combobox
+							id="cr-log-retention"
+							value={String(form.log_retention_days)}
+							options={[
+								...[
+									...new Set([
+										...LOG_RETENTION_OPTIONS,
+										form.log_retention_days,
+									]),
+								]
+									.filter((days) => days > 0)
+									.sort((a, b) => a - b)
+									.map((days) => ({
+										value: String(days),
+										label: sprintf(
+											/* translators: %d: number of days. */
+											_n(
+												'%d day',
+												'%d days',
+												days,
+												'cart-rebound'
+											),
+											days
+										),
+									})),
+								{
+									value: '0',
+									label: __('Never', 'cart-rebound'),
+								},
+							]}
+							onChange={(next) => {
+								setField(
+									'log_retention_days',
+									Number.parseInt(next, 10)
+								);
+							}}
 						/>
 					</Field>
 				</div>
@@ -392,7 +472,9 @@ export const Settings = () => {
 						'Email content — subject, rich-text body, sender, and coupon — is managed per template on the',
 						'cart-rebound'
 					)}{' '}
-					<a href="#/templates">{__('Templates', 'cart-rebound')}</a>{' '}
+					<AdminLink to="/templates">
+						{__('Templates', 'cart-rebound')}
+					</AdminLink>{' '}
 					{__(
 						'tab. Automatic recovery emails use the template marked default.',
 						'cart-rebound'

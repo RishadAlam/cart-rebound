@@ -1,16 +1,14 @@
 <?php
-/**
- * Cart-tracker unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
 namespace CartRebound\Tests\Unit;
 
+use Brain\Monkey\Actions;
 use Brain\Monkey\Functions;
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
+use CartRebound\Recovery\RecoveryLink;
 use CartRebound\Support\Settings;
 use CartRebound\Tests\TestCase;
 use CartRebound\Tracking\CartTracker;
@@ -31,11 +29,43 @@ final class CartTrackerTest extends TestCase {
 		$GLOBALS['wpdb'] = $this->wpdb;
 
 		Functions\when( 'get_option' )->justReturn( array() );
+		Functions\when( 'wc_get_cart_url' )->justReturn( 'https://shop.test/cart' );
+		Functions\when( 'add_query_arg' )->justReturn( 'https://shop.test/cart?recover' );
 	}
 
 	protected function tear_down(): void {
 		unset( $GLOBALS['wpdb'] );
 		parent::tear_down();
+	}
+
+	private function events(): EventDispatcher {
+		return new EventDispatcher( new RecoveryLink() );
+	}
+
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_master_switch_gates_tracking(): void {
+		Functions\when( 'WC' )->justReturn( null );
+		Functions\when( 'get_current_user_id' )->justReturn( 5 );
+
+		$enabled = array( 'tracking_enabled' => true );
+		Functions\when( 'get_option' )->alias(
+			static function () use ( &$enabled ) {
+				return $enabled;
+			}
+		);
+
+		$tracker = new CartTracker( new SessionManager( $this->events() ), new Settings(), $this->events() );
+		$allowed = new \ReflectionMethod( $tracker, 'tracking_allowed' );
+		$allowed->setAccessible( true );
+
+		$this->assertTrue( $allowed->invoke( $tracker ) );
+
+		$enabled = array( 'tracking_enabled' => false );
+
+		$this->assertFalse( $allowed->invoke( $tracker ) );
 	}
 
 	public function test_returning_shopper_reopens_the_cart_but_keeps_its_abandonment_stamp(): void {
@@ -47,7 +77,16 @@ final class CartTrackerTest extends TestCase {
 			'abandonment_notified' => 1,
 		);
 
-		$tracker = new CartTracker( new SessionManager(), new Settings() );
+		add_action( 'cart_rebound_cart_status_active', '__return_null' );
+		Actions\expectDone( 'cart_rebound_cart_status_active' )->once()->with(
+			\Mockery::on(
+				static function ( $payload ): bool {
+					return 7 === $payload['cart_id'] && CartSession::STATUS_ABANDONED === $payload['previous_status'];
+				}
+			)
+		);
+
+		$tracker = new CartTracker( new SessionManager( $this->events() ), new Settings(), $this->events() );
 
 		$this->assertSame( 7, $tracker->upsert( 'key-7', array( 'items_count' => 2, 'cart_total' => 40.0 ) ) );
 
@@ -56,8 +95,7 @@ final class CartTrackerTest extends TestCase {
 		$this->assertSame( CartSession::STATUS_ACTIVE, $written['status'] );
 		$this->assertSame( 0, $written['abandonment_notified'] );
 
-		// The abandonment stamp is what OrderLinker reads to attribute a later
-		// paid order as recovered, so reopening must never clear it.
+		// OrderLinker reads abandoned_at to attribute a later paid order, so reopening must keep it.
 		$this->assertArrayNotHasKey( 'abandoned_at', $written );
 	}
 }

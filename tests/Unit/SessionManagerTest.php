@@ -1,15 +1,12 @@
 <?php
-/**
- * Session-manager unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
 namespace CartRebound\Tests\Unit;
 
 use Brain\Monkey\Functions;
+use CartRebound\Events\EventDispatcher;
+use CartRebound\Recovery\RecoveryLink;
 use CartRebound\Tests\TestCase;
 use CartRebound\Tracking\SessionManager;
 
@@ -34,18 +31,18 @@ final class SessionManagerTest extends TestCase {
 		$key                               = str_repeat( 'aB3', 21 ) . 'x';
 		$_COOKIE[ SessionManager::COOKIE ] = $key;
 
-		$this->assertSame( $key, ( new SessionManager() )->resolve_session_key() );
+		$this->assertSame( $key, ( new SessionManager( new EventDispatcher( new RecoveryLink() ) ) )->resolve_session_key() );
 	}
 
 	public function test_rejects_a_predictable_numeric_cookie_key(): void {
 		$_COOKIE[ SessionManager::COOKIE ] = '42';
 
-		$this->assertSame( '', ( new SessionManager() )->resolve_session_key() );
+		$this->assertSame( '', ( new SessionManager( new EventDispatcher( new RecoveryLink() ) ) )->resolve_session_key() );
 	}
 
 	public function test_rejects_non_scalar_cookie_input(): void {
 		$_COOKIE[ SessionManager::COOKIE ] = array( '42' );
 
-		$this->assertSame( '', ( new SessionManager() )->resolve_session_key() );
+		$this->assertSame( '', ( new SessionManager( new EventDispatcher( new RecoveryLink() ) ) )->resolve_session_key() );
 	}
 }
