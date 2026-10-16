@@ -440,7 +440,7 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 **Added**
 
 * Added a **Track carts** switch (on by default) that pauses all cart, checkout-email and cookie capture without deactivating the plugin.
-* Added automatic deletion of activity-log entries after a configurable period (30 days by default, or never).
+* Added automatic deletion of activity-log entries after a configurable period (off by default; choose 7 days to a year).
 * Added a search field to the Carts screen that finds carts by email, name, phone, cart ID or order ID.
 * Added WordPress actions for automations: cart created, contact details captured, recovery email sent or failed, coupon sent, recovery link clicked, order placed from a tracked cart, unsubscribed, and every cart status change (one action for all changes and one per status).
 

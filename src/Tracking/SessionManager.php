@@ -194,6 +194,35 @@ final class SessionManager {
 	}
 
 	/**
+	 * Get the visitor's existing session key without creating or storing one.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return string Empty string when the visitor has no key yet.
+	 */
+	public function existing_session_key(): string {
+		$cookie = $this->read_cookie();
+
+		if ( '' !== $cookie ) {
+			return $cookie;
+		}
+
+		if ( ! function_exists( 'WC' ) ) {
+			return '';
+		}
+
+		$wc = WC();
+
+		if ( ! is_object( $wc ) || null === $wc->session ) {
+			return '';
+		}
+
+		$stored = $wc->session->get( self::WC_SESSION_KEY );
+
+		return is_string( $stored ) ? $this->validated_key( $stored ) : '';
+	}
+
+	/**
 	 * Read the first-party cookie value (sanitised).
 	 *
 	 * @since 0.1.0

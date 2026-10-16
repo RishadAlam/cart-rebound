@@ -101,6 +101,10 @@ final class EventDispatcher {
 	 * @return void
 	 */
 	public function created( array $row ): void {
+		if ( ! has_action( 'cart_rebound_cart_created' ) ) {
+			return;
+		}
+
 		/**
 		 * Fires when a new cart starts being tracked.
 		 *
@@ -123,12 +127,12 @@ final class EventDispatcher {
 	 * @return void
 	 */
 	public function captured( array $row ): void {
-		if ( '' === (string) ( $row['email'] ?? '' ) ) {
+		if ( '' === (string) ( $row['email'] ?? '' ) || ! has_action( 'cart_rebound_cart_captured' ) ) {
 			return;
 		}
 
 		/**
-		 * Fires when a cart's contact details are captured or change.
+		 * Fires when a cart first holds a contact email, or its email changes.
 		 *
 		 * @since 1.1.2
 		 *
@@ -150,6 +154,10 @@ final class EventDispatcher {
 		$status = (string) ( $row['status'] ?? '' );
 
 		if ( '' === $status || $status === $previous ) {
+			return;
+		}
+
+		if ( ! has_action( "cart_rebound_cart_status_{$status}" ) && ! has_action( 'cart_rebound_cart_status_changed' ) ) {
 			return;
 		}
 
@@ -205,7 +213,7 @@ final class EventDispatcher {
 		 */
 		do_action( 'cart_rebound_recovery_email_sent', $payload );
 
-		if ( '' === $payload['coupon_code'] ) {
+		if ( '' === $payload['coupon_code'] || ! $this->prints_coupon( $template ) ) {
 			return;
 		}
 
@@ -319,6 +327,20 @@ final class EventDispatcher {
 		 * @param array<string, mixed> $payload Flat cart payload plus `unsubscribed_at`.
 		 */
 		do_action( 'cart_rebound_unsubscribed', $payload );
+	}
+
+	/**
+	 * Whether a template's subject or body prints the coupon code.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $template Email template.
+	 * @return bool
+	 */
+	private function prints_coupon( array $template ): bool {
+		$content = (string) ( $template['subject'] ?? '' ) . (string) ( $template['body'] ?? '' );
+
+		return false !== strpos( $content, '{coupon_code}' );
 	}
 
 	/**

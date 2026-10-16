@@ -258,8 +258,9 @@ final class OrderLinker {
 				'abandonment_notified' => 0,
 			);
 
-			CartSession::update( $cart_id, $reopened );
-			$this->events->status_changed( array_merge( $row, $reopened ), $status );
+			if ( CartSession::update( $cart_id, $reopened ) ) {
+				$this->events->status_changed( array_merge( $row, $reopened ), $status );
+			}
 
 			return;
 		}
@@ -271,8 +272,9 @@ final class OrderLinker {
 				'order_id'         => 0,
 			);
 
-			CartSession::update( $cart_id, $lost );
-			$this->events->status_changed( array_merge( $row, $lost ), $status );
+			if ( CartSession::update( $cart_id, $lost ) ) {
+				$this->events->status_changed( array_merge( $row, $lost ), $status );
+			}
 
 			$order->add_order_note(
 				sprintf(
@@ -328,7 +330,7 @@ final class OrderLinker {
 			'recovered_at'     => gmdate( 'Y-m-d H:i:s' ),
 		);
 
-		CartSession::update( $cart_id, $recovered );
+		$saved = CartSession::update( $cart_id, $recovered );
 
 		$order->add_order_note(
 			sprintf(
@@ -341,7 +343,10 @@ final class OrderLinker {
 
 		$fresh = array_merge( $row, $recovered );
 
-		$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
+		if ( $saved ) {
+			$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
+		}
+
 		$this->events->recovered( $fresh, $order, $via_link ? 'email_link' : 'direct' );
 		$this->mailer->notify_admin( $fresh, $order );
 
@@ -365,8 +370,9 @@ final class OrderLinker {
 			'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 		);
 
-		CartSession::update( $cart_id, $completed );
-		$this->events->status_changed( array_merge( $row, $completed ), (string) ( $row['status'] ?? '' ) );
+		if ( CartSession::update( $cart_id, $completed ) ) {
+			$this->events->status_changed( array_merge( $row, $completed ), (string) ( $row['status'] ?? '' ) );
+		}
 
 		$order->add_order_note(
 			sprintf(
@@ -408,9 +414,13 @@ final class OrderLinker {
 			'order_id' => $order->get_id(),
 		);
 
-		CartSession::update( $cart_id, $placed );
+		$saved = CartSession::update( $cart_id, $placed );
 
 		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
+
+		if ( ! $saved ) {
+			return;
+		}
 
 		$linked = array_merge( $row, $placed );
 
@@ -453,7 +463,7 @@ final class OrderLinker {
 
 		$open = array( CartSession::STATUS_ACTIVE, CartSession::STATUS_ABANDONED );
 
-		$key = $this->sessions->resolve_session_key();
+		$key = $this->sessions->existing_session_key();
 
 		if ( '' !== $key ) {
 			$row = CartSession::query()

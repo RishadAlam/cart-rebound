@@ -77,6 +77,7 @@ final class CartTrackerTest extends TestCase {
 			'abandonment_notified' => 1,
 		);
 
+		add_action( 'cart_rebound_cart_status_active', '__return_null' );
 		Actions\expectDone( 'cart_rebound_cart_status_active' )->once()->with(
 			\Mockery::on(
 				static function ( $payload ): bool {

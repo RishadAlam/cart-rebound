@@ -203,7 +203,7 @@ All plugin behavior is configured under **Cart Rebound → Settings** in the Wor
 | `scan_interval`            | **Scan interval (minutes)**                     | `5`                          | How often the background abandonment scan runs.                                         |
 | `cleanup_days`             | **Unrecovered cleanup after (days)**            | `30`                         | Retention for stale active and unconverted abandoned/lost carts.                        |
 | `converted_cleanup_days`   | **Converted cleanup after (days)**              | `365`                        | Retention for recovered and completed cart records.                                     |
-| `log_retention_days`       | **Delete log entries after**                    | `30`                         | Activity-log entries older than this are deleted daily. `0` keeps them forever.         |
+| `log_retention_days`       | **Delete log entries after**                    | `0`                          | Activity-log entries older than this are deleted daily. `0` (Never) keeps them.         |
 | `recovery_email_enabled`   | **Send recovery email**                         | `false`                      | Whether one automatic recovery email is scheduled for an eligible abandoned cart.       |
 | `admin_recovery_email`     | **Notify admin on recovery**                    | `false`                      | Whether the store is emailed each time a tracked cart converts into a paid order.       |
 | `admin_notification_email` | **Notification email**                          | `''`                         | Where recovery notifications go; blank falls back to the site admin address.            |
@@ -613,10 +613,10 @@ Cart Rebound exposes its cart lifecycle through standard WordPress action hooks 
 | Action                               | When it fires                                                                                             | Payload                                 |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | `cart_rebound_cart_created`          | A new cart starts being tracked (guest carts have no email yet).                                          | Base payload                            |
-| `cart_rebound_cart_captured`         | A cart first holds a contact email, or its email, name or phone changes.                                  | Base payload                            |
+| `cart_rebound_cart_captured`         | A cart first holds a contact email, or its email changes.                                                 | Base payload                            |
 | `cart_rebound_abandoned`             | A cart is marked abandoned, by the scan or by an admin.                                                   | Base payload                            |
 | `cart_rebound_recovery_email_sent`   | A recovery email is handed to `wp_mail` successfully.                                                     | Base payload + email fields             |
-| `cart_rebound_recovery_coupon_sent`  | A recovery email that carries a coupon code is sent.                                                      | Base payload + email fields + coupon id |
+| `cart_rebound_recovery_coupon_sent`  | A recovery email whose subject or body prints `{coupon_code}` is sent.                                    | Base payload + email fields + coupon id |
 | `cart_rebound_recovery_email_failed` | `wp_mail` rejects a recovery email.                                                                       | Base payload + email fields (no coupon) |
 | `cart_rebound_recovery_link_clicked` | A shopper opens a recovery link and their cart is restored.                                               | Base payload + `clicked_at`             |
 | `cart_rebound_order_linked`          | An order is placed from a tracked cart, before it is paid.                                                | Base payload + order fields             |
@@ -625,7 +625,7 @@ Cart Rebound exposes its cart lifecycle through standard WordPress action hooks 
 | `cart_rebound_cart_status_changed`   | Any cart status change.                                                                                   | Base payload + `previous_status`        |
 | `cart_rebound_cart_status_{status}`  | A cart moves into one status: `active`, `abandoned`, `pending-payment`, `recovered`, `completed`, `lost`. | Base payload + `previous_status`        |
 
-The status hooks fire on transitions only, never when a cart is first created, and the specific `cart_rebound_cart_status_{status}` hook fires before `cart_rebound_cart_status_changed`. Cart Rebound does not generate coupons: `cart_rebound_recovery_coupon_sent` reports the existing WooCommerce coupon chosen on the email template.
+The status hooks fire on transitions only, never when a cart is first created, and the specific `cart_rebound_cart_status_{status}` hook fires before `cart_rebound_cart_status_changed`. They report every transition, including manual changes an admin makes on the Carts screen, so a cart already linked to an order (`order_id` > 0) can move back to `abandoned`. For recovery messaging, listen to `cart_rebound_abandoned`, which fires only for carts that are genuinely abandoned. Cart Rebound does not generate coupons: `cart_rebound_recovery_coupon_sent` reports the existing WooCommerce coupon chosen on the email template.
 
 The older `cart_rebound_email_sent` action still fires after each recovery email with its original `( $cart_id, $row, $template )` arguments. New code should use `cart_rebound_recovery_email_sent`.
 
@@ -982,7 +982,7 @@ Returns the full settings array merged over defaults (`SettingsController::index
 	"scan_interval": 5,
 	"cleanup_days": 30,
 	"converted_cleanup_days": 365,
-	"log_retention_days": 30,
+	"log_retention_days": 0,
 	"recovery_email_enabled": false,
 	"email_delay_minutes": 60,
 	"email_subject": "You left something in your cart",

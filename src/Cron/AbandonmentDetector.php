@@ -186,9 +186,9 @@ final class AbandonmentDetector {
 	private function mark_abandoned( array $row ): void {
 		$fields = $this->abandoned_fields();
 
-		CartSession::update( (int) ( $row['id'] ?? 0 ), $fields );
-
-		$this->notify( $row, $fields );
+		if ( CartSession::update( (int) ( $row['id'] ?? 0 ), $fields ) ) {
+			$this->notify( $row, $fields );
+		}
 	}
 
 	/**

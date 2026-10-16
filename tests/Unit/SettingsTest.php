@@ -24,7 +24,7 @@ final class SettingsTest extends TestCase {
 		$this->assertSame( 365, $all['converted_cleanup_days'] );
 		$this->assertFalse( $all['recovery_email_enabled'] );
 		$this->assertTrue( $all['tracking_enabled'] );
-		$this->assertSame( 30, $all['log_retention_days'] );
+		$this->assertSame( 0, $all['log_retention_days'] );
 	}
 
 	public function test_tracking_can_be_switched_off_and_logs_kept_forever(): void {

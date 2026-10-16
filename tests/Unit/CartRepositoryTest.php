@@ -49,6 +49,7 @@ final class CartRepositoryTest extends TestCase {
 			new CartDataCleaner( new Scheduler() )
 		);
 
+		add_action( 'cart_rebound_cart_status_lost', '__return_null' );
 		Actions\expectDone( 'cart_rebound_cart_status_lost' )->once();
 		Actions\expectDone( 'cart_rebound_cart_status_changed' )->once();
 

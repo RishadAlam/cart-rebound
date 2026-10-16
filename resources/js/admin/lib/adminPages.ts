@@ -23,6 +23,24 @@ export const pageUrl = (route: string): string =>
 export const routeForUrl = (url: string): string | undefined =>
 	routeBySlug.get(pageSlug(url));
 
+// Built from the current location rather than admin_url(): wp-admin may be served on
+// another host than siteurl, and history writes must stay same-origin.
+const historyUrl = (route: string): string | null => {
+	const slug = pages[route] ? pageSlug(pages[route].url) : null;
+
+	if (!slug) {
+		return null;
+	}
+
+	const url = new URL(window.location.href);
+
+	url.search = '';
+	url.hash = '';
+	url.searchParams.set('page', slug);
+
+	return url.toString();
+};
+
 export const initialRoute = (): string => {
 	const legacy = window.location.hash.replace(/^#/, '');
 
@@ -69,14 +87,16 @@ export const syncWithAdmin = (router: AppRouter) => {
 			: null;
 
 	const show = (route: string, action: 'push' | 'replace') => {
-		const url = pages[route]?.url;
+		const url = historyUrl(route);
 
 		if (url && url !== window.location.href) {
-			window.history[action === 'push' ? 'pushState' : 'replaceState'](
-				null,
-				'',
-				url
-			);
+			try {
+				window.history[
+					action === 'push' ? 'pushState' : 'replaceState'
+				](null, '', url);
+			} catch {
+				// A browser that refuses the history write still renders the route.
+			}
 		}
 
 		if (titleSuffix !== null && pages[route]) {

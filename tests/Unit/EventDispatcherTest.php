@@ -89,6 +89,8 @@ final class EventDispatcherTest extends TestCase {
 	public function test_status_change_fires_the_specific_then_the_global_hook(): void {
 		$order = array();
 
+		add_action( 'cart_rebound_cart_status_changed', '__return_null' );
+
 		Actions\expectDone( 'cart_rebound_cart_status_abandoned' )->once()->whenHappen(
 			static function ( $payload ) use ( &$order ): void {
 				$order[] = 'specific:' . $payload['previous_status'];
@@ -153,6 +155,7 @@ final class EventDispatcherTest extends TestCase {
 			array(
 				'id'     => 't1',
 				'name'   => 'Default',
+				'body'   => '<p>Use {coupon_code} at checkout.</p>',
 				'coupon' => 'SAVE10',
 			),
 			'manual'
@@ -163,6 +166,34 @@ final class EventDispatcherTest extends TestCase {
 		$this->assertSame( 42, $coupon['coupon_id'] );
 		$this->assertSame( 'manual', $coupon['trigger'] );
 		$this->assertSame( 't1', $coupon['template_id'] );
+	}
+
+	public function test_coupon_hook_skips_a_template_that_never_prints_the_code(): void {
+		Actions\expectDone( 'cart_rebound_recovery_email_sent' )->once();
+		Actions\expectDone( 'cart_rebound_recovery_coupon_sent' )->never();
+
+		$this->dispatcher()->email_sent(
+			$this->row(),
+			array(
+				'id'     => 't1',
+				'body'   => '<p>Your cart is waiting.</p>',
+				'coupon' => 'SAVE10',
+			),
+			'automatic'
+		);
+
+		$this->addToAssertionCount( 1 );
+	}
+
+	public function test_status_change_builds_nothing_without_listeners(): void {
+		Actions\expectDone( 'cart_rebound_cart_status_changed' )->never();
+
+		$this->dispatcher()->status_changed(
+			array_merge( $this->row(), array( 'status' => 'lost' ) ),
+			'active'
+		);
+
+		$this->addToAssertionCount( 1 );
 	}
 
 	public function test_unsubscribed_carries_the_shopper(): void {

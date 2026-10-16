@@ -140,37 +140,17 @@ final class CartTracker {
 			return;
 		}
 
-		$changed = $this->identity_changed( $existing, $data );
+		$captured_email = (string) ( $data['email'] ?? '' );
+		$stored_email   = (string) ( $existing['email'] ?? '' );
+		$email_changed  = '' !== $captured_email && $captured_email !== $stored_email;
 
 		$data['last_activity'] = gmdate( 'Y-m-d H:i:s' );
 
 		CartSession::update( (int) ( $existing['id'] ?? 0 ), $data );
 
-		if ( $changed ) {
+		if ( $email_changed ) {
 			$this->events->captured( array_merge( $existing, $data ) );
 		}
-	}
-
-	/**
-	 * Whether any captured identity field differs from the stored row.
-	 *
-	 * @since 1.1.2
-	 *
-	 * @param array<string, mixed> $row      The stored cart row.
-	 * @param array<string, mixed> $identity Sanitised identity fields.
-	 * @return bool
-	 */
-	private function identity_changed( array $row, array $identity ): bool {
-		foreach ( $identity as $field => $value ) {
-			$captured = (string) $value;
-			$stored   = (string) ( $row[ $field ] ?? '' );
-
-			if ( $captured !== $stored ) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
@@ -207,9 +187,9 @@ final class CartTracker {
 					$update['abandonment_notified'] = 0;
 				}
 
-				CartSession::update( $id, $update );
-
-				$this->events->status_changed( array_merge( $existing, $update ), $status );
+				if ( CartSession::update( $id, $update ) ) {
+					$this->events->status_changed( array_merge( $existing, $update ), $status );
+				}
 
 				return $id;
 			}
