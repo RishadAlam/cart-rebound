@@ -4,7 +4,7 @@ Tags: woocommerce, abandoned cart, cart abandonment, cart recovery, recovery ema
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -424,31 +424,35 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 
 = 1.1.2 =
 
-**Release date:** unreleased
+**Release date:** 2026-10-16
 
-**Fixed**
+**New**
 
-* Fixed recovered revenue being lost when a shopper returned to an abandoned cart without clicking the recovery link and then paid — the order was recorded as a straight-through completion instead of a recovery.
-* Fixed a recovery link opening a second, duplicate cart record for the same shopper, which could queue them a second recovery email for a cart they had already returned to.
-* Fixed the recovery link dropping shoppers onto an empty checkout form; the email, name and phone already captured for the cart are now filled in for them.
-* Fixed coupons that had been deleted since the cart was captured being re-applied on the recovery landing page, where they produced a "coupon does not exist" error.
-* Fixed a failed "send recovery email" or "mark recovered" reporting nothing: the reason is now shown inside the dialog instead of behind it.
-* Fixed the "count a cart as recovered when its order is" setting accepting order statuses WooCommerce does not register.
-* Fixed the Pending payment badge and the coupon chip falling below the WCAG AA contrast minimum.
-* Fixed creating an email template switching the editor to a different template, so the next edit landed on the wrong one.
-
-**Added**
-
-* Added a **Track carts** switch (on by default) that pauses all cart, checkout-email and cookie capture without deactivating the plugin.
-* Added automatic deletion of activity-log entries after a configurable period (off by default; choose 7 days to a year).
-* Added a search field to the Carts screen that finds carts by email, name, phone, cart ID or order ID.
-* Added WordPress actions for automations: cart created, contact details captured, recovery email sent or failed, coupon sent, recovery link clicked, order placed from a tracked cart, unsubscribed, and every cart status change (one action for all changes and one per status).
+* Search your carts. The Carts screen now has a search box that finds a cart by the customer's email, name or phone number, or by cart or order number.
+* Pause cart tracking with one switch. A new **Track carts** setting lets you stop collecting carts at any time without deactivating the plugin. It is on by default.
+* Clean up old activity automatically. You can now have Cart Rebound delete activity history after a period you choose, from 7 days to a year. This is off by default.
+* Connect Cart Rebound to your other tools. Developers and automation plugins can now react when a cart is created, a customer's contact details are saved, a recovery email is sent or fails, a coupon is sent, a recovery link is clicked, an order is placed, a customer unsubscribes, or a cart changes status.
 
 **Improved**
 
-* Made the loading shimmer run on the compositor instead of the main thread, removing the only layout-shift culprit on the admin screens.
-* Stopped shipping the current user's full capability list into every Cart Rebound admin page, cutting tens of kilobytes from each page load.
-* Stopped exposing the visitor's tracking session key in the carts REST response; nothing displayed it.
+* Cart Rebound now looks and feels like the rest of WooCommerce, with the same fonts and sizes, and it follows the admin color scheme you picked in your WordPress profile.
+* Each Cart Rebound screen now has its own clean web address, so you can bookmark a screen or open it in a new browser tab. The sidebar menu now highlights the screen you are on, and the browser's Back and Forward buttons work as expected.
+* Customers who come back through a recovery link now find their email, name and phone number already filled in at checkout, so they can pay faster.
+* Admin screens load faster and no longer jump around while loading.
+* Better privacy: Cart Rebound sends less information to the browser and no longer shares a visitor's internal tracking code.
+
+**Fixed**
+
+* Sales were sometimes not counted as recovered. If a customer came back to an abandoned cart on their own, without clicking the email link, and then paid, the sale is now correctly counted as recovered revenue.
+* Customers could receive a second recovery email for the same cart after clicking the recovery link. This no longer happens.
+* A coupon that had been deleted from your store no longer shows a "coupon does not exist" error when a customer returns to their cart.
+* When sending a recovery email or marking a cart as recovered fails, you now see the reason in the pop-up window instead of nothing happening.
+* The "count a cart as recovered when its order is" setting now only accepts real WooCommerce order statuses.
+* After creating a new email template, the editor now stays on that template, so your next change is saved to the right one.
+* On a brand-new install, the Templates screen could show an error until the page was reloaded. It now opens normally the first time.
+* The "Pending payment" label and the coupon tag are now easier to read.
+* Fixed misaligned rows and borders in the Carts table, and the WordPress sidebar menu no longer sticks at the wrong height after switching screens.
+* Cart Rebound's styles no longer change the look of other WordPress admin pages.
 
 = 1.1.1 =
 

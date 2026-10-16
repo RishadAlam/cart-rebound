@@ -56,7 +56,7 @@ Cart Rebound is a WooCommerce extension, so WooCommerce must be installed and ac
 * Requires PHP:      7.4
 ```
 
-Stable release: **1.1.1**. Tested up to WordPress 7.1.
+Stable release: **1.1.2**. Tested up to WordPress 7.1.
 
 ### Requirements
 

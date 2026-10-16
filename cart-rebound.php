@@ -3,7 +3,7 @@
  * Plugin Name:       Cart Rebound
  * Plugin URI:        https://github.com/RishadAlam/cart-rebound
  * Description:       Free, self-hosted WooCommerce cart abandonment recovery with automated emails, secure restore links, coupons, and revenue reports.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Requires at least: 6.2
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -20,7 +20,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'CART_REBOUND_VERSION', '1.1.1' );
+define( 'CART_REBOUND_VERSION', '1.1.2' );
 define( 'CART_REBOUND_FILE', __FILE__ );
 define( 'CART_REBOUND_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CART_REBOUND_URL', plugin_dir_url( __FILE__ ) );
