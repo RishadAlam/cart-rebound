@@ -237,6 +237,31 @@ const TrashIcon = () => (
 	</svg>
 );
 
+const SearchIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<circle cx="7" cy="7" r="4.3" stroke="currentColor" strokeWidth="1.4" />
+		<path
+			d="m10.3 10.3 3.2 3.2"
+			stroke="currentColor"
+			strokeWidth="1.4"
+			strokeLinecap="round"
+		/>
+	</svg>
+);
+
+const CloseIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<path
+			d="m4.5 4.5 7 7m0-7-7 7"
+			stroke="currentColor"
+			strokeWidth="1.4"
+			strokeLinecap="round"
+		/>
+	</svg>
+);
+
+const SEARCH_DELAY = 300;
+
 const Dash = () => <span className="cr-muted">—</span>;
 
 // The order URL is built server-side: only PHP knows whether the store is on
@@ -1105,6 +1130,8 @@ const SkeletonRows = () => (
 
 export const Carts = () => {
 	const [status, setStatus] = useState('');
+	const [query, setQuery] = useState('');
+	const [search, setSearch] = useState('');
 	const [page, setPage] = useState(1);
 	const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
 	const [sort, setSort] = useState<{ by: string; order: SortOrder }>({
@@ -1121,6 +1148,7 @@ export const Carts = () => {
 	const { data, isLoading, isFetching, isError } = useCarts({
 		status,
 		email: '',
+		search,
 		page,
 		per_page: perPage,
 		orderby: sort.by,
@@ -1150,6 +1178,23 @@ export const Carts = () => {
 	}, [selected]);
 
 	useEffect(() => {
+		const next = query.trim();
+
+		if (next === search) {
+			return;
+		}
+
+		const timer = window.setTimeout(() => {
+			setSearch(next);
+			setPage(1);
+		}, SEARCH_DELAY);
+
+		return () => {
+			window.clearTimeout(timer);
+		};
+	}, [query, search]);
+
+	useEffect(() => {
 		if (!feedback) {
 			return;
 		}
@@ -1164,6 +1209,18 @@ export const Carts = () => {
 	}, [feedback]);
 
 	const isEmpty = !isLoading && !isError && !!data && items.length === 0;
+	const isFiltered = search !== '' || status !== '';
+
+	const clearSearch = () => {
+		setQuery('');
+		setSearch('');
+		setPage(1);
+	};
+
+	const clearFilters = () => {
+		clearSearch();
+		setStatus('');
+	};
 	const allChecked = items.length > 0 && selected.size === items.length;
 
 	const toggleAll = (checked: boolean) => {
@@ -1267,6 +1324,38 @@ export const Carts = () => {
 	return (
 		<div>
 			<div className="cr-toolbar">
+				<div className="cr-search" role="search">
+					<SearchIcon />
+					<input
+						type="search"
+						className="cr-input is-compact cr-search__input"
+						value={query}
+						placeholder={__(
+							'Search email, name, phone or #id',
+							'cart-rebound'
+						)}
+						aria-label={__('Search carts', 'cart-rebound')}
+						onChange={(event) => {
+							setQuery(event.target.value);
+						}}
+						onKeyDown={(event) => {
+							if (event.key === 'Escape' && query !== '') {
+								event.preventDefault();
+								clearSearch();
+							}
+						}}
+					/>
+					{query !== '' && (
+						<button
+							type="button"
+							className="cr-search__clear"
+							aria-label={__('Clear search', 'cart-rebound')}
+							onClick={clearSearch}
+						>
+							<CloseIcon />
+						</button>
+					)}
+				</div>
 				<span className="cr-toolbar__label">
 					{__('Status', 'cart-rebound')}
 				</span>
@@ -1391,7 +1480,40 @@ export const Carts = () => {
 					</div>
 				)}
 
-				{isEmpty && (
+				{isEmpty && isFiltered && (
+					<div className="cr-empty">
+						<p className="cr-empty__title">
+							{search !== ''
+								? sprintf(
+										/* translators: %s: the search text. */
+										__(
+											'No carts match “%s”',
+											'cart-rebound'
+										),
+										search
+									)
+								: __(
+										'No carts match this filter',
+										'cart-rebound'
+									)}
+						</p>
+						<p>
+							{__(
+								'Try a different email, name, phone number or cart ID.',
+								'cart-rebound'
+							)}
+						</p>
+						<button
+							type="button"
+							className="cr-btn is-ghost is-sm"
+							onClick={clearFilters}
+						>
+							{__('Clear filters', 'cart-rebound')}
+						</button>
+					</div>
+				)}
+
+				{isEmpty && !isFiltered && (
 					<div className="cr-empty">
 						<p className="cr-empty__title">
 							{__('No carts yet', 'cart-rebound')}
@@ -1474,7 +1596,9 @@ export const Carts = () => {
 											onSort={onSort}
 											align="right"
 										/>
-										<th>{__('Actions', 'cart-rebound')}</th>
+										<th style={{ textAlign: 'right' }}>
+											{__('Actions', 'cart-rebound')}
+										</th>
 									</tr>
 								</thead>
 								<tbody>

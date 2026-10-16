@@ -112,6 +112,51 @@ final class QueryBuilder {
 	 * @throws InvalidArgumentException When the operator is unsupported or the value is not scalar.
 	 */
 	public function where( string $column, string $operator, $value ): QueryBuilder {
+		$this->wheres[] = $this->basic_condition( $column, $operator, $value );
+
+		return $this;
+	}
+
+	/**
+	 * Add a group of conditions joined by OR: `WHERE (a OR b OR …)`.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<int, array{0: string, 1: string, 2: mixed}> $conditions Each `[ column, operator, value ]`.
+	 * @return QueryBuilder
+	 *
+	 * @throws InvalidArgumentException When an operator is unsupported or a value is not scalar.
+	 */
+	public function where_any( array $conditions ): QueryBuilder {
+		$group = array();
+
+		foreach ( $conditions as $condition ) {
+			$group[] = $this->basic_condition( $condition[0], $condition[1], $condition[2] );
+		}
+
+		if ( array() !== $group ) {
+			$this->wheres[] = array(
+				'type'       => 'any',
+				'conditions' => $group,
+			);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Validate one comparison and return it as a basic WHERE entry.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param string $column   Column name.
+	 * @param string $operator Comparison operator (one of {@see OPERATORS}).
+	 * @param mixed  $value    Scalar (or null) value to compare against.
+	 * @return array{type: string, column: string, operator: string, value: mixed}
+	 *
+	 * @throws InvalidArgumentException When the operator is unsupported or the value is not scalar.
+	 */
+	private function basic_condition( string $column, string $operator, $value ): array {
 		$normalized = strtoupper( $operator );
 
 		if ( ! isset( self::FRAGMENTS[ $normalized ] ) ) {
@@ -126,14 +171,12 @@ final class QueryBuilder {
 			);
 		}
 
-		$this->wheres[] = array(
+		return array(
 			'type'     => 'basic',
 			'column'   => $column,
 			'operator' => $normalized,
 			'value'    => $value,
 		);
-
-		return $this;
 	}
 
 	/**
@@ -487,6 +530,11 @@ final class QueryBuilder {
 				continue;
 			}
 
+			if ( 'any' === $where['type'] ) {
+				$clauses[] = $this->where_any_fragment( $where, $bindings );
+				continue;
+			}
+
 			$clauses[]  = $this->where_fragment( $where['operator'] );
 			$bindings[] = $where['column'];
 			$bindings[] = $where['value'];
@@ -519,6 +567,27 @@ final class QueryBuilder {
 		}
 
 		return '%i IN (' . $placeholders . ')';
+	}
+
+	/**
+	 * Build an `(a OR b …)` fragment and append its bindings.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $where    The OR group.
+	 * @param array<int, mixed>    $bindings Bindings collected so far (by reference).
+	 * @return string
+	 */
+	private function where_any_fragment( array $where, array &$bindings ): string {
+		$fragments = array();
+
+		foreach ( $where['conditions'] as $condition ) {
+			$fragments[] = $this->where_fragment( $condition['operator'] );
+			$bindings[]  = $condition['column'];
+			$bindings[]  = $condition['value'];
+		}
+
+		return '(' . implode( ' OR ', $fragments ) . ')';
 	}
 
 	/**

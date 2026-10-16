@@ -82,6 +82,7 @@ final class CartsController extends Controller {
 		$args = array(
 			'status'   => $this->status_arg( $request->get_param( 'status' ) ),
 			'email'    => sanitize_text_field( (string) $request->get_param( 'email' ) ),
+			'search'   => sanitize_text_field( (string) $request->get_param( 'search' ) ),
 			'page'     => (int) $request->get_param( 'page' ),
 			'per_page' => (int) $request->get_param( 'per_page' ),
 			'orderby'  => sanitize_key( (string) $request->get_param( 'orderby' ) ),

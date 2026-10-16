@@ -59,6 +59,27 @@ final class CartRepositoryTest extends TestCase {
 			$this->wpdb->updated['data']['abandoned_at']
 		);
 	}
+
+	public function test_search_matches_every_word_across_contact_fields_and_ids(): void {
+		Functions\when( 'get_woocommerce_currency' )->justReturn( 'USD' );
+
+		$repository = new CartRepository(
+			new EventDispatcher( new RecoveryLink() ),
+			new CartDataCleaner( new Scheduler() )
+		);
+
+		$repository->get_carts( array( 'search' => '  Ann_  #42 ' ) );
+
+		$call = $this->wpdb->prepared[0];
+
+		$this->assertStringContainsString(
+			'WHERE (%i LIKE %s OR %i LIKE %s OR %i LIKE %s OR %i LIKE %s) AND (%i LIKE %s OR %i LIKE %s OR %i LIKE %s OR %i LIKE %s OR %i = %s OR %i = %s)',
+			$call['query']
+		);
+		$this->assertContains( '%Ann\\_%', $call['args'] );
+		$this->assertContains( '%#42%', $call['args'] );
+		$this->assertContains( 42, $call['args'] );
+	}
 }
 
 // phpcs:disable -- lightweight custom-table test fixture.
@@ -77,8 +98,24 @@ class CartRepositoryWpdb {
 		'where' => array(),
 	);
 
-	public function prepare( $query, $args = array() ) {
+	/** @var array<int, array{query: string, args: array<int, mixed>}> */
+	public $prepared = array();
+
+	public function prepare( $query, ...$args ) {
+		$this->prepared[] = array(
+			'query' => $query,
+			'args'  => isset( $args[0] ) && is_array( $args[0] ) ? $args[0] : $args,
+		);
+
 		return $query;
+	}
+
+	public function esc_like( $text ) {
+		return addcslashes( $text, '_%\\' );
+	}
+
+	public function get_var( $query ) {
+		return 0;
 	}
 
 	public function get_results( $query, $output ) {

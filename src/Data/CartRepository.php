@@ -96,6 +96,7 @@ final class CartRepository {
 	 *
 	 *     @type string|array<int, string> $status   Status filter.
 	 *     @type string                    $email    Email substring filter.
+	 *     @type string                    $search   Words matched against email, name and phone; a number also matches the cart or order id.
 	 *     @type int                       $page     1-based page number.
 	 *     @type int                       $per_page Page size (max 100).
 	 *     @type string                    $orderby  Sort column (whitelisted).
@@ -528,13 +529,50 @@ final class CartRepository {
 			$query->where( 'status', '=', $status );
 		}
 
+		global $wpdb;
+
 		$email = isset( $args['email'] ) ? (string) $args['email'] : '';
 
 		if ( '' !== $email ) {
-			$query->where( 'email', 'LIKE', '%' . $email . '%' );
+			$query->where( 'email', 'LIKE', '%' . $wpdb->esc_like( $email ) . '%' );
+		}
+
+		$words = preg_split( '/\s+/', trim( (string) ( $args['search'] ?? '' ) ), -1, PREG_SPLIT_NO_EMPTY );
+
+		foreach ( is_array( $words ) ? $words : array() as $word ) {
+			$query->where_any( $this->search_conditions( $word ) );
 		}
 
 		return $query;
+	}
+
+	/**
+	 * Conditions one search word can match.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param string $word A single search word.
+	 * @return array<int, array{0: string, 1: string, 2: mixed}>
+	 */
+	private function search_conditions( string $word ): array {
+		global $wpdb;
+
+		$like       = '%' . $wpdb->esc_like( $word ) . '%';
+		$conditions = array(
+			array( 'email', 'LIKE', $like ),
+			array( 'first_name', 'LIKE', $like ),
+			array( 'last_name', 'LIKE', $like ),
+			array( 'phone', 'LIKE', $like ),
+		);
+
+		$number = ltrim( $word, '#' );
+
+		if ( '' !== $number && ctype_digit( $number ) ) {
+			$conditions[] = array( 'id', '=', (int) $number );
+			$conditions[] = array( 'order_id', '=', (int) $number );
+		}
+
+		return $conditions;
 	}
 
 	/**

@@ -159,6 +159,7 @@ export type BulkAction = 'delete' | 'status';
 export interface CartsQuery {
 	status: string;
 	email: string;
+	search?: string;
 	page: number;
 	per_page: number;
 	orderby: string;
