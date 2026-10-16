@@ -70,7 +70,12 @@ const highlightSidebar = (route: string) => {
 	});
 };
 
-const isPlainLeftClick = (event: MouseEvent): boolean =>
+export const isPlainLeftClick = (
+	event: Pick<
+		MouseEvent,
+		'button' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey'
+	>
+): boolean =>
 	event.button === 0 &&
 	!event.metaKey &&
 	!event.ctrlKey &&

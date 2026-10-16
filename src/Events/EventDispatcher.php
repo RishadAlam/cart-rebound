@@ -197,10 +197,14 @@ final class EventDispatcher {
 	 * @return void
 	 */
 	public function email_sent( array $row, array $template, string $trigger ): void {
+		if ( ! has_action( 'cart_rebound_recovery_email_sent' ) && ! has_action( 'cart_rebound_recovery_coupon_sent' ) ) {
+			return;
+		}
+
 		$payload                  = $this->base_payload( $row );
 		$payload['template_id']   = (string) ( $template['id'] ?? '' );
 		$payload['template_name'] = (string) ( $template['name'] ?? '' );
-		$payload['coupon_code']   = (string) ( $template['coupon'] ?? '' );
+		$payload['coupon_code']   = $this->prints_coupon( $template ) ? (string) ( $template['coupon'] ?? '' ) : '';
 		$payload['trigger']       = $trigger;
 		$payload['sent_at']       = gmdate( 'Y-m-d H:i:s' );
 
@@ -213,7 +217,7 @@ final class EventDispatcher {
 		 */
 		do_action( 'cart_rebound_recovery_email_sent', $payload );
 
-		if ( '' === $payload['coupon_code'] || ! $this->prints_coupon( $template ) ) {
+		if ( '' === $payload['coupon_code'] || ! has_action( 'cart_rebound_recovery_coupon_sent' ) ) {
 			return;
 		}
 
@@ -245,6 +249,10 @@ final class EventDispatcher {
 	 * @return void
 	 */
 	public function email_failed( array $row, array $template, string $trigger ): void {
+		if ( ! has_action( 'cart_rebound_recovery_email_failed' ) ) {
+			return;
+		}
+
 		$payload                  = $this->base_payload( $row );
 		$payload['template_id']   = (string) ( $template['id'] ?? '' );
 		$payload['template_name'] = (string) ( $template['name'] ?? '' );
@@ -269,6 +277,10 @@ final class EventDispatcher {
 	 * @return void
 	 */
 	public function link_clicked( array $row ): void {
+		if ( ! has_action( 'cart_rebound_recovery_link_clicked' ) ) {
+			return;
+		}
+
 		$payload               = $this->base_payload( $row );
 		$payload['clicked_at'] = gmdate( 'Y-m-d H:i:s' );
 
@@ -292,6 +304,10 @@ final class EventDispatcher {
 	 * @return void
 	 */
 	public function order_linked( array $row, WC_Order $order ): void {
+		if ( ! has_action( 'cart_rebound_order_linked' ) ) {
+			return;
+		}
+
 		$payload                 = $this->base_payload( $row );
 		$payload['order_id']     = $order->get_id();
 		$payload['order_total']  = (float) $order->get_total();
@@ -316,6 +332,10 @@ final class EventDispatcher {
 	 * @return void
 	 */
 	public function unsubscribed( array $row ): void {
+		if ( ! has_action( 'cart_rebound_unsubscribed' ) ) {
+			return;
+		}
+
 		$payload                    = $this->base_payload( $row );
 		$payload['unsubscribed_at'] = gmdate( 'Y-m-d H:i:s' );
 
@@ -338,7 +358,7 @@ final class EventDispatcher {
 	 * @return bool
 	 */
 	private function prints_coupon( array $template ): bool {
-		$content = (string) ( $template['subject'] ?? '' ) . (string) ( $template['body'] ?? '' );
+		$content = ( $template['subject'] ?? '' ) . ( $template['body'] ?? '' );
 
 		return false !== strpos( $content, '{coupon_code}' );
 	}

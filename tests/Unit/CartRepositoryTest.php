@@ -81,6 +81,22 @@ final class CartRepositoryTest extends TestCase {
 		$this->assertContains( '%#42%', $call['args'] );
 		$this->assertContains( 42, $call['args'] );
 	}
+
+	public function test_a_zero_search_does_not_match_carts_without_an_order(): void {
+		Functions\when( 'get_woocommerce_currency' )->justReturn( 'USD' );
+
+		$repository = new CartRepository(
+			new EventDispatcher( new RecoveryLink() ),
+			new CartDataCleaner( new Scheduler() )
+		);
+
+		$repository->get_carts( array( 'search' => '#0' ) );
+
+		$query = $this->wpdb->prepared[0]['query'];
+
+		$this->assertStringContainsString( '(%i LIKE %s OR %i LIKE %s OR %i LIKE %s OR %i LIKE %s)', $query );
+		$this->assertStringNotContainsString( '%i = %s', $query );
+	}
 }
 
 // phpcs:disable -- lightweight custom-table test fixture.

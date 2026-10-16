@@ -1,6 +1,6 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { pageUrl } from '../lib/adminPages';
+import { isPlainLeftClick, pageUrl } from '../lib/adminPages';
 
 interface AdminLinkProps {
 	to: string;
@@ -22,13 +22,7 @@ export const AdminLink = ({
 		: pathname === to || pathname.startsWith(`${to}/`);
 
 	const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
-		if (
-			event.button !== 0 ||
-			event.metaKey ||
-			event.ctrlKey ||
-			event.shiftKey ||
-			event.altKey
-		) {
+		if (!isPlainLeftClick(event)) {
 			return;
 		}
 

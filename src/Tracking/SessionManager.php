@@ -170,18 +170,13 @@ final class SessionManager {
 	 * @return string
 	 */
 	private function woocommerce_session_key(): string {
-		if ( ! function_exists( 'WC' ) ) {
+		$wc = $this->woocommerce();
+
+		if ( null === $wc ) {
 			return '';
 		}
 
-		$wc = WC();
-
-		if ( ! is_object( $wc ) || null === $wc->session ) {
-			return '';
-		}
-
-		$stored = $wc->session->get( self::WC_SESSION_KEY );
-		$key    = is_string( $stored ) ? $this->validated_key( $stored ) : '';
+		$key = $this->stored_key( $wc );
 
 		if ( '' !== $key ) {
 			return $key;
@@ -207,16 +202,37 @@ final class SessionManager {
 			return $cookie;
 		}
 
+		$wc = $this->woocommerce();
+
+		return null === $wc ? '' : $this->stored_key( $wc );
+	}
+
+	/**
+	 * Get WooCommerce when its session is available.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return \WooCommerce|null
+	 */
+	private function woocommerce() {
 		if ( ! function_exists( 'WC' ) ) {
-			return '';
+			return null;
 		}
 
 		$wc = WC();
 
-		if ( ! is_object( $wc ) || null === $wc->session ) {
-			return '';
-		}
+		return is_object( $wc ) && null !== $wc->session ? $wc : null;
+	}
 
+	/**
+	 * Read and validate the key stored in the WooCommerce session.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param \WooCommerce $wc WooCommerce with an active session.
+	 * @return string Empty string when no valid key is stored.
+	 */
+	private function stored_key( $wc ): string {
 		$stored = $wc->session->get( self::WC_SESSION_KEY );
 
 		return is_string( $stored ) ? $this->validated_key( $stored ) : '';

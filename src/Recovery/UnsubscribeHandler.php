@@ -77,16 +77,14 @@ final class UnsubscribeHandler {
 		$row   = CartSession::query()->where( 'recovery_token', '=', $token )->first();
 		$email = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
 
-		if ( '' !== $email ) {
-			$already = Unsubscribe::is_suppressed( $email );
+		$result = '' !== $email ? Unsubscribe::suppress( $email ) : '';
 
-			if ( Unsubscribe::suppress( $email ) ) {
-				if ( ! $already && is_array( $row ) ) {
-					$this->events->unsubscribed( $row );
-				}
+		if ( Unsubscribe::ADDED === $result && is_array( $row ) ) {
+			$this->events->unsubscribed( $row );
+		}
 
-				$this->render( 'done', $token );
-			}
+		if ( '' !== $result ) {
+			$this->render( 'done', $token );
 		}
 
 		$this->render( 'invalid', $token );

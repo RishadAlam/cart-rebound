@@ -567,7 +567,7 @@ final class CartRepository {
 
 		$number = ltrim( $word, '#' );
 
-		if ( '' !== $number && ctype_digit( $number ) ) {
+		if ( '' !== $number && ctype_digit( $number ) && (int) $number > 0 ) {
 			$conditions[] = array( 'id', '=', (int) $number );
 			$conditions[] = array( 'order_id', '=', (int) $number );
 		}

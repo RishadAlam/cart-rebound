@@ -71,22 +71,36 @@ final class Unsubscribe extends Model {
 	}
 
 	/**
+	 * Suppression result: this call added the address.
+	 *
+	 * @var string
+	 */
+	public const ADDED = 'added';
+
+	/**
+	 * Suppression result: the address was already suppressed.
+	 *
+	 * @var string
+	 */
+	public const EXISTING = 'existing';
+
+	/**
 	 * Add an address to the suppression list (idempotent).
 	 *
 	 * @since 0.1.0
 	 *
 	 * @param string $email Email address.
-	 * @return bool True when the address is suppressed after the call.
+	 * @return string {@see ADDED} or {@see EXISTING} when the address is suppressed after the call, '' when it could not be.
 	 */
-	public static function suppress( string $email ): bool {
+	public static function suppress( string $email ): string {
 		$email = sanitize_email( $email );
 
 		if ( '' === $email || ! is_email( $email ) ) {
-			return false;
+			return '';
 		}
 
 		if ( self::is_suppressed( $email ) ) {
-			return true;
+			return self::EXISTING;
 		}
 
 		$id = self::create(
@@ -97,10 +111,10 @@ final class Unsubscribe extends Model {
 		);
 
 		if ( is_int( $id ) ) {
-			return true;
+			return self::ADDED;
 		}
 
 		// A concurrent insert may win the UNIQUE(email) race, so report the end state, not this insert's result.
-		return is_array( self::query()->where( 'email', '=', $email )->first() );
+		return is_array( self::query()->where( 'email', '=', $email )->first() ) ? self::EXISTING : '';
 	}
 }

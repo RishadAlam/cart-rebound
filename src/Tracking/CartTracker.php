@@ -92,6 +92,17 @@ final class CartTracker {
 	}
 
 	/**
+	 * Whether the "Track carts" switch is on.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return bool
+	 */
+	public function is_enabled(): bool {
+		return (bool) $this->settings->get( 'tracking_enabled' );
+	}
+
+	/**
 	 * Run a callback with cart tracking paused.
 	 *
 	 * @since 1.1.2

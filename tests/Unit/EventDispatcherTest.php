@@ -82,6 +82,12 @@ final class EventDispatcherTest extends TestCase {
 		$this->assertSame( 'Widget', $captured['products'][0]['name'] );
 	}
 
+	private function listen( string ...$hooks ): void {
+		foreach ( $hooks as $hook ) {
+			add_action( $hook, '__return_null' );
+		}
+	}
+
 	private function dispatcher(): EventDispatcher {
 		return new EventDispatcher( new RecoveryLink() );
 	}
@@ -130,6 +136,7 @@ final class EventDispatcherTest extends TestCase {
 	}
 
 	public function test_email_sent_without_a_coupon_skips_the_coupon_hook(): void {
+		$this->listen( 'cart_rebound_recovery_email_sent', 'cart_rebound_recovery_coupon_sent' );
 		Actions\expectDone( 'cart_rebound_recovery_email_sent' )->once();
 		Actions\expectDone( 'cart_rebound_recovery_coupon_sent' )->never();
 
@@ -140,6 +147,7 @@ final class EventDispatcherTest extends TestCase {
 
 	public function test_email_sent_with_a_coupon_reports_the_coupon(): void {
 		Functions\when( 'wc_get_coupon_id_by_code' )->justReturn( 42 );
+		$this->listen( 'cart_rebound_recovery_email_sent', 'cart_rebound_recovery_coupon_sent' );
 
 		$coupon = null;
 
@@ -169,7 +177,15 @@ final class EventDispatcherTest extends TestCase {
 	}
 
 	public function test_coupon_hook_skips_a_template_that_never_prints_the_code(): void {
-		Actions\expectDone( 'cart_rebound_recovery_email_sent' )->once();
+		$this->listen( 'cart_rebound_recovery_email_sent', 'cart_rebound_recovery_coupon_sent' );
+
+		$sent = null;
+
+		Actions\expectDone( 'cart_rebound_recovery_email_sent' )->once()->whenHappen(
+			static function ( $payload ) use ( &$sent ): void {
+				$sent = $payload;
+			}
+		);
 		Actions\expectDone( 'cart_rebound_recovery_coupon_sent' )->never();
 
 		$this->dispatcher()->email_sent(
@@ -182,7 +198,8 @@ final class EventDispatcherTest extends TestCase {
 			'automatic'
 		);
 
-		$this->addToAssertionCount( 1 );
+		$this->assertIsArray( $sent );
+		$this->assertSame( '', $sent['coupon_code'] );
 	}
 
 	public function test_status_change_builds_nothing_without_listeners(): void {
@@ -197,6 +214,8 @@ final class EventDispatcherTest extends TestCase {
 	}
 
 	public function test_unsubscribed_carries_the_shopper(): void {
+		$this->listen( 'cart_rebound_unsubscribed' );
+
 		$payload = null;
 
 		Actions\expectDone( 'cart_rebound_unsubscribed' )->once()->whenHappen(

@@ -143,7 +143,7 @@ final class RecoveryHandler {
 	 * @return void
 	 */
 	private function adopt_session( int $cart_id ): void {
-		if ( $cart_id <= 0 ) {
+		if ( $cart_id <= 0 || ! $this->tracker->is_enabled() ) {
 			return;
 		}
 
