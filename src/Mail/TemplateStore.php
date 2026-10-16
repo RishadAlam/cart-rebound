@@ -251,15 +251,17 @@ final class TemplateStore {
 	 * @return array<string, mixed>
 	 */
 	private function seed(): array {
-		return array(
-			'id'         => $this->new_id(),
-			'name'       => __( 'Default', 'cart-rebound' ),
-			'subject'    => (string) $this->settings->get( 'email_subject' ),
-			'body'       => wpautop( (string) $this->settings->get( 'email_body' ) ),
-			'from_name'  => (string) $this->settings->get( 'email_from_name' ),
-			'from_email' => (string) $this->settings->get( 'email_from_email' ),
-			'coupon'     => (string) $this->settings->get( 'email_coupon' ),
-			'is_default' => true,
+		return $this->sanitise(
+			array(
+				'id'         => $this->new_id(),
+				'name'       => __( 'Default', 'cart-rebound' ),
+				'subject'    => (string) $this->settings->get( 'email_subject' ),
+				'body'       => wpautop( (string) $this->settings->get( 'email_body' ) ),
+				'from_name'  => (string) $this->settings->get( 'email_from_name' ),
+				'from_email' => (string) $this->settings->get( 'email_from_email' ),
+				'coupon'     => (string) $this->settings->get( 'email_coupon' ),
+				'is_default' => true,
+			)
 		);
 	}
 

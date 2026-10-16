@@ -142,6 +142,8 @@ final class RecoveryMailerTest extends TestCase {
 		Functions\when( 'update_option' )->justReturn( true );
 		Functions\when( 'wp_generate_uuid4' )->justReturn( 'template-id' );
 		Functions\when( 'wpautop' )->returnArg();
+		Functions\when( 'sanitize_text_field' )->returnArg();
+		Functions\when( 'wp_kses_post' )->returnArg();
 		Functions\when( 'wc_get_cart_url' )->justReturn( 'https://shop.test/cart' );
 		Functions\when( 'add_query_arg' )->justReturn( 'https://shop.test/cart?recover' );
 		Functions\when( 'home_url' )->justReturn( 'https://shop.test/' );
