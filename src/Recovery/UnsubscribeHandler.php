@@ -11,6 +11,7 @@ namespace CartRebound\Recovery;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
 
@@ -36,14 +37,24 @@ final class UnsubscribeHandler {
 	private $links;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param RecoveryLink $links Recovery link builder.
+	 * @param RecoveryLink    $links  Recovery link builder.
+	 * @param EventDispatcher $events Event dispatcher.
 	 */
-	public function __construct( RecoveryLink $links ) {
-		$this->links = $links;
+	public function __construct( RecoveryLink $links, EventDispatcher $events ) {
+		$this->links  = $links;
+		$this->events = $events;
 	}
 
 	/**
@@ -73,8 +84,16 @@ final class UnsubscribeHandler {
 		$row   = CartSession::query()->where( 'recovery_token', '=', $token )->first();
 		$email = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
 
-		if ( '' !== $email && Unsubscribe::suppress( $email ) ) {
-			$this->render( 'done', $token );
+		if ( '' !== $email ) {
+			$already = Unsubscribe::is_suppressed( $email );
+
+			if ( Unsubscribe::suppress( $email ) ) {
+				if ( ! $already && is_array( $row ) ) {
+					$this->events->unsubscribed( $row );
+				}
+
+				$this->render( 'done', $token );
+			}
 		}
 
 		$this->render( 'invalid', $token );

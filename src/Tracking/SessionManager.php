@@ -11,6 +11,7 @@ namespace CartRebound\Tracking;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 
 /**
@@ -45,6 +46,25 @@ final class SessionManager {
 	 * @var int
 	 */
 	private const KEY_LENGTH = 64;
+
+	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
+	 * Constructor.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param EventDispatcher $events Event dispatcher.
+	 */
+	public function __construct( EventDispatcher $events ) {
+		$this->events = $events;
+	}
 
 	/**
 	 * Resolve the stable session key for the current visitor.
@@ -106,6 +126,10 @@ final class SessionManager {
 		}
 
 		CartSession::update( (int) ( $row['id'] ?? 0 ), $update );
+
+		if ( isset( $update['email'] ) ) {
+			$this->events->captured( array_merge( $row, $update ) );
+		}
 	}
 
 	/**

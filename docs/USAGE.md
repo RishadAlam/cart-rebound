@@ -604,20 +604,34 @@ The endpoint responds with `{ "updated": true|false }`.
 
 ## Developer Guide: Events (Hooks)
 
-Cart Rebound exposes its abandonment and recovery lifecycle through standard WordPress action hooks fired by `src/Events/EventDispatcher.php`. Automation tools (FlowMattic, Bit Integrations, etc.) and custom code should hook these actions rather than coupling to the plugin internals. Every event passes a single argument: a flat, mappable `$payload` array.
+Cart Rebound exposes its cart lifecycle through standard WordPress action hooks fired by `src/Events/EventDispatcher.php`. Automation tools (FlowMattic, Bit Integrations, etc.) and custom code should hook these actions rather than coupling to the plugin internals. Every event below passes a single argument: a flat, mappable `$payload` array.
 
 ### Actions
 
-| Action                   | When it fires                                        | Payload                              |
-| ------------------------ | ---------------------------------------------------- | ------------------------------------ |
-| `cart_rebound_abandoned` | A cart is detected as abandoned.                     | Base payload                         |
-| `cart_rebound_recovered` | An abandoned cart is recovered by a completed order. | Base payload + recovered-only fields |
+| Action                               | When it fires                                                                                             | Payload                                 |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `cart_rebound_cart_created`          | A new cart starts being tracked (guest carts have no email yet).                                          | Base payload                            |
+| `cart_rebound_cart_captured`         | A cart first holds a contact email, or its email, name or phone changes.                                  | Base payload                            |
+| `cart_rebound_abandoned`             | A cart is marked abandoned, by the scan or by an admin.                                                   | Base payload                            |
+| `cart_rebound_recovery_email_sent`   | A recovery email is handed to `wp_mail` successfully.                                                     | Base payload + email fields             |
+| `cart_rebound_recovery_coupon_sent`  | A recovery email that carries a coupon code is sent.                                                      | Base payload + email fields + coupon id |
+| `cart_rebound_recovery_email_failed` | `wp_mail` rejects a recovery email.                                                                       | Base payload + email fields (no coupon) |
+| `cart_rebound_recovery_link_clicked` | A shopper opens a recovery link and their cart is restored.                                               | Base payload + `clicked_at`             |
+| `cart_rebound_order_linked`          | An order is placed from a tracked cart, before it is paid.                                                | Base payload + order fields             |
+| `cart_rebound_recovered`             | An abandoned cart is recovered by a paid order.                                                           | Base payload + recovered-only fields    |
+| `cart_rebound_unsubscribed`          | A shopper unsubscribes from recovery emails (fires once per address).                                     | Base payload + `unsubscribed_at`        |
+| `cart_rebound_cart_status_changed`   | Any cart status change.                                                                                   | Base payload + `previous_status`        |
+| `cart_rebound_cart_status_{status}`  | A cart moves into one status: `active`, `abandoned`, `pending-payment`, `recovered`, `completed`, `lost`. | Base payload + `previous_status`        |
+
+The status hooks fire on transitions only, never when a cart is first created, and the specific `cart_rebound_cart_status_{status}` hook fires before `cart_rebound_cart_status_changed`. Cart Rebound does not generate coupons: `cart_rebound_recovery_coupon_sent` reports the existing WooCommerce coupon chosen on the email template.
+
+The older `cart_rebound_email_sent` action still fires after each recovery email with its original `( $cart_id, $row, $template )` arguments. New code should use `cart_rebound_recovery_email_sent`.
 
 When `EventDispatcher::abandoned()` runs it calls `do_action( 'cart_rebound_abandoned', $payload )` so a listener receives the cart data. The dispatcher also bumps lifetime counters after firing (`cart_rebound_lifetime_abandoned` on abandonment, `cart_rebound_lifetime_recovered` on recovery), but those are internal options, not part of the payload.
 
 ### Base payload (all events)
 
-Both the abandoned and the recovered event include these base fields, built by `base_payload()`:
+Every event above includes these base fields, built by `base_payload()`:
 
 | Key                | Type   | Source / notes                                                    |
 | ------------------ | ------ | ----------------------------------------------------------------- |
@@ -631,6 +645,8 @@ Both the abandoned and the recovered event include these base fields, built by `
 | `cart_total`       | float  | `row['cart_total']`.                                              |
 | `currency`         | string | `row['currency']`.                                                |
 | `cart_items_count` | int    | `row['items_count']`.                                             |
+| `status`           | string | The cart's status after the event (`row['status']`).              |
+| `order_id`         | int    | Linked order id, `0` when none (`row['order_id']`).               |
 | `products`         | array  | List of line items (see structure below).                         |
 | `checkout_url`     | string | `row['checkout_url']`.                                            |
 | `recovery_url`     | string | Built from the cart's `recovery_token` via `RecoveryLink::url()`. |
@@ -658,6 +674,40 @@ If the stored cart snapshot is missing or not valid JSON, `products` is an empty
 | `recovered_amount` | float  | `row['recovered_amount']` if present, otherwise `$order->get_total()`. |
 | `recovered_at`     | string | `row['recovered_at']` (empty string if unset).                         |
 | `recovery_method`  | string | How the cart was recovered: `'email_link'` or `'direct'`.              |
+
+### Email fields
+
+`cart_rebound_recovery_email_sent`, `cart_rebound_recovery_coupon_sent` and `cart_rebound_recovery_email_failed` add:
+
+| Key             | Type   | Source / notes                                                                 |
+| --------------- | ------ | ------------------------------------------------------------------------------ |
+| `template_id`   | string | The template that was sent.                                                    |
+| `template_name` | string | The template's name.                                                           |
+| `coupon_code`   | string | The template's coupon code, empty when none (sent and coupon events only).     |
+| `trigger`       | string | `'automatic'` for the scheduled email, `'manual'` for one sent from the admin. |
+| `sent_at`       | string | UTC send time (sent and coupon events only).                                   |
+| `coupon_id`     | int    | WooCommerce coupon id for `coupon_code`, `0` if not found (coupon event only). |
+
+### Order fields
+
+`cart_rebound_order_linked` adds `order_total` (float) and `order_status` (string, the WooCommerce status without the `wc-` prefix). `order_id` in the base payload holds the new order.
+
+### Example: react to any status change
+
+```php
+add_action( 'cart_rebound_cart_status_changed', function ( array $payload ) {
+	error_log( sprintf(
+		'Cart %d moved from %s to %s.',
+		$payload['cart_id'],
+		$payload['previous_status'],
+		$payload['status']
+	) );
+} );
+
+add_action( 'cart_rebound_cart_status_lost', function ( array $payload ) {
+	// Only carts that just became lost.
+} );
+```
 
 ### Example: listen for abandonment
 

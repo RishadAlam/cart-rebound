@@ -26,7 +26,7 @@
 - **Tokenized recovery links** — rebuild the cart (items, variations, and coupons) and send the shopper straight to checkout. No raw session key in the URL.
 - **Accurate revenue attribution** — orders are linked to carts by **explicit order meta, never fuzzy total matching**, so coupons, shipping, and tax never break the link. Carts resolve to _recovered_ or _completed_ only on real payment, with separate timestamps and a dedicated recovered-amount field.
 - **Optional built-in recovery email** — disabled by default and scheduled a configurable delay after abandonment, with merge tags for the shopper, the cart contents and value, the recovery and checkout links, the coupon, and your store details.
-- **Developer event &amp; REST API** — `cart_rebound_abandoned` / `cart_rebound_recovered` actions, and a read API for carts, stats, and recovered revenue.
+- **Developer events &amp; REST API** — actions for every step of the cart lifecycle (captured, abandoned, email sent, link clicked, order linked, recovered, unsubscribed, and each status change), and a read API for carts, stats, and recovered revenue.
 - **Admin dashboard** — active / abandoned / recovered counts, **recovered revenue**, recovery rate, and a filterable list of cart sessions with row actions.
 - **HPOS-compatible** — built for WooCommerce High-Performance Order Storage.
 
@@ -70,7 +70,13 @@ add_action( 'cart_rebound_abandoned', function ( array $payload ) {
 add_action( 'cart_rebound_recovered', function ( array $payload ) {
     // adds: order_id, recovered_amount, recovered_at, recovery_method
 } );
+
+add_action( 'cart_rebound_cart_status_changed', function ( array $payload ) {
+    // $payload['previous_status'] → $payload['status']
+} );
 ```
+
+Also available: `cart_rebound_cart_created`, `cart_rebound_cart_captured`, `cart_rebound_recovery_email_sent`, `cart_rebound_recovery_coupon_sent`, `cart_rebound_recovery_email_failed`, `cart_rebound_recovery_link_clicked`, `cart_rebound_order_linked`, `cart_rebound_unsubscribed` and `cart_rebound_cart_status_{status}`. See [docs/USAGE.md](docs/USAGE.md#developer-guide-events-hooks) for payloads.
 
 REST (namespace `cart-rebound/v1`, capability `manage_woocommerce`, nonce-protected): `GET carts`, `GET carts/{id}`, `GET stats`, `GET/POST settings`, `POST carts/{id}/mark-recovered`, `DELETE carts/{id}`.
 

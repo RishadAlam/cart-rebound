@@ -169,20 +169,21 @@ final class AbandonmentDetector {
 	 * @return void
 	 */
 	private function abandon_if_still_idle( array $row, string $cutoff ): void {
-		$id = (int) ( $row['id'] ?? 0 );
+		$id     = (int) ( $row['id'] ?? 0 );
+		$fields = $this->abandoned_fields();
 
 		$flipped = CartSession::query()
 			->where( 'id', '=', $id )
 			->where( 'status', '=', CartSession::STATUS_ACTIVE )
 			->where( 'items_count', '>', 0 )
 			->where( 'last_activity', '<', $cutoff )
-			->update_where( $this->abandoned_fields() );
+			->update_where( $fields );
 
 		if ( $flipped < 1 ) {
 			return;
 		}
 
-		$this->notify( $row, $id );
+		$this->notify( $row, $fields );
 	}
 
 	/**
@@ -197,11 +198,11 @@ final class AbandonmentDetector {
 	 * @return void
 	 */
 	private function mark_abandoned( array $row ): void {
-		$id = (int) ( $row['id'] ?? 0 );
+		$fields = $this->abandoned_fields();
 
-		CartSession::update( $id, $this->abandoned_fields() );
+		CartSession::update( (int) ( $row['id'] ?? 0 ), $fields );
 
-		$this->notify( $row, $id );
+		$this->notify( $row, $fields );
 	}
 
 	/**
@@ -224,12 +225,16 @@ final class AbandonmentDetector {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row The cart row.
-	 * @param int                  $id  The cart id.
+	 * @param array<string, mixed> $row    The cart row as read before the flip.
+	 * @param array<string, mixed> $fields The abandonment columns that were written.
 	 * @return void
 	 */
-	private function notify( array $row, int $id ): void {
-		$this->events->abandoned( $row );
+	private function notify( array $row, array $fields ): void {
+		$id      = (int) ( $row['id'] ?? 0 );
+		$flipped = array_merge( $row, $fields );
+
+		$this->events->status_changed( $flipped, (string) ( $row['status'] ?? '' ) );
+		$this->events->abandoned( $flipped );
 
 		if ( $this->settings->get( 'recovery_email_enabled' ) && '' !== (string) ( $row['email'] ?? '' ) ) {
 			$delay = max( 1, (int) $this->settings->get( 'email_delay_minutes' ) );

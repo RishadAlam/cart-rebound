@@ -140,7 +140,7 @@ final class OrderLinker {
 
 				// Mark pending payment before the order is paid so post-checkout empty-cart events keep
 				// its items and no recovery email goes out; the paid transition happens in link().
-				$this->mark_order_placed( $resolved['id'], $order_id );
+				$this->mark_order_placed( $resolved['id'], $order );
 			}
 
 			// The recovery binding is single-use; drop it so a later unrelated
@@ -267,27 +267,27 @@ final class OrderLinker {
 		if ( CartSession::STATUS_PENDING_PAYMENT === $status ) {
 			// `abandoned_at` is kept so a later paid order still attributes as recovered
 			// instead of as a straight-through completion.
-			CartSession::update(
-				$cart_id,
-				array(
-					'status'               => CartSession::STATUS_ACTIVE,
-					'order_id'             => 0,
-					'abandonment_notified' => 0,
-				)
+			$reopened = array(
+				'status'               => CartSession::STATUS_ACTIVE,
+				'order_id'             => 0,
+				'abandonment_notified' => 0,
 			);
+
+			CartSession::update( $cart_id, $reopened );
+			$this->events->status_changed( array_merge( $row, $reopened ), $status );
 
 			return;
 		}
 
 		if ( $this->already_converted( $status ) ) {
-			CartSession::update(
-				$cart_id,
-				array(
-					'status'           => CartSession::STATUS_LOST,
-					'recovered_amount' => 0,
-					'order_id'         => 0,
-				)
+			$lost = array(
+				'status'           => CartSession::STATUS_LOST,
+				'recovered_amount' => 0,
+				'order_id'         => 0,
 			);
+
+			CartSession::update( $cart_id, $lost );
+			$this->events->status_changed( array_merge( $row, $lost ), $status );
 
 			$order->add_order_note(
 				sprintf(
@@ -336,7 +336,7 @@ final class OrderLinker {
 		$is_recovered  = $via_link || $was_abandoned;
 
 		if ( ! $is_recovered ) {
-			$this->complete( $order, $cart_id );
+			$this->complete( $order, $row );
 			$this->sessions->clear();
 
 			return;
@@ -363,6 +363,7 @@ final class OrderLinker {
 
 		$fresh = array_merge( $row, $recovered );
 
+		$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
 		$this->events->recovered( $fresh, $order, $via_link ? 'email_link' : 'direct' );
 		$this->mailer->notify_admin( $fresh, $order );
 
@@ -378,19 +379,20 @@ final class OrderLinker {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param WC_Order $order   The paid order.
-	 * @param int      $cart_id The cart id.
+	 * @param WC_Order             $order The paid order.
+	 * @param array<string, mixed> $row   The cart row.
 	 * @return void
 	 */
-	private function complete( WC_Order $order, int $cart_id ): void {
-		CartSession::update(
-			$cart_id,
-			array(
-				'status'       => CartSession::STATUS_COMPLETED,
-				'order_id'     => $order->get_id(),
-				'completed_at' => gmdate( 'Y-m-d H:i:s' ),
-			)
+	private function complete( WC_Order $order, array $row ): void {
+		$cart_id   = (int) ( $row['id'] ?? 0 );
+		$completed = array(
+			'status'       => CartSession::STATUS_COMPLETED,
+			'order_id'     => $order->get_id(),
+			'completed_at' => gmdate( 'Y-m-d H:i:s' ),
 		);
+
+		CartSession::update( $cart_id, $completed );
+		$this->events->status_changed( array_merge( $row, $completed ), (string) ( $row['status'] ?? '' ) );
 
 		$order->add_order_note(
 			sprintf(
@@ -411,11 +413,11 @@ final class OrderLinker {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param int $cart_id  Cart id.
-	 * @param int $order_id Order id.
+	 * @param int      $cart_id Cart id.
+	 * @param WC_Order $order   The order just placed.
 	 * @return void
 	 */
-	private function mark_order_placed( int $cart_id, int $order_id ): void {
+	private function mark_order_placed( int $cart_id, WC_Order $order ): void {
 		$row = CartSession::find( $cart_id );
 
 		if ( ! is_array( $row ) ) {
@@ -432,15 +434,19 @@ final class OrderLinker {
 			return;
 		}
 
-		CartSession::update(
-			$cart_id,
-			array(
-				'status'   => CartSession::STATUS_PENDING_PAYMENT,
-				'order_id' => $order_id,
-			)
+		$placed = array(
+			'status'   => CartSession::STATUS_PENDING_PAYMENT,
+			'order_id' => $order->get_id(),
 		);
 
+		CartSession::update( $cart_id, $placed );
+
 		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
+
+		$linked = array_merge( $row, $placed );
+
+		$this->events->status_changed( $linked, (string) ( $row['status'] ?? '' ) );
+		$this->events->order_linked( $linked, $order );
 	}
 
 	/**

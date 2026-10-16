@@ -4,6 +4,8 @@ declare( strict_types=1 );
 
 namespace CartRebound\Tests\Unit;
 
+use Brain\Monkey\Actions;
+use Brain\Monkey\Functions;
 use CartRebound\Cron\Scheduler;
 use CartRebound\Data\CartDataCleaner;
 use CartRebound\Data\CartRepository;
@@ -25,6 +27,9 @@ final class CartRepositoryTest extends TestCase {
 
 		$this->wpdb      = new CartRepositoryWpdb();
 		$GLOBALS['wpdb'] = $this->wpdb;
+
+		Functions\when( 'wc_get_cart_url' )->justReturn( 'https://shop.test/cart' );
+		Functions\when( 'add_query_arg' )->justReturn( 'https://shop.test/cart?recover' );
 	}
 
 	protected function tear_down(): void {
@@ -43,6 +48,9 @@ final class CartRepositoryTest extends TestCase {
 			new EventDispatcher( new RecoveryLink() ),
 			new CartDataCleaner( new Scheduler() )
 		);
+
+		Actions\expectDone( 'cart_rebound_cart_status_lost' )->once();
+		Actions\expectDone( 'cart_rebound_cart_status_changed' )->once();
 
 		$this->assertTrue( $repository->update_status( 9, CartSession::STATUS_LOST ) );
 		$this->assertSame( CartSession::STATUS_LOST, $this->wpdb->updated['data']['status'] );

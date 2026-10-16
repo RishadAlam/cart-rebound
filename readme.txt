@@ -384,7 +384,7 @@ Cart Rebound focuses on recovering eligible carts after shoppers leave. Its prod
 
 = Can developers integrate Cart Rebound with other automation? =
 
-Yes. Use the `cart_rebound_abandoned` and `cart_rebound_recovered` WordPress actions. The flat event payload is designed for custom code and automation tools. The plugin's administrative application also uses protected REST endpoints.
+Yes. Cart Rebound fires a WordPress action at every step of the cart lifecycle: `cart_rebound_cart_created`, `cart_rebound_cart_captured`, `cart_rebound_abandoned`, `cart_rebound_recovery_email_sent`, `cart_rebound_recovery_coupon_sent`, `cart_rebound_recovery_email_failed`, `cart_rebound_recovery_link_clicked`, `cart_rebound_order_linked`, `cart_rebound_recovered`, `cart_rebound_unsubscribed`, plus `cart_rebound_cart_status_changed` and one `cart_rebound_cart_status_{status}` action per status. Each passes one flat payload array designed for custom code and automation tools. The plugin's administrative application also uses protected REST endpoints.
 
 == Screenshots ==
 
@@ -414,7 +414,7 @@ Suggested disclosure text is added to the WordPress privacy-policy guide. Site o
 
 Human-readable PHP, TypeScript, React, and CSS source, tests, build configuration, and documentation are available at [github.com/RishadAlam/cart-rebound](https://github.com/RishadAlam/cart-rebound).
 
-The plugin exposes `cart_rebound_abandoned` and `cart_rebound_recovered` actions for custom integrations. Administrative REST routes use the `cart-rebound/v1` namespace and require the appropriate permission.
+The plugin exposes lifecycle actions for custom integrations, including `cart_rebound_abandoned`, `cart_rebound_recovered` and `cart_rebound_cart_status_changed`. Administrative REST routes use the `cart-rebound/v1` namespace and require the appropriate permission.
 
 Production packages can be created with `pnpm production-zip`. See the repository documentation for Composer, Node.js, pnpm, testing, translation, and local-development instructions.
 
@@ -436,6 +436,10 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 * Fixed the "count a cart as recovered when its order is" setting accepting order statuses WooCommerce does not register.
 * Fixed the Pending payment badge and the coupon chip falling below the WCAG AA contrast minimum.
 * Fixed creating an email template switching the editor to a different template, so the next edit landed on the wrong one.
+
+**Added**
+
+* Added WordPress actions for automations: cart created, contact details captured, recovery email sent or failed, coupon sent, recovery link clicked, order placed from a tracked cart, unsubscribed, and every cart status change (one action for all changes and one per status).
 
 **Improved**
 

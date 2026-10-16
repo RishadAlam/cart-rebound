@@ -422,7 +422,10 @@ final class CartRepository {
 
 		if ( $updated ) {
 			$fresh = CartSession::find( $cart_id );
-			$this->events->recovered( is_array( $fresh ) ? $fresh : $row, $order, 'direct' );
+			$fresh = is_array( $fresh ) ? $fresh : $row;
+
+			$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
+			$this->events->recovered( $fresh, $order, 'direct' );
 		}
 
 		return $updated;
@@ -434,7 +437,7 @@ final class CartRepository {
 	 * This is the pure-data transition used for every status except a manual
 	 * abandon that should notify (that path runs through
 	 * {@see \CartRebound\Cron\AbandonmentDetector::abandon()} so the event fires
-	 * and the follow-up email is queued). No integration event is dispatched here.
+	 * and the follow-up email is queued). Only the status-change events fire here.
 	 *
 	 * @since 0.1.0
 	 *
@@ -491,7 +494,13 @@ final class CartRepository {
 				break;
 		}
 
-		return CartSession::update( $cart_id, $data );
+		$updated = CartSession::update( $cart_id, $data );
+
+		if ( $updated ) {
+			$this->events->status_changed( array_merge( $row, $data ), (string) ( $row['status'] ?? '' ) );
+		}
+
+		return $updated;
 	}
 
 	/**

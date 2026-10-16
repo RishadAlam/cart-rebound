@@ -11,6 +11,7 @@ namespace CartRebound\Mail;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
 use CartRebound\Recovery\RecoveryLink;
@@ -60,6 +61,14 @@ final class RecoveryMailer {
 	private $templates;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
 	 * Human-readable reason the most recent on-demand send failed.
 	 *
 	 * @since 0.1.0
@@ -72,14 +81,16 @@ final class RecoveryMailer {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param Settings      $settings  Settings store.
-	 * @param RecoveryLink  $links     Recovery link builder.
-	 * @param TemplateStore $templates Email template store.
+	 * @param Settings        $settings  Settings store.
+	 * @param RecoveryLink    $links     Recovery link builder.
+	 * @param TemplateStore   $templates Email template store.
+	 * @param EventDispatcher $events    Event dispatcher.
 	 */
-	public function __construct( Settings $settings, RecoveryLink $links, TemplateStore $templates ) {
+	public function __construct( Settings $settings, RecoveryLink $links, TemplateStore $templates, EventDispatcher $events ) {
 		$this->settings  = $settings;
 		$this->links     = $links;
 		$this->templates = $templates;
+		$this->events    = $events;
 	}
 
 	/**
@@ -127,20 +138,27 @@ final class RecoveryMailer {
 		$template = $this->templates->default();
 		$sent     = $this->dispatch( $email, $row, $template );
 
-		if ( $sent ) {
-			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		if ( ! $sent ) {
+			$this->events->email_failed( $row, $template, 'automatic' );
 
-			/**
-			 * Fires after a recovery email is sent (drives the activity log).
-			 *
-			 * @since 0.1.0
-			 *
-			 * @param int                  $cart_id  The cart id.
-			 * @param array<string, mixed> $row      The cart row.
-			 * @param array<string, mixed> $template The template that was sent.
-			 */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+			return;
 		}
+
+		CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		$this->events->email_sent( array_merge( $row, array( 'email_sent' => 1 ) ), $template, 'automatic' );
+
+		/**
+		 * Fires after a recovery email is sent (drives the activity log).
+		 *
+		 * Prefer `cart_rebound_recovery_email_sent`, which carries the flat payload.
+		 *
+		 * @since 0.1.0
+		 *
+		 * @param int                  $cart_id  The cart id.
+		 * @param array<string, mixed> $row      The cart row.
+		 * @param array<string, mixed> $template The template that was sent.
+		 */
+		do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
 	}
 
 	/**
@@ -259,14 +277,19 @@ final class RecoveryMailer {
 		$template = is_array( $chosen ) ? $chosen : $this->templates->default();
 		$sent     = $this->dispatch( $email, $row, $template );
 
-		if ( $sent ) {
-			CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		if ( ! $sent ) {
+			$this->events->email_failed( $row, $template, 'manual' );
 
-			/** This action is documented in src/Mail/RecoveryMailer.php */
-			do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+			return false;
 		}
 
-		return $sent;
+		CartSession::update( $cart_id, array( 'email_sent' => 1 ) );
+		$this->events->email_sent( array_merge( $row, array( 'email_sent' => 1 ) ), $template, 'manual' );
+
+		/** This action is documented in src/Mail/RecoveryMailer.php */
+		do_action( 'cart_rebound_email_sent', $cart_id, $row, $template );
+
+		return true;
 	}
 
 	/**

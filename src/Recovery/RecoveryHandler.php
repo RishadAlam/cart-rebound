@@ -11,6 +11,7 @@ namespace CartRebound\Recovery;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Tracking\SessionManager;
 
@@ -41,14 +42,24 @@ final class RecoveryHandler {
 	private $sessions;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.1.2
 	 *
-	 * @param SessionManager $sessions Session key resolver.
+	 * @param SessionManager  $sessions Session key resolver.
+	 * @param EventDispatcher $events   Event dispatcher.
 	 */
-	public function __construct( SessionManager $sessions ) {
+	public function __construct( SessionManager $sessions, EventDispatcher $events ) {
 		$this->sessions = $sessions;
+		$this->events   = $events;
 	}
 
 	/**
@@ -91,6 +102,7 @@ final class RecoveryHandler {
 		}
 
 		$this->prefill_customer( $row );
+		$this->events->link_clicked( $row );
 
 		if ( function_exists( 'WC' ) && null !== WC()->session ) {
 			WC()->session->set( self::SESSION_CART_ID, (int) ( $row['id'] ?? 0 ) );

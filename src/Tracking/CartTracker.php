@@ -11,6 +11,7 @@ namespace CartRebound\Tracking;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Support\Settings;
 use WC_Product;
@@ -43,16 +44,26 @@ final class CartTracker {
 	private $settings;
 
 	/**
+	 * Event dispatcher.
+	 *
+	 * @since 1.1.2
+	 * @var EventDispatcher
+	 */
+	private $events;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param SessionManager $sessions Session key resolver.
-	 * @param Settings       $settings Settings store.
+	 * @param SessionManager  $sessions Session key resolver.
+	 * @param Settings        $settings Settings store.
+	 * @param EventDispatcher $events   Event dispatcher.
 	 */
-	public function __construct( SessionManager $sessions, Settings $settings ) {
+	public function __construct( SessionManager $sessions, Settings $settings, EventDispatcher $events ) {
 		$this->sessions = $sessions;
 		$this->settings = $settings;
+		$this->events   = $events;
 	}
 
 	/**
@@ -107,9 +118,37 @@ final class CartTracker {
 			return;
 		}
 
+		$changed = $this->identity_changed( $existing, $data );
+
 		$data['last_activity'] = gmdate( 'Y-m-d H:i:s' );
 
 		CartSession::update( (int) ( $existing['id'] ?? 0 ), $data );
+
+		if ( $changed ) {
+			$this->events->captured( array_merge( $existing, $data ) );
+		}
+	}
+
+	/**
+	 * Whether any captured identity field differs from the stored row.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array<string, mixed> $row      The stored cart row.
+	 * @param array<string, mixed> $identity Sanitised identity fields.
+	 * @return bool
+	 */
+	private function identity_changed( array $row, array $identity ): bool {
+		foreach ( $identity as $field => $value ) {
+			$captured = (string) $value;
+			$stored   = (string) ( $row[ $field ] ?? '' );
+
+			if ( $captured !== $stored ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -148,6 +187,8 @@ final class CartTracker {
 
 				CartSession::update( $id, $update );
 
+				$this->events->status_changed( array_merge( $existing, $update ), $status );
+
 				return $id;
 			}
 
@@ -177,7 +218,16 @@ final class CartTracker {
 
 		$id = CartSession::create( $insert );
 
-		return is_int( $id ) ? $id : 0;
+		if ( ! is_int( $id ) ) {
+			return 0;
+		}
+
+		$created = array_merge( $insert, array( 'id' => $id ) );
+
+		$this->events->created( $created );
+		$this->events->captured( $created );
+
+		return $id;
 	}
 
 	/**
