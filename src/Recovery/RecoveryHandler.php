@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
+use CartRebound\Tracking\CartTracker;
 use CartRebound\Tracking\SessionManager;
 
 /**
@@ -50,16 +51,26 @@ final class RecoveryHandler {
 	private $events;
 
 	/**
+	 * Cart tracker.
+	 *
+	 * @since 1.1.2
+	 * @var CartTracker
+	 */
+	private $tracker;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.1.2
 	 *
 	 * @param SessionManager  $sessions Session key resolver.
 	 * @param EventDispatcher $events   Event dispatcher.
+	 * @param CartTracker     $tracker  Cart tracker.
 	 */
-	public function __construct( SessionManager $sessions, EventDispatcher $events ) {
+	public function __construct( SessionManager $sessions, EventDispatcher $events, CartTracker $tracker ) {
 		$this->sessions = $sessions;
 		$this->events   = $events;
+		$this->tracker  = $tracker;
 	}
 
 	/**
@@ -97,12 +108,22 @@ final class RecoveryHandler {
 		// otherwise open a duplicate row that gets its own recovery email.
 		$this->adopt_session( (int) ( $row['id'] ?? 0 ) );
 
-		if ( ! $this->restore_cart( $row ) ) {
+		$restored = $this->tracker->without_tracking(
+			function () use ( $row ): bool {
+				return $this->restore_cart( $row );
+			}
+		);
+
+		if ( ! $restored ) {
 			return;
 		}
 
+		$this->tracker->track();
 		$this->prefill_customer( $row );
-		$this->events->link_clicked( $row );
+
+		$fresh = CartSession::find( (int) ( $row['id'] ?? 0 ) );
+
+		$this->events->link_clicked( is_array( $fresh ) ? $fresh : $row );
 
 		if ( function_exists( 'WC' ) && null !== WC()->session ) {
 			WC()->session->set( self::SESSION_CART_ID, (int) ( $row['id'] ?? 0 ) );

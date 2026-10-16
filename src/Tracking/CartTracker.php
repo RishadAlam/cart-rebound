@@ -52,6 +52,14 @@ final class CartTracker {
 	private $events;
 
 	/**
+	 * Whether cart writes are currently ignored.
+	 *
+	 * @since 1.1.2
+	 * @var bool
+	 */
+	private $paused = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
@@ -74,7 +82,7 @@ final class CartTracker {
 	 * @return void
 	 */
 	public function track(): void {
-		if ( ! $this->tracking_allowed() ) {
+		if ( $this->paused || ! $this->tracking_allowed() ) {
 			return;
 		}
 
@@ -85,6 +93,27 @@ final class CartTracker {
 		}
 
 		$this->upsert( $key, $this->snapshot() );
+	}
+
+	/**
+	 * Run a callback with cart tracking paused.
+	 *
+	 * Rebuilding a cart empties it first; tracking each intermediate write would
+	 * record an empty cart and fire events for a state the shopper never saw.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param callable $callback Work to run untracked.
+	 * @return mixed The callback's return value.
+	 */
+	public function without_tracking( callable $callback ) {
+		$this->paused = true;
+
+		try {
+			return $callback();
+		} finally {
+			$this->paused = false;
+		}
 	}
 
 	/**
