@@ -28,5 +28,27 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Impeccable design-hook cache
+# AI agent files (local only)
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+GEMINI.md
+PRODUCT.md
+DESIGN.md
+.claude/
 .impeccable/
+.cursor/
+.cursorrules
+.windsurf/
+.windsurfrules
+.clinerules
+.codex/
+.gemini/
+.continue/
+.junie/
+.kiro/
+.roo/
+.aider*
+.mcp.json
+graphify-out/
+.github/copilot-instructions.md
