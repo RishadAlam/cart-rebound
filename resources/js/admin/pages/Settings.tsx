@@ -1,8 +1,4 @@
-/**
- * Settings page — edit and persist plugin settings.
- *
- * Tracking is always on while the plugin is active; there is no master toggle.
- */
+// Tracking is always on while the plugin is active; there is no master toggle.
 import {
 	useEffect,
 	useState,
@@ -24,10 +20,8 @@ type NumberKey =
 type ToggleKey =
 	'guest_tracking' | 'recovery_email_enabled' | 'admin_recovery_email';
 
-// WooCommerce order statuses selectable as "counts as recovered". Reversed
-// states (refunded/cancelled/failed) and unpaid pending are intentionally
-// omitted; custom statuses can be added via the cart_rebound_paid_order_statuses
-// filter.
+// Refunded/cancelled/failed and unpaid pending are omitted on purpose; custom
+// statuses come in via the cart_rebound_paid_order_statuses filter.
 const PAID_STATUS_OPTIONS: Array<{ key: string; label: string }> = [
 	{ key: 'on-hold', label: __('On hold', 'cart-rebound') },
 	{ key: 'processing', label: __('Processing', 'cart-rebound') },

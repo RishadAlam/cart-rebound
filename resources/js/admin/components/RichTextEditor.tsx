@@ -1,18 +1,5 @@
-/**
- * A focused rich-text editor for email bodies — dependency-free, built on a
- * contentEditable surface with a grouped formatting toolbar.
- *
- * It is uncontrolled: the initial HTML is written once on mount and edits are
- * emitted via onChange. Remount it (change its `key`) to load a different value,
- * which keeps the caret stable instead of fighting React re-renders.
- *
- * Selection handling: toolbar buttons preventDefault on mousedown so the editor
- * keeps focus and the live selection (execCommand applies to it directly — no
- * focus() call, which would collapse it). Controls that must steal focus (the
- * colour inputs, the merge-tag combobox) save the caret on blur and restore it
- * before acting. Colours use styleWithCSS so they emit inline styles that
- * survive wp_kses_post (which strips legacy <font> tags).
- */
+// Uncontrolled: the initial HTML is written once on mount. Remount it (change its
+// `key`) to load a different value, which keeps the caret stable.
 import {
 	useEffect,
 	useId,
@@ -132,7 +119,6 @@ const widthLabel = (width: string): string =>
 
 type EditorMode = 'visual' | 'html';
 
-// Commands whose on/off state is reflected in the toolbar.
 const STATEFUL = [
 	'bold',
 	'italic',
@@ -156,8 +142,6 @@ export const RichTextEditor = ({
 	onChange: (html: string) => void;
 	tags?: MergeTag[];
 	ariaLabel?: string;
-	// Rendered opposite the Visual/HTML switch — for actions that act on the
-	// body as a whole, such as previewing it.
 	actions?: ReactNode;
 }) => {
 	const baseId = useId();
@@ -171,9 +155,8 @@ export const RichTextEditor = ({
 	const [mode, setMode] = useState<EditorMode>('visual');
 	const [code, setCode] = useState(value);
 
-	// HTML waiting to be written into the contentEditable: the initial value on
-	// mount, then whatever the HTML view produced when switching back. Held in a
-	// ref so re-seeding never depends on render order.
+	// HTML waiting to be written into the contentEditable. Held in a ref so
+	// re-seeding never depends on render order.
 	const pendingSeed = useRef<string | null>(value);
 	const seedEmits = useRef(false);
 
@@ -237,7 +220,6 @@ export const RichTextEditor = ({
 		}
 	};
 
-	// Reflect which formats apply at the caret so the toolbar can light up.
 	const syncActive = () => {
 		const doc = ref.current?.ownerDocument;
 
@@ -263,17 +245,16 @@ export const RichTextEditor = ({
 		syncActive();
 	};
 
-	// execCommand is deprecated but remains the only broadly-supported,
-	// dependency-free way to format a contentEditable. No focus() call: the
-	// button's mousedown-preventDefault already kept focus + selection.
+	// execCommand is deprecated but the only broadly-supported dependency-free option.
+	// No focus() call: the button's mousedown preventDefault already kept the selection.
 	const run = (command: string, argument?: string) => {
 		document.execCommand(command, false, argument);
 		emit();
 		refresh();
 	};
 
-	// For controls that stole focus (colour inputs): re-focus, restore the caret,
-	// then apply. `css` emits inline styles so colours survive wp_kses_post.
+	// `css` emits inline styles so colours survive wp_kses_post, which strips
+	// legacy <font> tags.
 	const runRestored = (command: string, argument?: string, css = false) => {
 		ref.current?.focus();
 		restoreSelection();
@@ -326,8 +307,6 @@ export const RichTextEditor = ({
 		refresh();
 	};
 
-	// Re-indent whatever is in the HTML view now. Formatting only moves
-	// whitespace between blocks, so the emitted markup renders identically.
 	const formatCode = () => {
 		const next = formatHtml(code);
 
@@ -339,16 +318,12 @@ export const RichTextEditor = ({
 		onChange(next);
 	};
 
-	// Switching views hands the current markup to the other one: the visual view
-	// is the source of truth in visual mode, the textarea in HTML mode.
 	const switchMode = (next: EditorMode) => {
 		if (next === mode) {
 			return;
 		}
 
 		if (next === 'html') {
-			// The contentEditable emits one unbroken line; indent it so the
-			// markup is readable before anyone has to edit it.
 			setCode(formatHtml(ref.current?.innerHTML ?? value));
 		} else {
 			pendingSeed.current = code;
@@ -422,7 +397,6 @@ export const RichTextEditor = ({
 		frame.open();
 	};
 
-	// Keep the editor's selection when a toolbar button is pressed.
 	const keepSelection = (event: MouseEvent) => {
 		event.preventDefault();
 	};

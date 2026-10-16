@@ -18,9 +18,5 @@ use CartRebound\Support\Facades\Route;
 
 Route::get( 'ping', array( PingController::class, 'index' ) )->middleware( 'nonce' );
 
-/*
- * Front-end guest beacon: captures the email/name/phone a guest enters at
- * checkout. State-changing but intentionally nonce-only — guests hold no
- * capability, and the endpoint can only update the visitor's current cart.
- */
+// Nonce-only by design: guests hold no capability and can only update their own cart.
 Route::post( 'capture', array( CaptureController::class, 'store' ) )->middleware( 'nonce' );

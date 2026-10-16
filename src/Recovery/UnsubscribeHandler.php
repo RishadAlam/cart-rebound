@@ -99,7 +99,6 @@ final class UnsubscribeHandler {
 			: '';
 
 		if ( '' === $view || ! is_readable( $view ) ) {
-			// Fall back to a bare status page if the view is somehow missing.
 			wp_die(
 				esc_html__( 'Unsubscribe', 'cart-rebound' ),
 				esc_html__( 'Unsubscribe', 'cart-rebound' ),
@@ -119,7 +118,7 @@ final class UnsubscribeHandler {
 		$field_token = RecoveryLink::QUERY_TOKEN;
 		$home_url    = home_url( '/' );
 
-		require $view; // The view calls exit; execution stops here.
+		require $view;
 		exit;
 	}
 

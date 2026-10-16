@@ -1,14 +1,3 @@
-/**
- * HTML helpers for the email body editor.
- *
- * The editor stores whatever markup the contentEditable produced — one long
- * line. These helpers give the HTML view a readable version of it and keep the
- * visual view's block structure sane, without changing how the email renders:
- * line breaks are only ever added between block-level elements, where the
- * browser collapses them away. Inline runs are copied verbatim, entities and
- * all, so `&nbsp;` never turns into a bare space.
- */
-
 // Elements that carry their own line box, so a newline around them is inert.
 export const BLOCK_TAGS = new Set([
 	'P',
@@ -35,7 +24,6 @@ export const BLOCK_TAGS = new Set([
 	'FIGCAPTION',
 ]);
 
-// Elements with no closing tag.
 const VOID_TAGS = new Set([
 	'AREA',
 	'BASE',
@@ -52,7 +40,6 @@ const VOID_TAGS = new Set([
 	'WBR',
 ]);
 
-// Whitespace inside these is significant, so their markup is left untouched.
 const VERBATIM_TAGS = new Set(['PRE', 'TEXTAREA']);
 
 const INDENT = '  ';
@@ -150,13 +137,6 @@ const formatNodes = (nodes: Node[], depth: number, doc: Document): string[] => {
 	return lines;
 };
 
-/**
- * Re-indent HTML for reading. Returns the input unchanged if it cannot be
- * parsed, so a half-typed tag never wipes out what the author was writing.
- *
- * @param html Markup to indent.
- * @return The indented markup.
- */
 export const formatHtml = (html: string): string => {
 	if (html.trim() === '' || typeof document === 'undefined') {
 		return html;
@@ -176,15 +156,8 @@ export const formatHtml = (html: string): string => {
 	return formatNodes(children, 0, document).join('\n');
 };
 
-/**
- * Wrap loose root-level nodes in a paragraph.
- *
- * Without a block wrapper, execCommand list/align commands apply to the whole
- * editable instead of the current line, which is how an entire email body ends
- * up as one bulleted list.
- *
- * @param root The editable element to normalise in place.
- */
+// Without a block wrapper, execCommand list/align commands apply to the whole
+// editable instead of the current line, turning an entire email into one list.
 export const wrapLooseNodes = (root: HTMLElement) => {
 	const doc = root.ownerDocument;
 	let buffer: ChildNode[] = [];

@@ -121,17 +121,14 @@ final class SessionManager {
 	 * @return void
 	 */
 	public function clear(): void {
-		// Only retire the session from the shopper's own front-end request. On a
-		// wp-admin order edit or a cron/webhook status change the current cookie
-		// and WooCommerce session belong to someone else (or no one), and
+		// In wp-admin or cron the cookie and WooCommerce session belong to someone else;
 		// CartTracker archives the converted key on the next cart regardless.
 		if ( is_admin() || wp_doing_cron() ) {
 			return;
 		}
 
 		// Once output has started the cookie can no longer be expired; bail before
-		// touching the WooCommerce session too, so the cookie and the session slot
-		// can never diverge (the cookie is read first on the next request).
+		// touching the WooCommerce session too, so the two never diverge.
 		if ( headers_sent() ) {
 			return;
 		}
@@ -192,8 +189,7 @@ final class SessionManager {
 			return '';
 		}
 
-		// Identifier cookie; unslashed + strictly validated on use, no nonce
-		// applies to a read-only browser reference.
+		// Read-only identifier cookie: no nonce applies; it is strictly validated on use.
 		return $this->validated_key( sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE ] ) ) );
 	}
 

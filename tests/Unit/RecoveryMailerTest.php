@@ -1,9 +1,4 @@
 <?php
-/**
- * Recovery mailer unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -38,7 +33,6 @@ final class RecoveryMailerTest extends TestCase {
 		);
 		Functions\when( 'sanitize_email' )->returnArg();
 
-		// Merge-tag values pull in a handful of formatting/site helpers.
 		Functions\when( 'number_format_i18n' )->alias(
 			static function ( $number, $decimals = 0 ) {
 				return number_format( (float) $number, (int) $decimals );
@@ -184,8 +178,7 @@ class RecoveryMailerWpdb {
 	public function prepare( $query, $args = array() ) {
 		$flat = is_array( $args ) ? $args : array( $args );
 
-		// Interpolate %i/%s/%d in order so the target table name is visible to
-		// get_results() (which routes the suppression lookup to an empty result).
+		// Interpolate so get_results() can see the target table name.
 		return (string) preg_replace_callback(
 			'/%[isd]/',
 			static function () use ( &$flat ) {
@@ -198,9 +191,7 @@ class RecoveryMailerWpdb {
 	public function get_results( $query, $output ) {
 		unset( $output );
 
-		// Route the suppression lookup (against the unsubscribes table specifically,
-		// not any query whose values merely contain the word) to a controllable
-		// result so fixtures decide whether an address is unsubscribed.
+		// Match the table name, not any query whose values merely contain the word.
 		if ( is_string( $query ) && false !== strpos( $query, 'cart_rebound_unsubscribes' ) ) {
 			return $this->unsubscribed
 				? array( array( 'id' => 1, 'email' => 'shopper@example.com' ) )

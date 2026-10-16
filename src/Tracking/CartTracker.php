@@ -131,18 +131,8 @@ final class CartTracker {
 			$status = (string) ( $existing['status'] ?? '' );
 
 			if ( ! $this->is_terminal( $status ) ) {
-				// WooCommerce empties the cart the moment an order is placed (it
-				// fires `woocommerce_cart_emptied` / `woocommerce_cart_updated`
-				// with a now-empty cart). While an order is awaiting payment for
-				// this session that empty snapshot must not wipe the tracked
-				// contents/total: the row is about to be linked to the order, and
-				// a not-yet-paid order still needs its items to drive recovery — so
-				// the last non-empty snapshot and its abandonment clock stay put.
-				//
-				// An empty cart with NO order in flight is a genuine discard (the
-				// shopper removed every item), so it falls through to the normal
-				// update below and the row is zeroed as before, keeping a
-				// deliberately-emptied cart out of the abandonment funnel.
+				// WooCommerce empties the cart when an order is placed; while that order awaits
+				// payment, keep the last snapshot so the unpaid order can still drive recovery.
 				if ( $is_empty && $this->order_in_progress() ) {
 					return $id;
 				}
@@ -150,12 +140,8 @@ final class CartTracker {
 				$update = array_merge( $data, array( 'last_activity' => $now ) );
 
 				if ( CartSession::STATUS_ABANDONED === $status ) {
-					// Shopper is active again — return the cart to the active funnel
-					// so the detector can re-fire. `abandoned_at` deliberately stays:
-					// it is the historical "this cart was once abandoned" marker that
-					// OrderLinker reads to attribute a later paid order as recovered
-					// rather than as a straight-through completion, and that the
-					// revenue chart and product report bucket their abandonments on.
+					// `abandoned_at` deliberately stays: OrderLinker reads it to attribute a later paid
+					// order as recovered, and the revenue and product reports bucket on it.
 					$update['status']               = CartSession::STATUS_ACTIVE;
 					$update['abandonment_notified'] = 0;
 				}
@@ -170,10 +156,8 @@ final class CartTracker {
 			CartSession::update( $id, array( 'session_key' => hash( 'sha256', $key . '|archived|' . $id ) ) );
 		}
 
-		// Never open a brand-new row for an empty cart: WooCommerce fires
-		// `woocommerce_cart_updated` on ordinary page loads (shop, product,
-		// account) where the cart holds nothing, which would otherwise litter
-		// the list with 0-item rows. Existing rows are still updated above.
+		// WooCommerce fires `woocommerce_cart_updated` with an empty cart on ordinary
+		// page loads, so never open a new row for one.
 		if ( $is_empty ) {
 			return 0;
 		}

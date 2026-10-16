@@ -88,7 +88,7 @@ final class SettingsController extends Controller {
 		foreach ( $keys as $key ) {
 			$value = $request->get_param( $key );
 
-			// null = field omitted; '' is an explicit clear (Settings sanitises types).
+			// Null means the field was omitted; '' is an explicit clear (Settings sanitises types).
 			if ( null !== $value ) {
 				$input[ $key ] = $value;
 			}

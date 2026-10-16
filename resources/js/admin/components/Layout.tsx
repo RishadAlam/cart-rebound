@@ -1,6 +1,3 @@
-/**
- * App shell: heading + tab navigation + routed content.
- */
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { __ } from '@wordpress/i18n';
 import { OnboardingWizard } from './OnboardingWizard';
@@ -26,8 +23,7 @@ const tabs: Tab[] = [
 const tabClass = ({ isActive }: { isActive: boolean }): string =>
 	isActive ? 'cr-tab is-active' : 'cr-tab';
 
-// Reports and tables get the full admin width; the form pages (templates,
-// settings) stay capped so their label/input rows remain scannable.
+// Form pages stay width-capped so their label/input rows remain scannable.
 const WIDE_ROUTES = ['/', '/carts', '/logs'];
 
 export const Layout = () => {

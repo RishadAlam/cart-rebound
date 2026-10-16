@@ -1,17 +1,5 @@
-/**
- * Shared formatting helpers for the admin UI.
- */
-
-/**
- * Render an amount the way WooCommerce renders prices on the storefront.
- *
- * Intl picks separators and symbol placement from the browser locale, which
- * drifts from what the shop owner configured — a store selling in EUR with a
- * comma decimal would still read `€1,234.50` to an en-US admin. The boot data
- * carries the store's own settings so both surfaces agree.
- * @param amount
- * @param format
- */
+// Not Intl: it follows the browser locale, so an en-US admin would see `€1,234.50`
+// for a store configured with a comma decimal. Mirror the store's own settings.
 const formatWooCommerceMoney = (
 	amount: number,
 	format: CartReboundBootData['currency']
@@ -53,12 +41,6 @@ const formatWooCommerceMoney = (
 	return amount < 0 ? `-${price}` : price;
 };
 
-/**
- * Format a monetary amount using the store's WooCommerce price settings when
- * possible, falling back gracefully when the currency is unknown.
- * @param amount
- * @param currency
- */
 export const formatMoney = (amount: number, currency: string): string => {
 	if (currency === '') {
 		return amount.toFixed(2);

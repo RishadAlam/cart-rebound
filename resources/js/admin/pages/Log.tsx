@@ -1,6 +1,3 @@
-/**
- * Log page — a filterable, paginated view of the plugin's activity log.
- */
 import { useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';

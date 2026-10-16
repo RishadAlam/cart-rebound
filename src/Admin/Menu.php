@@ -90,12 +90,8 @@ final class Menu {
 			$this->page_hooks[ $this->page_hook ] = '/';
 		}
 
-		/*
-		 * Every submenu item mounts the same single-page app; the route is
-		 * seeded into the hash router at load (see AssetServiceProvider). The
-		 * first item reuses the parent slug, relabelling the auto-created entry
-		 * from "Cart Rebound" to "Dashboard".
-		 */
+		// The first item reuses the parent slug to relabel WordPress's auto-created
+		// "Cart Rebound" submenu entry as "Dashboard".
 		$submenus = array(
 			self::SLUG                => array( __( 'Dashboard', 'cart-rebound' ), '/' ),
 			self::SLUG . '-carts'     => array( __( 'Carts', 'cart-rebound' ), '/carts' ),
@@ -119,11 +115,8 @@ final class Menu {
 			}
 		}
 
-		/*
-		 * WooCommerce's own menu_order filter pins Products immediately after
-		 * WooCommerce, regardless of numeric menu positions. Run later and
-		 * place Cart Rebound in that exact slot.
-		 */
+		// WooCommerce's menu_order filter pins Products right after WooCommerce
+		// regardless of menu positions, so run later to take that slot.
 		add_filter( 'menu_order', array( $this, 'place_after_woocommerce' ), 20 );
 	}
 

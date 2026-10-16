@@ -1,7 +1,3 @@
-/**
- * Error boundary so a render-time throw shows a styled fallback instead of a
- * blank admin screen.
- */
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { __ } from '@wordpress/i18n';
 

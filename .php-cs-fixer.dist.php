@@ -1,15 +1,4 @@
 <?php
-/**
- * PHP-CS-Fixer configuration.
- *
- * Deliberately a minimal, tab-indented rule set that AGREES with the
- * WordPress-Extra PHPCS standard rather than fighting it. We do not apply the
- * full PSR-12 preset because PSR-12 mandates space indentation and brace/paren
- * spacing that conflict with WordPress core style. Keeping this small means
- * `composer cs-check` and `composer phpcs` never disagree.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -21,6 +10,7 @@ return ( new PhpCsFixer\Config() )
 	->setIndent( "\t" )
 	->setLineEnding( "\n" )
 	->setRiskyAllowed( false )
+	// Not @PSR12: its space indentation and spacing conflict with WordPress-Extra PHPCS.
 	->setRules(
 		array(
 			'array_syntax'              => array( 'syntax' => 'long' ),

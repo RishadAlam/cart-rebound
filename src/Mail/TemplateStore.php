@@ -93,8 +93,8 @@ final class TemplateStore {
 			}
 		}
 
-		// A stored-but-corrupted option (e.g. all-scalar rows) filters down to
-		// nothing; re-seed so the invariant "always at least one template" holds.
+		// A corrupted option can filter down to nothing; re-seed so at least one template
+		// always exists.
 		if ( array() === $templates ) {
 			return $this->seed_and_persist();
 		}

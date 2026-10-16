@@ -82,11 +82,8 @@ final class RecoveryHandler {
 			return;
 		}
 
-		// Adopt the recovered row into this browser's tracking session BEFORE the
-		// cart is rebuilt. CartTracker runs on the cart writes below, and without
-		// this it would open a second row for the same cart — leaving the original
-		// sitting in `abandoned` while the duplicate collected its own recovery
-		// email for the shopper who just clicked this link.
+		// Adopt the row before the cart is rebuilt: CartTracker runs on those writes and would
+		// otherwise open a duplicate row that gets its own recovery email.
 		$this->adopt_session( (int) ( $row['id'] ?? 0 ) );
 
 		if ( ! $this->restore_cart( $row ) ) {
@@ -179,8 +176,7 @@ final class RecoveryHandler {
 		}
 
 		// Both address books are seeded: the block checkout compares them to decide
-		// whether to keep "use the same address for billing" ticked, and filling
-		// only one side would split the form into two addresses to complete.
+		// whether to keep "use the same address for billing" ticked.
 		$names = array(
 			'first_name' => array( 'billing_first_name', 'shipping_first_name' ),
 			'last_name'  => array( 'billing_last_name', 'shipping_last_name' ),
@@ -261,10 +257,8 @@ final class RecoveryHandler {
 
 		if ( is_array( $coupons ) ) {
 			foreach ( $coupons as $code ) {
-				// Coupons captured weeks ago are often gone by the time the link is
-				// clicked. Re-applying a deleted code makes WooCommerce print a red
-				// "coupon does not exist" block, which is the first thing a
-				// returning shopper would see — so only live codes are restored.
+				// Re-applying a since-deleted code makes WooCommerce show a "coupon does not exist"
+				// error to the returning shopper, so only live codes are restored.
 				if ( is_string( $code ) && '' !== $code && $this->coupon_exists( $code ) ) {
 					$cart->apply_coupon( $code );
 				}

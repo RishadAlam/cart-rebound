@@ -1,10 +1,3 @@
-/**
- * Vite build configuration.
- *
- * Builds the admin React bundle into public/build with a manifest so PHP can
- * enqueue the hashed asset files. The dev server enables CORS for HMR against a
- * local WordPress instance.
- */
 import { rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
@@ -15,10 +8,6 @@ const resolvePath = (path: string): string =>
 
 const hotFile = resolvePath('./public/hot');
 
-/**
- * Tell WordPress when Vite is actively serving the source entry. The marker is
- * removed on a normal server shutdown and before every production build.
- */
 const wordpressHotFile = (): Plugin => ({
 	name: 'cart-rebound-wordpress-hot-file',
 	configResolved: ({ command }) => {
@@ -76,8 +65,7 @@ export default defineConfig({
 		}),
 	],
 	esbuild: {
-		// Keep WordPress translator guidance beside placeholder strings after
-		// minification so POT generation can audit the production artifact.
+		// Keep translator comments after minification so POT generation can audit the build.
 		legalComments: 'inline',
 	},
 	resolve: {
@@ -101,8 +89,7 @@ export default defineConfig({
 				comments: /translators:|@license|@preserve|^!/i,
 			},
 		},
-		// Emit a real stylesheet that WordPress can enqueue instead of injecting
-		// CSS into the JavaScript bundle at runtime.
+		// Emit a real stylesheet for WordPress to enqueue instead of CSS injected by JS.
 		cssCodeSplit: false,
 		rollupOptions: {
 			external: [

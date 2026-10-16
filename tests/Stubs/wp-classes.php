@@ -1,23 +1,13 @@
 <?php
-/**
- * Minimal WordPress class/function stubs for unit + integration tests.
- *
- * Brain\Monkey mocks functions but not classes, so we provide just enough of
- * WP_Error, WP_REST_Request and WP_REST_Response for the framework under test.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
+// Brain\Monkey mocks functions but not classes.
 defined( 'ARRAY_A' ) || define( 'ARRAY_A', 'ARRAY_A' );
 defined( 'ARRAY_N' ) || define( 'ARRAY_N', 'ARRAY_N' );
 defined( 'OBJECT' ) || define( 'OBJECT', 'OBJECT' );
 
 if ( ! class_exists( 'WP_Error' ) ) {
-	/**
-	 * Tiny WP_Error stand-in.
-	 */
 	class WP_Error {
 
 		/** @var array<string, array<int, string>> */
@@ -83,9 +73,6 @@ if ( ! function_exists( 'is_wp_error' ) ) {
 }
 
 if ( ! class_exists( 'WP_REST_Request' ) ) {
-	/**
-	 * Tiny WP_REST_Request stand-in.
-	 */
 	class WP_REST_Request {
 
 		/** @var array<string, string> */
@@ -131,9 +118,6 @@ if ( ! class_exists( 'WP_REST_Request' ) ) {
 }
 
 if ( ! class_exists( 'WP_REST_Response' ) ) {
-	/**
-	 * Tiny WP_REST_Response stand-in.
-	 */
 	class WP_REST_Response {
 
 		/** @var mixed */

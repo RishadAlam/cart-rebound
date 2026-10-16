@@ -1,6 +1,3 @@
-/**
- * Typed REST endpoint callers.
- */
 import { __ } from '@wordpress/i18n';
 import { apiClient } from './client';
 import type {

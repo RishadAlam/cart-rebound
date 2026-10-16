@@ -1,13 +1,4 @@
 <?php
-/**
- * PHPUnit bootstrap.
- *
- * Defines the constants that production code guards on, then loads the
- * Composer autoloader so tests can exercise the framework in isolation
- * (WordPress functions are mocked with Brain\Monkey).
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 

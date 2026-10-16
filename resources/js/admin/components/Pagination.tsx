@@ -1,18 +1,9 @@
-/**
- * Shared table pagination bar.
- *
- * Paging is server-side: the caller requests one page at a time and the REST
- * endpoint returns just that slice plus the unfiltered total, so this bar only
- * reports the current window and moves the cursor. Changing the page size
- * resets to page 1 — the old cursor would point past the end of the new range.
- */
 import { __, sprintf } from '@wordpress/i18n';
 import { Combobox } from './Combobox';
 
-/** Page sizes offered to the user. The REST layer caps `per_page` at 100. */
+// The REST layer caps `per_page` at 100.
 export const PER_PAGE_OPTIONS = [10, 20, 30, 50, 100];
 
-/** Starting page size for every paginated table, so they open consistently. */
 export const DEFAULT_PER_PAGE = 20;
 
 export const Pagination = ({

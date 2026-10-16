@@ -80,9 +80,8 @@ abstract class FormRequest {
 	 * @return array<string, mixed>|WP_Error Sanitised values, or a WP_Error on failure.
 	 */
 	public function validate() {
-		// Authorization is re-checked on every call (never cached), so a reused
-		// request instance cannot return previously-validated data after the
-		// caller's permission has changed.
+		// Never cache authorization: a reused request must not return validated data
+		// after the caller's permission has changed.
 		if ( ! $this->authorize() ) {
 			return new WP_Error(
 				'cart_rebound_forbidden',

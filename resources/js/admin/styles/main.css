@@ -2,13 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================
-   Cart Rebound — admin design system
-   Scoped under .cr-app so it never leaks into or fights wp-admin.
-   ============================================================ */
-
-/* Older WordPress only defines the scheme variables inside the block editor.
-   Values mirror core's wp-base-styles; :where() lets core's own rules win. */
+/* Older WordPress defines these only inside the block editor; :where() lets
+   core's own rules win. Values mirror core's wp-base-styles. */
 :where(body.admin-color-light) {
 	--wp-admin-theme-color: #007cba;
 	--wp-admin-theme-color--rgb: 0, 124, 186;
@@ -67,9 +62,8 @@
 	--cr-ink-soft: #3c434a;
 	--cr-muted: #646970;
 
-	/* The accent follows the user's Administration Color Scheme. Text uses the
-	   darker-10 step: the base theme color drops to ~4:1 on --cr-accent-soft in
-	   the Light, Blue, Midnight and Sunrise schemes, under WCAG AA for 12px type. */
+	/* Text uses darker-10: the base theme color is ~4:1 on --cr-accent-soft in
+	   several schemes, under WCAG AA for 12px type. */
 	--cr-accent: var(--wp-admin-theme-color, #3858e9);
 	--cr-accent-hover: var(--wp-admin-theme-color-darker-10, #2145e6);
 	--cr-accent-text: var(--wp-admin-theme-color-darker-10, #2145e6);
@@ -91,8 +85,7 @@
 	--cr-ring: 0 0 0 3px rgba(var(--cr-accent-rgb), 0.3);
 	--cr-ease: cubic-bezier(0.23, 1, 0.32, 1);
 
-	/* WooCommerce admin type: the wp-admin system stack on WordPress's
-	   11/12/13/15/20 scale, 14px for form controls and tabs, 23px page titles. */
+	/* Matches WooCommerce admin type: wp-admin stack, 14px controls, 23px titles. */
 	--cr-font:
 		-apple-system, blinkmacsystemfont, "Segoe UI", roboto, oxygen-sans,
 		ubuntu, cantarell, "Helvetica Neue", sans-serif;
@@ -115,9 +108,7 @@
 	-webkit-font-smoothing: antialiased;
 }
 
-/* Data-dense pages (dashboard, carts, log) fill the admin width so tables and
-   charts can breathe. Form pages keep the default measure — stretching a
-   label/input row across a wide monitor only makes it harder to scan. */
+/* Form pages keep the default measure; full-width label/input rows are hard to scan. */
 .cr-app.is-wide {
 	max-width: none;
 }
@@ -128,7 +119,6 @@
 	box-sizing: border-box;
 }
 
-/* ---- Header ---- */
 .cr-header {
 	margin-bottom: 4px;
 }
@@ -146,7 +136,6 @@
 	font-size: var(--cr-text-m);
 }
 
-/* ---- Tabs ---- */
 .cr-tabs {
 	display: flex;
 	gap: 2px;
@@ -185,8 +174,6 @@
 	box-shadow: var(--cr-ring);
 }
 
-/* Tabs nested inside a card (template editor panes) sit flush with the card
-   edge, so the pane below reads as the tab's own surface. */
 .cr-tabs.is-inset {
 	margin: 14px 0 0;
 	gap: 4px;
@@ -197,7 +184,6 @@
 	font-size: var(--cr-text-m);
 }
 
-/* ---- Cards & sections ---- */
 .cr-card {
 	background: var(--cr-surface);
 	border: 1px solid var(--cr-border);
@@ -213,7 +199,6 @@
 	border-top: 1px solid var(--cr-border);
 }
 
-/* Hidden panes must not leave their border behind. */
 .cr-section[hidden] {
 	display: none;
 }
@@ -232,7 +217,6 @@
 	font-size: var(--cr-text-m);
 }
 
-/* ---- Stats ---- */
 .cr-stats {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
@@ -272,7 +256,6 @@
 	color: var(--cr-accent-text);
 }
 
-/* ---- Badges ---- */
 .cr-badge {
 	display: inline-flex;
 	align-items: center;
@@ -323,7 +306,6 @@
 	background: var(--cr-panel);
 }
 
-/* ---- Buttons ---- */
 .cr-btn {
 	display: inline-flex;
 	align-items: center;
@@ -393,13 +375,8 @@
 	font-size: var(--cr-text-s);
 }
 
-/* ---- Form controls ---- */
-
-/*
- * Element-qualified selectors intentionally outrank WordPress admin's global
- * input[type="…"] rules, keeping text/number/email controls aligned with the
- * Combobox trigger.
- */
+/* Element-qualified selectors outrank wp-admin's global input[type="…"]
+ * rules, keeping controls aligned with the Combobox trigger. */
 input.cr-input,
 textarea.cr-input,
 select.cr-select {
@@ -466,7 +443,6 @@ select.cr-select:disabled {
 	cursor: not-allowed;
 }
 
-/* ---- Toggle switch ---- */
 .cr-switch {
 	position: relative;
 	display: inline-flex;
@@ -520,7 +496,6 @@ select.cr-select:disabled {
 	box-shadow: var(--cr-ring);
 }
 
-/* ---- Fields ---- */
 .cr-field {
 	margin-bottom: 20px;
 }
@@ -565,8 +540,6 @@ select.cr-select:disabled {
 	cursor: pointer;
 }
 
-/* Small group label inside a pane — quieter than a section title, loud enough
-   to break six switch rows into things you can scan. */
 .cr-subhead {
 	margin: 22px 0 12px;
 	color: var(--cr-muted);
@@ -612,8 +585,8 @@ select.cr-select:disabled {
 	gap: 18px;
 }
 
-/* Hints wrap to different heights, which pushed the inputs of a two-up row out
-   of line. Subgrid puts label / hint / control on shared rows instead. */
+/* Subgrid shares label/hint/control rows so wrapping hints don't misalign a
+   two-up row's inputs. */
 @supports (grid-template-rows: subgrid) {
 	.cr-field__grid {
 		grid-template-rows: auto auto auto;
@@ -633,7 +606,6 @@ select.cr-select:disabled {
 		margin-bottom: 0;
 	}
 
-	/* Row spacing now comes from the grid, so the parts stop adding their own. */
 	.cr-field__grid > .cr-field > .cr-field__label {
 		margin-bottom: 0;
 	}
@@ -643,7 +615,6 @@ select.cr-select:disabled {
 	}
 }
 
-/* ---- Toolbar ---- */
 .cr-toolbar {
 	display: flex;
 	flex-wrap: wrap;
@@ -662,7 +633,6 @@ select.cr-select:disabled {
 	flex: 1;
 }
 
-/* ---- Table ---- */
 .cr-table-wrap {
 	overflow-x: auto;
 }
@@ -723,7 +693,6 @@ select.cr-select:disabled {
 	white-space: nowrap;
 }
 
-/* ---- Selection column ---- */
 .cr-table th.cr-check,
 .cr-table td.cr-check {
 	width: 34px;
@@ -742,7 +711,6 @@ select.cr-select:disabled {
 	background: var(--cr-accent-soft);
 }
 
-/* ---- Sortable headers ---- */
 .cr-sort {
 	display: inline-flex;
 	align-items: center;
@@ -781,7 +749,6 @@ select.cr-select:disabled {
 	line-height: 1;
 }
 
-/* ---- Inline status pill select ---- */
 .cr-status {
 	max-width: 150px;
 	padding: 3px 26px 3px 11px;
@@ -847,7 +814,6 @@ select.cr-select:disabled {
 	gap: 6px;
 }
 
-/* ---- Status guide ---- */
 .cr-guide {
 	margin-bottom: 12px;
 	border: 1px solid var(--cr-border);
@@ -949,7 +915,6 @@ select.cr-select:disabled {
 	}
 }
 
-/* ---- Loading spinner ---- */
 .cr-spinner {
 	flex: none;
 	animation: cr-spin 0.7s linear infinite;
@@ -969,7 +934,6 @@ select.cr-select:disabled {
 	font-size: var(--cr-text-m);
 }
 
-/* ---- Icon action buttons ---- */
 .cr-iconbtn {
 	display: inline-flex;
 	align-items: center;
@@ -1019,7 +983,6 @@ select.cr-select:disabled {
 	color: var(--cr-danger);
 }
 
-/* ---- Bulk action bar ---- */
 .cr-bulkbar {
 	display: flex;
 	flex-wrap: wrap;
@@ -1047,7 +1010,6 @@ select.cr-select:disabled {
 	background: var(--cr-success-soft);
 }
 
-/* ---- Recover dialog ---- */
 .cr-dialog {
 	width: min(440px, calc(100vw - 32px));
 	padding: 0;
@@ -1058,10 +1020,8 @@ select.cr-select:disabled {
 	box-shadow: 0 12px 40px oklch(0 0 0 / 0.18);
 	opacity: 1;
 
-	/* Rest at transform:none — a non-none transform would make position:fixed
-	   descendants (the Combobox popover) resolve against the dialog, not the
-	   viewport, mispositioning/clipping them. The entrance still animates from
-	   the scale(0.96) start below. */
+	/* Any non-none transform makes position:fixed descendants (Combobox popover)
+	   resolve against the dialog instead of the viewport. */
 	transform: none;
 	transition:
 		opacity 200ms var(--cr-ease),
@@ -1118,7 +1078,6 @@ select.cr-select:disabled {
 	width: min(760px, calc(100vw - 32px));
 }
 
-/* ---- Cart detail ---- */
 .cr-linkbtn {
 	padding: 0;
 	border: 0;
@@ -1133,8 +1092,6 @@ select.cr-select:disabled {
 	text-decoration: underline;
 }
 
-/* One treatment serves both the button that opens a cart and the anchor that
-   deep-links into WooCommerce, so drop the anchor's default underline. */
 a.cr-linkbtn {
 	text-decoration: none;
 }
@@ -1145,7 +1102,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* The detail dialog is a column: pinned header, scrolling body, pinned foot. */
 .cr-detail {
 	display: flex;
 	flex-direction: column;
@@ -1361,7 +1317,6 @@ a.cr-linkbtn {
 	border-top: 1px solid var(--cr-border);
 }
 
-/* ---- Onboarding wizard (dedicated two-pane native dialog) ---- */
 .cr-onb {
 	display: flex;
 	flex-direction: column;
@@ -1400,7 +1355,6 @@ a.cr-linkbtn {
 	min-height: 0;
 }
 
-/* -- Left rail: brand + step tracker -- */
 .cr-onb__rail {
 	display: flex;
 	flex-direction: column;
@@ -1494,7 +1448,6 @@ a.cr-linkbtn {
 	font-size: var(--cr-text-s);
 }
 
-/* -- Right pane: step content -- */
 .cr-onb__main {
 	display: flex;
 	flex-direction: column;
@@ -1503,8 +1456,6 @@ a.cr-linkbtn {
 	padding: 28px 30px;
 }
 
-/* Give the pane real presence when there's vertical room; on short or zoomed
-   viewports it shrinks and scrolls instead of clipping the footer. */
 @media (min-height: 540px) {
 	.cr-onb__main {
 		min-height: 366px;
@@ -1677,7 +1628,6 @@ a.cr-linkbtn {
 	}
 }
 
-/* ---- Email preview ---- */
 .cr-savebar__spacer {
 	flex: 1;
 }
@@ -1687,7 +1637,6 @@ a.cr-linkbtn {
 	font-size: var(--cr-text-s);
 }
 
-/* The preview reads like a message in an inbox: sender row, then the render. */
 .cr-preview__mail {
 	margin: 4px 0 12px;
 	border: 1px solid var(--cr-border);
@@ -1788,7 +1737,6 @@ a.cr-linkbtn {
 	}
 }
 
-/* ---- Pagination ---- */
 .cr-pagination {
 	display: flex;
 	align-items: center;
@@ -1803,7 +1751,6 @@ a.cr-linkbtn {
 	flex: 1;
 }
 
-/* ---- Save bar ---- */
 .cr-savebar {
 	display: flex;
 	flex-wrap: wrap;
@@ -1815,8 +1762,6 @@ a.cr-linkbtn {
 	border-radius: 0 0 var(--cr-radius) var(--cr-radius);
 }
 
-/* Saving is reachable from anywhere in a long template rather than only from
-   the bottom of the page. */
 .cr-savebar.is-sticky {
 	position: sticky;
 	bottom: 0;
@@ -1830,7 +1775,6 @@ a.cr-linkbtn {
 	font-weight: 500;
 }
 
-/* ---- States: loading skeleton & empty ---- */
 .cr-skeleton {
 	position: relative;
 	overflow: hidden;
@@ -1838,9 +1782,8 @@ a.cr-linkbtn {
 	background: var(--cr-panel);
 }
 
-/* The sweep runs on a transform rather than background-position: Chrome cannot
-   composite background-position, so a skeleton table put ~50 shimmer animations
-   on the main thread and showed up as the page's only layout-shift culprit. */
+/* Animate transform, not background-position: Chrome can't composite the
+   latter, so ~50 shimmers ran on the main thread. */
 .cr-skeleton::after {
 	position: absolute;
 	background: linear-gradient(
@@ -1886,7 +1829,6 @@ a.cr-linkbtn {
 	background: var(--cr-danger-soft);
 }
 
-/* ---- Tags ---- */
 .cr-tag {
 	display: inline-flex;
 	align-items: center;
@@ -1904,7 +1846,6 @@ a.cr-linkbtn {
 	color: var(--cr-muted);
 }
 
-/* ---- Log level badges + inline code ---- */
 .cr-logbadge {
 	display: inline-flex;
 	align-items: center;
@@ -1956,7 +1897,6 @@ a.cr-linkbtn {
 	font-size: var(--cr-text-s);
 }
 
-/* ---- Merge-tag legend ---- */
 .cr-tokens {
 	margin-top: 10px;
 	padding: 10px 14px;
@@ -1965,8 +1905,6 @@ a.cr-linkbtn {
 	background: var(--cr-panel);
 }
 
-/* Closed by default: the reference is for the first template, the picker in the
-   toolbar is for every one after it. */
 .cr-tokens__title {
 	display: flex;
 	align-items: center;
@@ -1981,8 +1919,6 @@ a.cr-linkbtn {
 	transition: color 120ms var(--cr-ease);
 }
 
-/* The default disclosure marker sits on the text baseline and cannot be
-   styled consistently across browsers, so draw our own. */
 .cr-tokens__title::-webkit-details-marker {
 	display: none;
 }
@@ -2047,7 +1983,6 @@ a.cr-linkbtn {
 	margin-top: 10px;
 }
 
-/* ---- Templates (master / detail) ---- */
 .cr-templates {
 	display: grid;
 	grid-template-columns: 240px 1fr;
@@ -2147,8 +2082,6 @@ a.cr-linkbtn {
 	min-width: 0;
 }
 
-/* The editor header carries identity and the pane switcher; the panes below
-   own their own padding, so it stops short of a full section's spacing. */
 .cr-templates__head {
 	padding: 20px 24px 0;
 	border-bottom: 1px solid var(--cr-border);
@@ -2182,13 +2115,11 @@ a.cr-linkbtn {
 		grid-template-columns: 1fr;
 	}
 
-	/* Stacked, the list is above the editor — pinning it would cover the form. */
 	.cr-templates__list {
 		position: static;
 	}
 }
 
-/* ---- Rich text editor ---- */
 .cr-rte {
 	overflow: hidden;
 	background: var(--cr-surface);
@@ -2201,8 +2132,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* Visual / HTML switch — the editor's own view, so it sits inside the frame
-   above the toolbar rather than floating beside the field label. */
 .cr-rte__modes {
 	display: flex;
 	align-items: center;
@@ -2249,7 +2178,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* Raw HTML view — a plain code surface, no email canvas. */
 .cr-rte__code {
 	display: block;
 	width: 100%;
@@ -2355,7 +2283,6 @@ a.cr-linkbtn {
 	flex: 1;
 }
 
-/* Contextual image toolbar (shown while an image is selected). */
 .cr-rte__imagebar {
 	display: flex;
 	flex-wrap: wrap;
@@ -2372,7 +2299,6 @@ a.cr-linkbtn {
 	font-weight: 600;
 }
 
-/* Email canvas — the body renders on an email-like white sheet. */
 .cr-rte__canvas {
 	max-height: 520px;
 	padding: 20px;
@@ -2414,8 +2340,8 @@ a.cr-linkbtn {
 	margin: 0 0 14px;
 }
 
-/* Tailwind preflight strips list markers; the email body is rendered without
-   it, so restore them here or the editor lies about what will be sent. */
+/* Preflight strips list markers but the sent email keeps them; restore so the
+   editor matches what will be sent. */
 .cr-rte__content ul,
 .cr-rte__content ol {
 	margin: 0 0 14px;
@@ -2468,11 +2394,6 @@ a.cr-linkbtn {
 	color: var(--cr-muted);
 }
 
-/* ---- Chip multi-select ---- */
-
-/* A plain row: the chosen items as pills, then the control that adds another.
-   No container of its own — the chips are the field. Everything in the row is
-   30px tall so the pills and the picker share one line. */
 .cr-chips {
 	display: flex;
 	flex-wrap: wrap;
@@ -2547,9 +2468,6 @@ a.cr-linkbtn {
 	cursor: not-allowed;
 }
 
-/* The picker sits in the same row as the chips, so it matches their height and
-   pill shape and stays quiet until hovered — it adds to the row, it is not a
-   second control beside it. */
 .cr-chips .cr-combo {
 	display: flex;
 	width: auto;
@@ -2571,7 +2489,6 @@ a.cr-linkbtn {
 	color: var(--cr-ink);
 }
 
-/* ---- Combobox (searchable select) ---- */
 .cr-combo {
 	position: relative;
 	display: inline-block;
@@ -2757,7 +2674,6 @@ a.cr-linkbtn {
 	text-align: center;
 }
 
-/* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
 	.cr-skeleton::after {
 		animation: none;
@@ -2780,22 +2696,16 @@ a.cr-linkbtn {
 	}
 }
 
-/* ============================================================
-   Dashboard — overview metrics, revenue trend, supporting reports.
-   ============================================================ */
-
 .cr-dash {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
 }
 
-/* Used across the admin for de-emphasised table text. */
 .cr-muted {
 	color: var(--cr-muted);
 }
 
-/* ---- Card headers shared by the overview and trend panels ---- */
 .cr-overview {
 	padding: 20px 22px 22px;
 }
@@ -2822,7 +2732,6 @@ a.cr-linkbtn {
 	font-size: var(--cr-text-m);
 }
 
-/* ---- Headline metric strip ---- */
 .cr-metrics {
 	display: grid;
 	grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -2884,7 +2793,6 @@ a.cr-linkbtn {
 	color: var(--cr-success);
 }
 
-/* ---- Info hint bubble ---- */
 .cr-hint {
 	position: relative;
 	display: inline-flex;
@@ -2949,7 +2857,6 @@ a.cr-linkbtn {
 	transform: translate(-50%, 0);
 }
 
-/* ---- Range selector ---- */
 .cr-range {
 	display: inline-flex;
 	flex: none;
@@ -2990,7 +2897,6 @@ a.cr-linkbtn {
 	box-shadow: var(--cr-ring);
 }
 
-/* ---- Revenue trend ---- */
 .cr-trend {
 	padding: 20px 22px 16px;
 }
@@ -3143,7 +3049,6 @@ a.cr-linkbtn {
 	font-weight: 600;
 }
 
-/* ---- Supporting report tables ---- */
 .cr-reports {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));

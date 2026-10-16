@@ -93,10 +93,8 @@ final class Plugin {
 
 		self::clear_scheduled_actions( $app );
 
-		// Drops the custom tables and deletes the cart_rebound_migrations option.
 		$app->make( Migrator::class )->rollback();
 
-		// Remove every remaining plugin option so uninstall leaves nothing behind.
 		$options = array(
 			'cart_rebound_settings',
 			'cart_rebound_email_templates',

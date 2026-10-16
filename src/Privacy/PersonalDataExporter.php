@@ -107,10 +107,6 @@ final class PersonalDataExporter {
 			$bindings = array( $logs_table, $sessions_table, $email, $limit, $offset );
 		}
 
-		/*
-		 * Both table identifiers and every value are bound through prepare().
-		 * This is a paginated read over the plugin's custom tables.
-		 */
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL is assembled from the two literal prepared templates above.
 		$prepared_sql = $wpdb->prepare( $sql, $bindings );
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom-table privacy export; query was prepared above.

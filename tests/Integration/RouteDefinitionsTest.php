@@ -1,12 +1,4 @@
 <?php
-/**
- * Route-definition security tests.
- *
- * Loads the plugin's actual route files through the Route facade and asserts the
- * nonce / capability gating each route declares.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 

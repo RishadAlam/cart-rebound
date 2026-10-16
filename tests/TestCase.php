@@ -1,9 +1,4 @@
 <?php
-/**
- * Base test case.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -13,9 +8,6 @@ use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Yoast\PHPUnitPolyfills\TestCases\TestCase as PolyfillTestCase;
 
-/**
- * Shared base test case wiring Brain\Monkey for WordPress function mocking.
- */
 abstract class TestCase extends PolyfillTestCase {
 
 	/**
@@ -27,7 +19,6 @@ abstract class TestCase extends PolyfillTestCase {
 		parent::set_up();
 		Monkey\setUp();
 
-		// Escaping/i18n helpers return their first argument in unit tests.
 		Functions\stubs(
 			array(
 				'esc_html',
@@ -39,7 +30,6 @@ abstract class TestCase extends PolyfillTestCase {
 			)
 		);
 
-		// Key sanitisation is used by option shapes, so mirror core's behaviour.
 		Functions\when( 'sanitize_key' )->alias(
 			static function ( $key ) {
 				return (string) preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) );

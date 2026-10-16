@@ -1,7 +1,3 @@
-/**
- * Ambient typings for the data WordPress injects into the page via
- * `wp_add_inline_script` as `window.CartRebound`.
- */
 export {};
 
 declare global {
@@ -10,7 +6,6 @@ declare global {
 		nonce: string;
 		// Route the WordPress submenu seeded into the hash router at load.
 		initialRoute?: string;
-		// The store's WooCommerce price display settings.
 		currency: {
 			code: string;
 			symbol: string;

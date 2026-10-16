@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-#
-# Configure Cart Rebound for development after cloning it into WordPress.
 set -euo pipefail
 
 PLUGIN_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

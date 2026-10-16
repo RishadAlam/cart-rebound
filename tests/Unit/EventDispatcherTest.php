@@ -1,9 +1,4 @@
 <?php
-/**
- * Event dispatcher unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 

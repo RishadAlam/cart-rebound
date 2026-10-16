@@ -1,9 +1,4 @@
 <?php
-/**
- * FormRequest unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
@@ -50,7 +45,6 @@ final class FormRequestTest extends TestCase {
 	}
 
 	public function test_min_rule_does_not_reject_non_string_values(): void {
-		// An integer under 'min:3' must not be measured as a 1-char string.
 		$result = ( new AgeRequest( $this->request( array( 'age' => 5 ) ) ) )->validate();
 
 		$this->assertSame( array( 'age' => 5 ), $result );
@@ -74,7 +68,6 @@ final class FormRequestTest extends TestCase {
 		ToggleableRequest::$allowed = true;
 		$this->assertSame( array( 'title' => 'Hi' ), $form->validate() );
 
-		// Authorization revoked: a repeat call must re-check and deny, not serve cache.
 		ToggleableRequest::$allowed = false;
 		$denied = $form->validate();
 

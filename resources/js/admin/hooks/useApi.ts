@@ -1,6 +1,3 @@
-/**
- * React Query hooks for the REST API.
- */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
 	bulkCarts,

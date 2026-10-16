@@ -106,9 +106,8 @@ final class Scheduler {
 	 */
 	public function clear( string $hook ): void {
 		if ( $this->uses_action_scheduler() ) {
-			// The hook names are plugin-specific, so clearing by hook safely removes
-			// every argument variant. Passing a group with empty args would only
-			// match actions whose args are also empty in Action Scheduler.
+			// Hook names are plugin-specific, so clearing by hook removes every args variant;
+			// passing a group with empty args would only match actions with empty args.
 			as_unschedule_all_actions( $hook );
 		}
 

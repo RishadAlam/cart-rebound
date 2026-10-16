@@ -161,7 +161,6 @@ final class CartRepository {
 		global $wpdb;
 		$table = ( new CartSession() )->get_table();
 
-		// Single GROUP BY query instead of one COUNT(*) per status.
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
 			$wpdb->prepare( 'SELECT status, COUNT(*) AS cnt FROM %i GROUP BY status', $table ),
@@ -180,7 +179,6 @@ final class CartRepository {
 
 		$revenue = CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->sum( 'recovered_amount' );
 
-		// Still-open money: what the carts sitting in `abandoned` are worth.
 		$recoverable = CartSession::query()->where( 'status', '=', CartSession::STATUS_ABANDONED )->sum( 'cart_total' );
 
 		// Use purge-immune lifetime counters: the Janitor deletes unrecovered
@@ -283,8 +281,7 @@ final class CartRepository {
 			$abandoned_at = (string) ( $row['abandoned_at'] ?? '' );
 			$recovered_at = (string) ( $row['recovered_at'] ?? '' );
 
-			// Datetimes are stored as 'Y-m-d H:i:s', so a string compare is a
-			// chronological compare — no parsing needed per row.
+			// Datetimes are stored as 'Y-m-d H:i:s', so a string compare is chronological.
 			$was_abandoned = '' !== $abandoned_at && $abandoned_at >= $since;
 			$was_recovered = '' !== $recovered_at && $recovered_at >= $since;
 
@@ -402,7 +399,6 @@ final class CartRepository {
 
 		$row = CartSession::find( $cart_id );
 
-		// Idempotent: never re-attribute a cart that is already linked to an order.
 		if ( ! is_array( $row ) || (int) ( $row['order_id'] ?? 0 ) > 0 ) {
 			return false;
 		}

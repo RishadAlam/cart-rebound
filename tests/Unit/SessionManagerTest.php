@@ -1,9 +1,4 @@
 <?php
-/**
- * Session-manager unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 

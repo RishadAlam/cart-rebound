@@ -1,9 +1,4 @@
 <?php
-/**
- * Form request unit tests for the plugin's requests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 

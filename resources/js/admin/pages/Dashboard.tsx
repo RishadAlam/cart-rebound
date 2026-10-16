@@ -1,15 +1,5 @@
-/**
- * Dashboard — recovery performance at a glance.
- *
- * Laid out as a report rather than a wall of counts: an Overview strip of
- * headline metrics, a dual-series revenue trend, and two supporting reports
- * (latest cart activity, and which products get abandoned most).
- *
- * The Overview strip is lifetime/current state — status counts are a snapshot
- * and the recovery rate runs off purge-immune lifetime counters — while the
- * chart and the product report follow the selected time range. The headings say
- * so, so the two scopes are never confused for one another.
- */
+// The Overview strip is lifetime/current state (the recovery rate uses purge-immune
+// lifetime counters); only the chart and product report follow the time range.
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
@@ -54,11 +44,6 @@ const ArrowIcon = () => (
 	</svg>
 );
 
-/**
- * Metric label helper — the ⓘ carries the explanation for screen readers.
- * @param root0
- * @param root0.text
- */
 const Hint = ({ text }: { text: string }) => (
 	<span className="cr-hint">
 		<button type="button" className="cr-hint__btn" aria-label={text}>

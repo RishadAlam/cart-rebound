@@ -1,11 +1,5 @@
-/**
- * Carts page — filterable, sortable, paginated list of tracked carts.
- *
- * Each row keeps a calm surface: an inline color-coded status select and three
- * icon actions (recover, send email, delete). The heavier "mark recovered"
- * order picker lives in a native <dialog> so it escapes the table's horizontal
- * scroll container instead of being clipped by it.
- */
+// The order picker is a native <dialog> so it escapes the table's horizontal
+// scroll container instead of being clipped by it.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
@@ -45,7 +39,6 @@ const COLUMN_COUNT = 9;
 
 type Feedback = { type: 'success' | 'error'; message: string };
 
-// Column key → the backend sort column it maps to.
 const SORTABLE = {
 	id: 'id',
 	email: 'email',
@@ -61,7 +54,6 @@ const messageOf = (error: unknown): string =>
 		? error.message
 		: __('Something went wrong.', 'cart-rebound');
 
-// Each cart status paired with a plain-language meaning for the status guide.
 const STATUS_GUIDE: Array<[string, string]> = [
 	[
 		'active',
@@ -249,13 +241,8 @@ const TrashIcon = () => (
 
 const Dash = () => <span className="cr-muted">—</span>;
 
-/**
- * The linked order number, deep-linking into WooCommerce when we have a URL for
- * it. The URL is built server-side because only PHP knows whether the store is
- * on HPOS, which changes where orders are edited.
- * @param root0
- * @param root0.cart
- */
+// The order URL is built server-side: only PHP knows whether the store is on
+// HPOS, which changes where orders are edited.
 const OrderLink = ({ cart }: { cart: Cart }) => {
 	if (cart.order_id <= 0) {
 		return <Dash />;
@@ -305,13 +292,8 @@ const Spinner = ({ size = 15 }: { size?: number }) => (
 	</svg>
 );
 
-/**
- * A failed dialog action has to report inside the dialog: the page-level notice
- * sits behind the modal backdrop, where the shopper-facing error would never be
- * seen before it auto-dismissed.
- * @param root0
- * @param root0.error
- */
+// Dialog errors render inside the dialog: the page-level notice sits behind the
+// modal backdrop and would auto-dismiss unseen.
 const DialogError = ({ error }: { error: unknown }) =>
 	error ? (
 		<div className="cr-notice is-error cr-dialog__error" role="alert">
@@ -862,9 +844,7 @@ const RecoverDialog = ({
 	};
 
 	return (
-		// Backdrop click-to-close is a mouse nicety; keyboard dismissal (Esc) is
-		// handled natively by <dialog> via onClose, so the a11y interaction rules
-		// don't apply here.
+		// Backdrop click-to-close is a mouse nicety; Esc is handled natively.
 		// eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events
 		<dialog
 			ref={ref}
@@ -1161,9 +1141,8 @@ export const Carts = () => {
 	// reads the same code instead of trusting per-row values.
 	const currency = data?.currency ?? '';
 
-	// A selection only makes sense for rows currently on screen, so prune it to
-	// the visible ids on every list change — filter/page/sort switch, or a
-	// refetch after a row action removed or moved rows.
+	// Only on-screen rows can stay selected, so prune on every list change
+	// (filter/page/sort switch, or a refetch after a row action).
 	useEffect(() => {
 		const visible = new Set(items.map((cart) => cart.id));
 

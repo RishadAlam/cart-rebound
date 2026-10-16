@@ -1,9 +1,4 @@
 <?php
-/**
- * Query builder unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 

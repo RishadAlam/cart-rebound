@@ -1,6 +1,4 @@
-/**
- * Admin sub-routing (hash-based, so it works inside wp-admin).
- */
+// Hash-based so sub-routes work inside wp-admin.
 import { createHashRouter } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Carts } from './pages/Carts';

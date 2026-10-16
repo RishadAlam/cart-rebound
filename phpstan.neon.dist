@@ -1,4 +1,3 @@
-# PHPStan static analysis — level 8 with WordPress stubs.
 includes:
 	- phpstan-baseline.neon
 	- vendor/szepeviktor/phpstan-wordpress/extension.neon

@@ -119,8 +119,7 @@ final class RecoveryMailer {
 			return;
 		}
 
-		// Suppression is a DB lookup, so it runs last — after the free row-field
-		// guards have already rejected the common no-op cases.
+		// Suppression is a DB lookup, so it runs after the cheap row-field guards.
 		if ( Unsubscribe::is_suppressed( $email ) ) {
 			return;
 		}
@@ -162,7 +161,6 @@ final class RecoveryMailer {
 			return;
 		}
 
-		// Use the address the merchant configured, falling back to the site admin.
 		$recipient = (string) $this->settings->get( 'admin_notification_email', '' );
 
 		if ( '' === $recipient || ! is_email( $recipient ) ) {
@@ -249,9 +247,6 @@ final class RecoveryMailer {
 			return $this->fail( __( 'This cart has no items to recover.', 'cart-rebound' ) );
 		}
 
-		// Never re-pitch a cart that already converted to an order: recovered and
-		// completed carts are order-linked, and mailing "you left something in
-		// your cart" (with a coupon) to a paid customer is wrong.
 		if ( (int) ( $row['order_id'] ?? 0 ) > 0 ) {
 			return $this->fail( __( 'This cart is already linked to an order.', 'cart-rebound' ) );
 		}
@@ -404,8 +399,7 @@ final class RecoveryMailer {
 	private function subject( array $template, array $row ): string {
 		$tokens = $this->tokens( $row, $template );
 
-		// A subject line cannot carry markup, so the two list tokens fall back to
-		// the plain comma-separated product names.
+		// A subject line cannot carry markup, so the list tokens fall back to plain names.
 		$tokens['{products}']       = $tokens['{product_names}'];
 		$tokens['{products_table}'] = $tokens['{product_names}'];
 
@@ -683,9 +677,8 @@ final class RecoveryMailer {
 		$recovery_url    = $tokens['{recovery_url}'];
 		$unsubscribe_url = $tokens['{unsubscribe_url}'];
 
-		// Paragraph-wrap the authored body *before* substitution: wpautop closes
-		// an open <p> when it meets block markup, which would leave a stray
-		// </p> inside the injected product table.
+		// Run wpautop before substitution: it closes an open <p> at block markup,
+		// which would leave a stray </p> inside the injected product table.
 		$content = str_replace(
 			array_keys( $replacements ),
 			array_values( $replacements ),

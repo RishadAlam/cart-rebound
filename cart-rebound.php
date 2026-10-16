@@ -61,8 +61,7 @@ add_action(
 			add_action( 'admin_notices', array( CartRebound\Support\Requirements::class, 'render_admin_notice' ) );
 		}
 
-		// Privacy/export/erase integrations remain available even if WooCommerce
-		// is deactivated after Cart Rebound was already installed.
+		// Bootstrap even without WooCommerce so privacy export/erase keeps working.
 		$cart_rebound_app->bootstrap();
 	}
 );

@@ -1,9 +1,3 @@
-/**
- * Shared cart lifecycle status helpers.
- *
- * Kept in one place so the Carts table and the Dashboard reports translate the
- * same status with the same string and context.
- */
 import { _x } from '@wordpress/i18n';
 
 export const statusLabel = (status: string): string => {

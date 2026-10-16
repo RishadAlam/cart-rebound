@@ -138,11 +138,8 @@ final class OrderLinker {
 
 				$order->save();
 
-				// Move the cart to "pending payment" as soon as the order exists —
-				// before it is paid — so the post-checkout empty-cart events keep its
-				// captured items and it drops out of the active/abandoned funnel (no
-				// recovery email for a shopper who already ordered). The paid
-				// transition to recovered/completed happens later in link().
+				// Mark pending payment before the order is paid so post-checkout empty-cart events keep
+				// its items and no recovery email goes out; the paid transition happens in link().
 				$this->mark_order_placed( $resolved['id'], $order_id );
 			}
 
@@ -151,8 +148,6 @@ final class OrderLinker {
 			$this->clear_recovery_binding();
 		}
 
-		// Only transition the cart once the order is actually paid — a pending or
-		// never-paid order must not prematurely complete/recover the cart.
 		if ( $order->has_status( $this->paid_statuses() ) ) {
 			$this->link( $order );
 		}
@@ -270,9 +265,8 @@ final class OrderLinker {
 		$status = (string) ( $row['status'] ?? '' );
 
 		if ( CartSession::STATUS_PENDING_PAYMENT === $status ) {
-			// `abandoned_at` is kept: if this cart had been abandoned before the
-			// (now reversed) order, a later paid order still has to attribute as
-			// recovered instead of as a straight-through completion.
+			// `abandoned_at` is kept so a later paid order still attributes as recovered
+			// instead of as a straight-through completion.
 			CartSession::update(
 				$cart_id,
 				array(
@@ -328,19 +322,15 @@ final class OrderLinker {
 
 		$row = CartSession::find( $cart_id );
 
-		// Idempotent on the paid lifecycle states, not on order_id: the id is
-		// stamped at order creation (see mark_order_placed()), so a pending-payment
-		// row still needs its paid transition here.
+		// Idempotent on paid states, not order_id: the id is stamped at order creation,
+		// so a pending-payment row still needs its paid transition here.
 		if ( ! is_array( $row ) || $this->already_converted( (string) ( $row['status'] ?? '' ) ) ) {
 			return;
 		}
 
-		// The cart converted: drop any recovery email still queued for it.
 		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
 
-		// A cart that was ever abandoned (its abandoned_at survives the
-		// pending-payment transition) — or that arrived via a recovery link —
-		// counts as recovered; a pristine cart converted straight through.
+		// `abandoned_at` survives the pending-payment transition, so a once-abandoned cart counts as recovered.
 		$via_link      = '1' === (string) $order->get_meta( self::META_RECOVERED );
 		$was_abandoned = '' !== (string) ( $row['abandoned_at'] ?? '' );
 		$is_recovered  = $via_link || $was_abandoned;
@@ -371,8 +361,6 @@ final class OrderLinker {
 			)
 		);
 
-		// The payload is the row we already hold plus the columns just written —
-		// no need to re-read the row we just saved.
 		$fresh = array_merge( $row, $recovered );
 
 		$this->events->recovered( $fresh, $order, $via_link ? 'email_link' : 'direct' );
@@ -452,7 +440,6 @@ final class OrderLinker {
 			)
 		);
 
-		// They placed an order — drop any recovery email still queued for this cart.
 		$this->scheduler->clear_with_args( RecoveryMailer::HOOK, array( $cart_id ) );
 	}
 

@@ -1,9 +1,4 @@
 <?php
-/**
- * Development asset loader unit tests.
- *
- * @package CartRebound
- */
 
 declare( strict_types=1 );
 
