@@ -12,6 +12,7 @@ namespace CartRebound\Cron;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Data\CartDataCleaner;
+use CartRebound\Data\LogRepository;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\QueryBuilder;
 use CartRebound\Support\Settings;
@@ -54,16 +55,26 @@ final class Janitor {
 	private $cleaner;
 
 	/**
+	 * Activity log store.
+	 *
+	 * @since 1.1.2
+	 * @var LogRepository
+	 */
+	private $logs;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.1.0
 	 *
 	 * @param Settings        $settings Settings store.
 	 * @param CartDataCleaner $cleaner  Privacy-aware cart deletion service.
+	 * @param LogRepository   $logs     Activity log store.
 	 */
-	public function __construct( Settings $settings, CartDataCleaner $cleaner ) {
+	public function __construct( Settings $settings, CartDataCleaner $cleaner, LogRepository $logs ) {
 		$this->settings = $settings;
 		$this->cleaner  = $cleaner;
+		$this->logs     = $logs;
 	}
 
 	/**
@@ -122,6 +133,8 @@ final class Janitor {
 				->where( 'status', '=', CartSession::STATUS_LOST )
 				->where( 'last_activity', '<', $unrecovered_cutoff )
 		);
+
+		$this->logs->delete_older_than( (int) $this->settings->get( 'log_retention_days' ) );
 
 		return $deleted;
 	}

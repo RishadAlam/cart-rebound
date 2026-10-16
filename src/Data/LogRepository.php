@@ -109,6 +109,24 @@ final class LogRepository {
 	}
 
 	/**
+	 * Delete log entries older than a number of days.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param int $days Entries older than this many days are deleted; 0 keeps everything.
+	 * @return int Rows deleted.
+	 */
+	public function delete_older_than( int $days ): int {
+		if ( $days <= 0 ) {
+			return 0;
+		}
+
+		$cutoff = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
+
+		return LogEntry::query()->where( 'created_at', '<', $cutoff )->delete_where();
+	}
+
+	/**
 	 * Trim the log to the most recent {@see MAX_ROWS} rows.
 	 *
 	 * @since 0.1.0

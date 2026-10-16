@@ -65,11 +65,13 @@ export interface ProductReportRow {
 }
 
 export interface Settings {
+	tracking_enabled: boolean;
 	guest_tracking: boolean;
 	abandonment_threshold: number;
 	scan_interval: number;
 	cleanup_days: number;
 	converted_cleanup_days: number;
+	log_retention_days: number;
 	recovery_email_enabled: boolean;
 	admin_recovery_email: boolean;
 	admin_notification_email: string;

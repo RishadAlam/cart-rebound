@@ -64,24 +64,7 @@ final class SettingsController extends Controller {
 	 * @return WP_REST_Response
 	 */
 	public function update( WP_REST_Request $request ): WP_REST_Response {
-		$keys = array(
-			'guest_tracking',
-			'abandonment_threshold',
-			'scan_interval',
-			'cleanup_days',
-			'converted_cleanup_days',
-			'recovery_email_enabled',
-			'admin_recovery_email',
-			'admin_notification_email',
-			'paid_order_statuses',
-			'email_delay_minutes',
-			'email_subject',
-			'email_body',
-			'email_from_name',
-			'email_from_email',
-			'email_coupon',
-			'onboarding_complete',
-		);
+		$keys = array_keys( $this->settings->defaults() );
 
 		$input = array();
 

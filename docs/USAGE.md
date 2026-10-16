@@ -197,11 +197,13 @@ All plugin behavior is configured under **Cart Rebound → Settings** in the Wor
 
 | Key                        | UI label                                        | Default                      | Controls                                                                                |
 | -------------------------- | ----------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
+| `tracking_enabled`         | **Track carts**                                 | `true`                       | Master switch. Off stops all new cart, checkout-email and cookie capture.               |
 | `guest_tracking`           | **Track guest carts**                           | `false`                      | Whether carts from logged-out visitors are tracked. Logged-in cart tracking remains on. |
 | `abandonment_threshold`    | **Abandonment threshold (minutes)**             | `30`                         | Minutes of inactivity before an eligible cart is considered abandoned.                  |
 | `scan_interval`            | **Scan interval (minutes)**                     | `5`                          | How often the background abandonment scan runs.                                         |
 | `cleanup_days`             | **Unrecovered cleanup after (days)**            | `30`                         | Retention for stale active and unconverted abandoned/lost carts.                        |
 | `converted_cleanup_days`   | **Converted cleanup after (days)**              | `365`                        | Retention for recovered and completed cart records.                                     |
+| `log_retention_days`       | **Delete log entries after**                    | `30`                         | Activity-log entries older than this are deleted daily. `0` keeps them forever.         |
 | `recovery_email_enabled`   | **Send recovery email**                         | `false`                      | Whether one automatic recovery email is scheduled for an eligible abandoned cart.       |
 | `admin_recovery_email`     | **Notify admin on recovery**                    | `false`                      | Whether the store is emailed each time a tracked cart converts into a paid order.       |
 | `admin_notification_email` | **Notification email**                          | `''`                         | Where recovery notifications go; blank falls back to the site admin address.            |
@@ -295,7 +297,7 @@ Capture is wired in `src/Providers/CaptureServiceProvider.php::boot()`. Four Woo
 
 Each call re-snapshots the cart and upserts the row. The snapshot (`CartTracker::snapshot()`) stores: `cart_contents` (JSON of product_id, variation_id, variation, quantity, name, price, line_total per line), `cart_total` (from `WC()->cart->get_total('edit')`), `currency`, `items_count`, `coupons` (applied coupon codes), and `checkout_url`.
 
-Tracking runs whenever `CartTracker::tracking_allowed()` passes: WooCommerce must be loaded. There is no master on/off toggle — tracking is active while the plugin is active. Logged-in users are always tracked; guests are tracked only when the `guest_tracking` setting is on.
+Tracking runs whenever `CartTracker::tracking_allowed()` passes: WooCommerce must be loaded and the `tracking_enabled` master switch must be on (the default). With it on, logged-in users are always tracked; guests are tracked only when the `guest_tracking` setting is on. With it off, no cart rows are written, the checkout capture script is not loaded, no tracking cookie is set and guest carts are not merged on login; carts already tracked keep their scheduled recovery emails.
 
 ### The stable session key and the `cart_rebound_ref` cookie
 
@@ -974,11 +976,13 @@ Returns the full settings array merged over defaults (`SettingsController::index
 
 ```json
 {
+	"tracking_enabled": true,
 	"guest_tracking": false,
 	"abandonment_threshold": 30,
 	"scan_interval": 5,
 	"cleanup_days": 30,
 	"converted_cleanup_days": 365,
+	"log_retention_days": 30,
 	"recovery_email_enabled": false,
 	"email_delay_minutes": 60,
 	"email_subject": "You left something in your cart",
@@ -993,11 +997,11 @@ Returns the full settings array merged over defaults (`SettingsController::index
 
 #### POST `/settings`
 
-Persists settings and re-syncs the scheduler (`SettingsController::update` → `Settings::update()`). Only these keys are read from the request; any other params are ignored. A `null` (omitted) param leaves the stored value unchanged, while `''` is an explicit clear that the `Settings` sanitiser coerces per field type:
+Persists settings and re-syncs the scheduler (`SettingsController::update` → `Settings::update()`). Only keys that exist in `Settings::defaults()` are read from the request; any other params are ignored. A `null` (omitted) param leaves the stored value unchanged, while `''` is an explicit clear that the `Settings` sanitiser coerces per field type:
 
-`guest_tracking`, `abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, `recovery_email_enabled`, `email_delay_minutes`, `email_subject`, `email_body`, `email_from_name`, `email_from_email`, `email_coupon`.
+`tracking_enabled`, `guest_tracking`, `abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, `log_retention_days`, `recovery_email_enabled`, `email_delay_minutes`, `email_subject`, `email_body`, `email_from_name`, `email_from_email`, `email_coupon`.
 
-Sanitisation rules: booleans via `! empty()`; `abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, and `email_delay_minutes` are cast to int and floored at `1`; text and email fields use the corresponding WordPress sanitization functions.
+Sanitisation rules: booleans via `! empty()`; `abandonment_threshold`, `scan_interval`, `cleanup_days`, `converted_cleanup_days`, and `email_delay_minutes` are cast to int and floored at `1`; `log_retention_days` is cast to int and floored at `0`; text and email fields use the corresponding WordPress sanitization functions.
 
 After saving, the controller fires the `cart_rebound_settings_updated` action with the full sanitised settings so the scheduler can reconcile its cron schedule:
 

@@ -365,7 +365,7 @@ final class CartTracker {
 	 * @return bool
 	 */
 	private function tracking_allowed(): bool {
-		if ( ! function_exists( 'WC' ) ) {
+		if ( ! function_exists( 'WC' ) || ! $this->settings->get( 'tracking_enabled' ) ) {
 			return false;
 		}
 

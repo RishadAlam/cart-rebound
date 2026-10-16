@@ -28,6 +28,7 @@ interface Position {
 const SEARCH_THRESHOLD = 7;
 
 export const Combobox = ({
+	id,
 	options,
 	value,
 	onChange,
@@ -39,6 +40,7 @@ export const Combobox = ({
 	tone,
 	pill = false,
 }: {
+	id?: string;
 	options: ComboOption[];
 	value: string;
 	onChange: (value: string) => void;
@@ -200,6 +202,7 @@ export const Combobox = ({
 		>
 			<button
 				ref={triggerRef}
+				id={id}
 				type="button"
 				className={`cr-combo__trigger${pill ? ' is-pill' : ''}${
 					tone ? ` cr-combo__trigger--${tone}` : ''

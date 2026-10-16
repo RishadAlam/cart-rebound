@@ -34,11 +34,13 @@ final class Settings {
 	 */
 	public function defaults(): array {
 		return array(
+			'tracking_enabled'         => true,
 			'guest_tracking'           => false,
 			'abandonment_threshold'    => 30,
 			'scan_interval'            => 5,
 			'cleanup_days'             => 30,
 			'converted_cleanup_days'   => 365,
+			'log_retention_days'       => 30,
 			'recovery_email_enabled'   => false,
 			'admin_recovery_email'     => false,
 			'admin_notification_email' => '',
@@ -112,11 +114,13 @@ final class Settings {
 	 */
 	private function sanitise( array $values ): array {
 		return array(
+			'tracking_enabled'         => ! empty( $values['tracking_enabled'] ),
 			'guest_tracking'           => ! empty( $values['guest_tracking'] ),
 			'abandonment_threshold'    => max( 1, (int) ( $values['abandonment_threshold'] ?? 30 ) ),
 			'scan_interval'            => max( 1, (int) ( $values['scan_interval'] ?? 5 ) ),
 			'cleanup_days'             => max( 1, (int) ( $values['cleanup_days'] ?? 30 ) ),
 			'converted_cleanup_days'   => max( 1, (int) ( $values['converted_cleanup_days'] ?? 365 ) ),
+			'log_retention_days'       => max( 0, (int) ( $values['log_retention_days'] ?? 30 ) ),
 			'recovery_email_enabled'   => ! empty( $values['recovery_email_enabled'] ),
 			'admin_recovery_email'     => ! empty( $values['admin_recovery_email'] ),
 			'admin_notification_email' => sanitize_email( (string) ( $values['admin_notification_email'] ?? '' ) ),

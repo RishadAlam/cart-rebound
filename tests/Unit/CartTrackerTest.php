@@ -42,6 +42,32 @@ final class CartTrackerTest extends TestCase {
 		return new EventDispatcher( new RecoveryLink() );
 	}
 
+	/**
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_master_switch_gates_tracking(): void {
+		Functions\when( 'WC' )->justReturn( null );
+		Functions\when( 'get_current_user_id' )->justReturn( 5 );
+
+		$enabled = array( 'tracking_enabled' => true );
+		Functions\when( 'get_option' )->alias(
+			static function () use ( &$enabled ) {
+				return $enabled;
+			}
+		);
+
+		$tracker = new CartTracker( new SessionManager( $this->events() ), new Settings(), $this->events() );
+		$allowed = new \ReflectionMethod( $tracker, 'tracking_allowed' );
+		$allowed->setAccessible( true );
+
+		$this->assertTrue( $allowed->invoke( $tracker ) );
+
+		$enabled = array( 'tracking_enabled' => false );
+
+		$this->assertFalse( $allowed->invoke( $tracker ) );
+	}
+
 	public function test_returning_shopper_reopens_the_cart_but_keeps_its_abandonment_stamp(): void {
 		$this->wpdb->rows[] = array(
 			'id'                   => 7,
