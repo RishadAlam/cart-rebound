@@ -11,19 +11,5 @@ export default {
 			{ except: [ 'first-nested' ], ignore: [ 'after-comment' ] },
 		],
 		'no-descending-specificity': null,
-		'at-rule-no-unknown': [
-			true,
-			{
-				ignoreAtRules: [
-					'tailwind',
-					'apply',
-					'layer',
-					'screen',
-					'variants',
-					'responsive',
-					'config',
-				],
-			},
-		],
 	},
 };

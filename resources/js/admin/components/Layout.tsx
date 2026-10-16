@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { __ } from '@wordpress/i18n';
 import { AdminLink } from './AdminLink';
@@ -26,12 +27,44 @@ const tabClass = ({ isActive }: { isActive: boolean }): string =>
 
 const WIDE_ROUTES = ['/', '/carts', '/logs'];
 
+// WordPress sizes its sticky admin menu from a page height it measures only on load
+// and resize, so re-pin it whenever the app's own height changes.
+const useRepinAdminMenu = () => {
+	const ref = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const node = ref.current;
+
+		if (!node || !window.jQuery || !('ResizeObserver' in window)) {
+			return;
+		}
+
+		let frame = 0;
+		const observer = new ResizeObserver(() => {
+			window.cancelAnimationFrame(frame);
+			frame = window.requestAnimationFrame(() => {
+				window.jQuery?.(document).trigger('wp-pin-menu');
+			});
+		});
+
+		observer.observe(node);
+
+		return () => {
+			observer.disconnect();
+			window.cancelAnimationFrame(frame);
+		};
+	}, []);
+
+	return ref;
+};
+
 export const Layout = () => {
 	const { pathname } = useLocation();
 	const wide = WIDE_ROUTES.includes(pathname);
+	const appRef = useRepinAdminMenu();
 
 	return (
-		<div className={wide ? 'cr-app is-wide' : 'cr-app'}>
+		<div ref={appRef} className={wide ? 'cr-app is-wide' : 'cr-app'}>
 			<OnboardingWizard />
 
 			<header className="cr-header">

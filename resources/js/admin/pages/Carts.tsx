@@ -470,7 +470,7 @@ const CartRow = ({
 
 	return (
 		<tr className={selected ? 'is-selected' : undefined}>
-			<td className="cr-check">
+			<td className="cr-col-check">
 				<input
 					type="checkbox"
 					checked={selected}
@@ -1533,7 +1533,7 @@ export const Carts = () => {
 							<table className="cr-table">
 								<thead>
 									<tr>
-										<th className="cr-check">
+										<th className="cr-col-check">
 											<input
 												type="checkbox"
 												checked={allChecked}

@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Older WordPress defines these only inside the block editor; :where() lets
    core's own rules win. Values mirror core's wp-base-styles. */
 :where(body.admin-color-light) {
@@ -784,13 +780,13 @@ select.cr-select:disabled {
 	white-space: nowrap;
 }
 
-.cr-table th.cr-check,
-.cr-table td.cr-check {
+.cr-table .cr-col-check {
 	width: 34px;
 	padding-right: 0;
 }
 
-.cr-check input[type="checkbox"] {
+.cr-check input[type="checkbox"],
+.cr-col-check input[type="checkbox"] {
 	width: 15px;
 	height: 15px;
 	margin: 0;
@@ -815,6 +811,10 @@ select.cr-select:disabled {
 	letter-spacing: inherit;
 	cursor: pointer;
 	transition: color 140ms var(--cr-ease);
+}
+
+.cr-table .cr-sort {
+	vertical-align: middle;
 }
 
 .cr-sort.is-right {

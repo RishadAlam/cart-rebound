@@ -33,6 +33,7 @@ declare global {
 
 	interface Window {
 		CartRebound?: CartReboundBootData;
+		jQuery?: (target: Document) => { trigger: (event: string) => void };
 		wp?: {
 			media?: (options?: Record<string, unknown>) => WpMediaFrame;
 		};
