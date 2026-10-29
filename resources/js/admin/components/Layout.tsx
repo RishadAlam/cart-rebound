@@ -64,7 +64,7 @@ export const Layout = () => {
 	const appRef = useRepinAdminMenu();
 
 	return (
-		<div ref={appRef} className={wide ? 'cr-app is-wide' : 'cr-app'}>
+		<div ref={appRef} className="cr-app">
 			<OnboardingWizard />
 
 			<header className="cr-header">
@@ -92,7 +92,9 @@ export const Layout = () => {
 				))}
 			</nav>
 
-			<Outlet />
+			<div className={wide ? 'cr-page' : 'cr-page is-narrow'}>
+				<Outlet />
+			</div>
 		</div>
 	);
 };

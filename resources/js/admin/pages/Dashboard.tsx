@@ -33,7 +33,7 @@ const InfoIcon = () => (
 const ArrowIcon = () => (
 	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
 		<path
-			d="M5.5 10.5 10.5 5.5M6.4 5.5h4.1v4.1"
+			d="M3.5 8h9M9 4.5 12.5 8 9 11.5"
 			stroke="currentColor"
 			strokeWidth="1.3"
 			strokeLinecap="round"

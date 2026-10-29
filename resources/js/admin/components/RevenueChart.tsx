@@ -88,10 +88,15 @@ const smoothPath = (pts: Pt[]): string => {
 		const p0 = pts[i - 1] ?? p1;
 		const p3 = pts[i + 2] ?? p2;
 
+		// Clamped to the segment's own range so the curve never dips below
+		// zero or overshoots a day's real value.
+		const low = Math.min(p1.y, p2.y);
+		const high = Math.max(p1.y, p2.y);
+		const clampY = (y: number) => Math.min(high, Math.max(low, y));
 		const c1x = p1.x + (p2.x - p0.x) * TENSION;
-		const c1y = p1.y + (p2.y - p0.y) * TENSION;
+		const c1y = clampY(p1.y + (p2.y - p0.y) * TENSION);
 		const c2x = p2.x - (p3.x - p1.x) * TENSION;
-		const c2y = p2.y - (p3.y - p1.y) * TENSION;
+		const c2y = clampY(p2.y - (p3.y - p1.y) * TENSION);
 
 		d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(
 			2
@@ -354,9 +359,13 @@ export const RevenueChart = ({
 						</g>
 
 						{points.map((point, index) => {
+							const last = index === points.length - 1;
+							const crowdsLast =
+								!last && points.length - 1 - index < labelEvery;
+
 							if (
-								index % labelEvery !== 0 &&
-								index !== points.length - 1
+								(index % labelEvery !== 0 && !last) ||
+								crowdsLast
 							) {
 								return null;
 							}
@@ -367,7 +376,11 @@ export const RevenueChart = ({
 									className="cr-chart__axis"
 									x={xAt(index)}
 									y={HEIGHT - 10}
-									textAnchor="middle"
+									textAnchor={
+										last && points.length > 1
+											? 'end'
+											: 'middle'
+									}
 								>
 									{shortDate(point.date)}
 								</text>

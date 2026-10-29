@@ -95,7 +95,7 @@
 	--cr-text-2xl: 23px;
 
 	box-sizing: border-box;
-	max-width: 1120px;
+	overflow-x: clip;
 	padding: 8px 20px 56px;
 	color: var(--cr-ink);
 	font-family: var(--cr-font);
@@ -104,8 +104,8 @@
 	-webkit-font-smoothing: antialiased;
 }
 
-.cr-app.is-wide {
-	max-width: none;
+.cr-page.is-narrow {
+	max-width: 1080px;
 }
 
 .cr-app *,
@@ -135,11 +135,19 @@
 	display: flex;
 	gap: 2px;
 	margin: 18px 0 28px;
+	overflow-x: auto;
 	border-bottom: 1px solid var(--cr-border);
+	scrollbar-width: none;
+}
+
+.cr-tabs::-webkit-scrollbar {
+	display: none;
 }
 
 .cr-tab {
+	flex: none;
 	margin-bottom: -1px;
+	white-space: nowrap;
 	padding: 10px 14px;
 	border: 0;
 	border-bottom: 2px solid transparent;
@@ -457,7 +465,10 @@ select.cr-select:disabled {
 	cursor: pointer;
 }
 
-.cr-switch__track {
+/* Specificity outranks browser extensions that inject
+   `input:not(:checked) + span { display: none }`; same for .cr-check__label. */
+.cr-switch > span.cr-switch__track {
+	display: block;
 	width: 38px;
 	height: 22px;
 	border-radius: 999px;
@@ -497,12 +508,27 @@ select.cr-select:disabled {
 }
 
 .cr-switch input:disabled + .cr-switch__track {
-	opacity: 0.45;
+	background: var(--cr-panel);
+	box-shadow: inset 0 0 0 1px var(--cr-border-strong);
+}
+
+.cr-switch input:disabled + .cr-switch__track .cr-switch__thumb {
+	background: var(--cr-border-strong);
+	box-shadow: none;
+}
+
+.cr-switch input:checked:disabled + .cr-switch__track {
+	background: rgba(var(--cr-accent-rgb), 0.35);
+	box-shadow: none;
+}
+
+.cr-switch input:checked:disabled + .cr-switch__track .cr-switch__thumb {
+	background: var(--cr-surface);
 }
 
 .cr-field--row.is-disabled .cr-field__label,
 .cr-field--row.is-disabled .cr-field__hint {
-	opacity: 0.55;
+	color: var(--cr-muted);
 }
 
 .cr-field {
@@ -547,6 +573,11 @@ select.cr-select:disabled {
 	height: 16px;
 	accent-color: var(--cr-accent);
 	cursor: pointer;
+}
+
+.cr-check > span.cr-check__label {
+	display: inline;
+	line-height: 1.3;
 }
 
 .cr-subhead {
@@ -594,22 +625,26 @@ select.cr-select:disabled {
 	gap: 18px;
 }
 
+.cr-field__grid.is-columns {
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
 @supports (grid-template-rows: subgrid) {
 	.cr-field__grid {
 		grid-template-rows: auto auto auto;
 		align-items: start;
 		row-gap: 6px;
-		margin-bottom: 20px;
-	}
-
-	.cr-field__grid:last-child {
-		margin-bottom: 0;
+		margin-bottom: 6px;
 	}
 
 	.cr-field__grid > .cr-field {
 		display: grid;
 		grid-row: span 3;
 		grid-template-rows: subgrid;
+		margin-bottom: 14px;
+	}
+
+	.cr-field__grid:last-child > .cr-field {
 		margin-bottom: 0;
 	}
 
@@ -1049,8 +1084,15 @@ select.cr-select:disabled {
 	height: 15px;
 }
 
+.cr-iconbtn-slot {
+	flex: none;
+	width: 30px;
+	height: 30px;
+}
+
 .cr-iconbtn:disabled {
-	opacity: 0.45;
+	border-color: var(--cr-border);
+	color: var(--cr-border-control);
 	cursor: not-allowed;
 }
 

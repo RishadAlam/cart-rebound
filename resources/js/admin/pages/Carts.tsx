@@ -530,7 +530,7 @@ const CartRow = ({
 					>
 						<EyeIcon />
 					</button>
-					{cart.order_id === 0 && (
+					{cart.order_id === 0 ? (
 						<button
 							type="button"
 							className="cr-iconbtn"
@@ -545,6 +545,8 @@ const CartRow = ({
 						>
 							<RecoverIcon />
 						</button>
+					) : (
+						<span className="cr-iconbtn-slot" aria-hidden="true" />
 					)}
 					<button
 						type="button"

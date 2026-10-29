@@ -215,7 +215,7 @@ export const Settings = () => {
 						'cart-rebound'
 					)}
 				</p>
-				<div className="cr-field__grid">
+				<div className="cr-field__grid is-columns">
 					<Field
 						id="cr-threshold"
 						label={__(
@@ -360,7 +360,9 @@ export const Settings = () => {
 									)}
 									onChange={onStatusToggle(option.key)}
 								/>
-								<span>{option.label}</span>
+								<span className="cr-check__label">
+									{option.label}
+								</span>
 							</label>
 						))}
 					</div>
@@ -447,7 +449,7 @@ export const Settings = () => {
 					</Field>
 				)}
 
-				<div className="cr-field__grid">
+				<div className="cr-field__grid is-columns">
 					<Field
 						id="cr-delay"
 						label={__('Send delay (minutes)', 'cart-rebound')}
