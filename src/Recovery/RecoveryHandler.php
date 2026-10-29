@@ -99,6 +99,8 @@ final class RecoveryHandler {
 			->first();
 
 		if ( ! is_array( $row ) ) {
+			$this->notice( __( 'This cart link has expired, or its order was already placed.', 'cart-rebound' ) );
+
 			return;
 		}
 
@@ -190,6 +192,11 @@ final class RecoveryHandler {
 			return;
 		}
 
+		// Saving the customer writes account meta: never copy one shopper's details into another's account.
+		if ( is_user_logged_in() && (int) ( $row['user_id'] ?? 0 ) !== get_current_user_id() ) {
+			return;
+		}
+
 		$email  = (string) ( $row['email'] ?? '' );
 		$filled = false;
 
@@ -234,7 +241,7 @@ final class RecoveryHandler {
 	 * @since 0.1.0
 	 *
 	 * @param array<string, mixed> $row The cart row.
-	 * @return bool Whether the cart was available to restore into.
+	 * @return bool Whether at least one stored line was put back in the cart.
 	 */
 	private function restore_cart( array $row ): bool {
 		if ( ! function_exists( 'WC' ) ) {
@@ -247,31 +254,49 @@ final class RecoveryHandler {
 			return false;
 		}
 
-		$cart->empty_cart();
-
-		$lines = ( isset( $row['cart_contents'] ) && is_string( $row['cart_contents'] ) )
+		$decoded = ( isset( $row['cart_contents'] ) && is_string( $row['cart_contents'] ) )
 			? json_decode( $row['cart_contents'], true )
 			: array();
-
-		if ( is_array( $lines ) ) {
-			foreach ( $lines as $line ) {
-				if ( ! is_array( $line ) ) {
-					continue;
+		$lines   = array_values( array_filter( is_array( $decoded ) ? $decoded : array(), 'is_array' ) );
+		$buyable = array_values(
+			array_filter(
+				$lines,
+				function ( array $line ): bool {
+					return $this->is_available( $line );
 				}
+			)
+		);
 
-				$product_id = (int) ( $line['product_id'] ?? 0 );
+		// Leave the visitor's current cart alone when nothing saved can be bought any more.
+		if ( array() === $buyable ) {
+			$this->notice( __( 'The items in this saved cart are no longer available.', 'cart-rebound' ) );
 
-				if ( $product_id <= 0 ) {
-					continue;
-				}
+			return false;
+		}
 
-				$cart->add_to_cart(
-					$product_id,
-					max( 1, (int) ( $line['quantity'] ?? 1 ) ),
-					(int) ( $line['variation_id'] ?? 0 ),
-					( isset( $line['variation'] ) && is_array( $line['variation'] ) ) ? $line['variation'] : array()
-				);
+		$cart->empty_cart();
+
+		$added = 0;
+
+		foreach ( $buyable as $line ) {
+			$key = $cart->add_to_cart(
+				(int) $line['product_id'],
+				max( 1, (int) ( $line['quantity'] ?? 1 ) ),
+				(int) ( $line['variation_id'] ?? 0 ),
+				( isset( $line['variation'] ) && is_array( $line['variation'] ) ) ? $line['variation'] : array()
+			);
+
+			if ( false !== $key ) {
+				++$added;
 			}
+		}
+
+		if ( 0 === $added ) {
+			return false;
+		}
+
+		if ( $added < count( $lines ) ) {
+			$this->notice( __( 'Some items from your saved cart are no longer available and were left out.', 'cart-rebound' ) );
 		}
 
 		$coupons = ( isset( $row['coupons'] ) && is_string( $row['coupons'] ) )
@@ -288,6 +313,48 @@ final class RecoveryHandler {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Whether a stored cart line's product can still be bought.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array<string, mixed> $line Cart line.
+	 * @return bool
+	 */
+	private function is_available( array $line ): bool {
+		$product_id = (int) ( $line['product_id'] ?? 0 );
+
+		if ( $product_id <= 0 ) {
+			return false;
+		}
+
+		if ( ! function_exists( 'wc_get_product' ) ) {
+			return true;
+		}
+
+		$variation_id = (int) ( $line['variation_id'] ?? 0 );
+		$product      = wc_get_product( $variation_id > 0 ? $variation_id : $product_id );
+
+		return $product instanceof \WC_Product
+			&& 'trash' !== $product->get_status()
+			&& $product->is_purchasable()
+			&& $product->is_in_stock();
+	}
+
+	/**
+	 * Show the shopper a storefront notice, when WooCommerce notices are available.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $message Notice text.
+	 * @return void
+	 */
+	private function notice( string $message ): void {
+		if ( function_exists( 'wc_add_notice' ) && function_exists( 'WC' ) && null !== WC()->session ) {
+			wc_add_notice( $message, 'notice' );
+		}
 	}
 
 	/**
