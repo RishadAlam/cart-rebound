@@ -121,11 +121,11 @@ final class RecoveryMailer {
 			return;
 		}
 
-		if ( 1 === (int) ( $row['email_sent'] ?? 0 ) ) {
+		if ( 1 === (int) ( $row['email_sent'] ?? 0 ) || (int) ( $row['order_id'] ?? 0 ) > 0 ) {
 			return;
 		}
 
-		if ( (int) ( $row['items_count'] ?? 0 ) <= 0 ) {
+		if ( (int) ( $row['items_count'] ?? 0 ) <= 0 || $this->nothing_left( $row ) ) {
 			return;
 		}
 
@@ -254,6 +254,10 @@ final class RecoveryMailer {
 			return $this->fail( __( 'This cart has no items to recover.', 'cart-rebound' ) );
 		}
 
+		if ( $this->nothing_left( $row ) ) {
+			return $this->fail( __( 'Every product in this cart has since been deleted, so there is nothing to recover.', 'cart-rebound' ) );
+		}
+
 		if ( (int) ( $row['order_id'] ?? 0 ) > 0 ) {
 			return $this->fail( __( 'This cart is already linked to an order.', 'cart-rebound' ) );
 		}
@@ -370,7 +374,7 @@ final class RecoveryMailer {
 			'currency'       => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : '',
 			'items_count'    => 3,
 			'checkout_url'   => function_exists( 'wc_get_checkout_url' ) ? wc_get_checkout_url() : home_url( '/checkout/' ),
-			'abandoned_at'   => current_time( 'mysql' ),
+			'abandoned_at'   => current_time( 'mysql', true ),
 			'cart_contents'  => wp_json_encode(
 				array(
 					array(
@@ -409,11 +413,27 @@ final class RecoveryMailer {
 		$tokens['{products}']       = $tokens['{product_names}'];
 		$tokens['{products_table}'] = $tokens['{product_names}'];
 
-		return str_replace(
-			array_keys( $tokens ),
-			array_values( $tokens ),
-			(string) ( $template['subject'] ?? '' )
-		);
+		$filled  = trim( $this->tidy_blank_tokens( str_replace( array_keys( $tokens ), array_values( $tokens ), (string) ( $template['subject'] ?? '' ) ) ) );
+		$subject = ltrim( $filled, " ,\t" );
+
+		// Only re-capitalise when a blank leading tag was stripped ("{first_name}, your cart…").
+		if ( $subject === $filled || '' === $subject || ! function_exists( 'mb_substr' ) ) {
+			return $subject;
+		}
+
+		return mb_strtoupper( mb_substr( $subject, 0, 1 ) ) . mb_substr( $subject, 1 );
+	}
+
+	/**
+	 * Close the gap a blank merge tag leaves before a comma ("Hi {first_name}," becomes "Hi,").
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $text Text after token substitution.
+	 * @return string
+	 */
+	private function tidy_blank_tokens( string $text ): string {
+		return (string) preg_replace( '/[ \t]+,/u', ',', $text );
 	}
 
 	/**
@@ -462,7 +482,7 @@ final class RecoveryMailer {
 			'{recovery_url}'    => $this->links->url( $token ),
 			'{unsubscribe_url}' => $this->links->unsubscribe_url( $token ),
 			'{coupon_code}'     => (string) ( $template['coupon'] ?? '' ),
-			'{store_name}'      => (string) get_bloginfo( 'name' ),
+			'{store_name}'      => wp_specialchars_decode( (string) get_bloginfo( 'name' ), ENT_QUOTES ),
 			'{store_url}'       => home_url( '/' ),
 			'{store_email}'     => $this->store_email(),
 			'{manager_name}'    => $this->manager_name(),
@@ -500,7 +520,9 @@ final class RecoveryMailer {
 			return '';
 		}
 
-		return (string) mysql2date( (string) get_option( 'date_format' ), $stamp );
+		$time = strtotime( $stamp . ' UTC' );
+
+		return false === $time ? '' : (string) wp_date( (string) get_option( 'date_format' ), $time );
 	}
 
 	/**
@@ -521,7 +543,7 @@ final class RecoveryMailer {
 	}
 
 	/**
-	 * A human name for whoever runs the store — the admin user's first name.
+	 * A human name for whoever runs the store — the admin user's first name, else "our team".
 	 *
 	 * @since 0.1.0
 	 *
@@ -530,13 +552,13 @@ final class RecoveryMailer {
 	private function manager_name(): string {
 		$admin = get_user_by( 'email', (string) get_option( 'admin_email' ) );
 
-		if ( ! $admin instanceof \WP_User ) {
-			return '';
+		$name = '';
+
+		if ( $admin instanceof \WP_User ) {
+			$name = '' !== (string) $admin->first_name ? (string) $admin->first_name : (string) $admin->display_name;
 		}
 
-		$first = (string) $admin->first_name;
-
-		return '' !== $first ? $first : (string) $admin->display_name;
+		return '' !== $name ? $name : __( 'our team', 'cart-rebound' );
 	}
 
 	/**
@@ -598,12 +620,46 @@ final class RecoveryMailer {
 		$lines = array();
 
 		foreach ( $raw as $line ) {
-			if ( is_array( $line ) ) {
+			if ( is_array( $line ) && ! $this->is_withdrawn( $line ) ) {
 				$lines[] = $line;
 			}
 		}
 
 		return $lines;
+	}
+
+	/**
+	 * Whether a cart had stored lines but every one of their products is gone.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array<string, mixed> $row Cart row.
+	 * @return bool
+	 */
+	private function nothing_left( array $row ): bool {
+		$stored = ( isset( $row['cart_contents'] ) && is_string( $row['cart_contents'] ) )
+			? json_decode( $row['cart_contents'], true )
+			: null;
+
+		return is_array( $stored ) && array() !== $stored && array() === $this->items( $row );
+	}
+
+	/**
+	 * Whether a cart line points at a product that was deleted or trashed since capture.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array<string, mixed> $line Cart line.
+	 * @return bool
+	 */
+	private function is_withdrawn( array $line ): bool {
+		if ( (int) ( $line['product_id'] ?? 0 ) <= 0 || ! function_exists( 'wc_get_product' ) ) {
+			return false;
+		}
+
+		$product = $this->product( $line );
+
+		return null === $product || 'trash' === $product->get_status();
 	}
 
 	/**
@@ -619,7 +675,7 @@ final class RecoveryMailer {
 	private function dispatch( string $email, array $row, array $template ): bool {
 		$subject = $this->subject( $template, $row );
 		$body    = $this->build_body( $row, $template );
-		$headers = $this->headers( $template );
+		$headers = $this->headers( $template, $this->links->unsubscribe_url( (string) ( $row['recovery_token'] ?? '' ) ) );
 
 		$this->last_error = __( 'WordPress could not send the email. Check the site SMTP or mail transport configuration and try again.', 'cart-rebound' );
 		add_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
@@ -671,19 +727,26 @@ final class RecoveryMailer {
 			$replacements[ $tag ] = in_array( $tag, $urls, true ) ? esc_url( $plain ) : esc_html( $plain );
 		}
 
-		// The two list tokens are markup by definition, escaped as they are built.
-		$replacements['{products}']       = $this->products_html( $row );
-		$replacements['{products_table}'] = $this->products_table_html( $row, $template );
-
 		$recovery_url    = $tokens['{recovery_url}'];
 		$unsubscribe_url = $tokens['{unsubscribe_url}'];
 
 		// Run wpautop before substitution: it closes an open <p> at block markup,
-		// which would leave a stray </p> inside the injected product table.
+		// which would leave a stray </p> inside the injected product table. A list
+		// tag on its own line is then unwrapped so the table never sits inside <p>.
+		$html = wpautop( (string) ( $template['body'] ?? '' ) );
+		$html = (string) preg_replace( '#<p>\s*(\{(?:products|products_table)\})\s*</p>#', '$1', $html );
+
+		if ( '' === $tokens['{coupon_code}'] ) {
+			$html = (string) preg_replace( '#<p\b[^>]*>(?:(?!</p>).)*\{coupon_code\}(?:(?!</p>).)*</p>\s*#is', '', $html );
+		}
+
+		$content = $this->tidy_blank_tokens( str_replace( array_keys( $replacements ), array_values( $replacements ), $html ) );
+
+		// The markup tokens are escaped as they are built.
 		$content = str_replace(
-			array_keys( $replacements ),
-			array_values( $replacements ),
-			wpautop( (string) ( $template['body'] ?? '' ) )
+			array( '{products}', '{products_table}' ),
+			array( $this->products_html( $row ), $this->products_table_html( $row, $template ) ),
+			$content
 		);
 
 		$template_path = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/recovery.php' : '';
@@ -713,7 +776,8 @@ final class RecoveryMailer {
 		foreach ( $this->items( $row ) as $line ) {
 			$items[] = '<li style="margin: 0 0 4px;">' . esc_html(
 				sprintf(
-					'%1$s × %2$d',
+					/* translators: 1: product name, 2: quantity. */
+					__( '%1$s × %2$d', 'cart-rebound' ),
 					$this->line_name( $line ),
 					(int) ( $line['quantity'] ?? 0 )
 				)
@@ -891,7 +955,7 @@ final class RecoveryMailer {
 				return '';
 			}
 
-			$img = '<img src="' . esc_url( $src ) . '" alt="" width="' . $size . '" height="' . $size . '" style="'
+			$img = '<img src="' . esc_url( $src ) . '" alt="' . esc_attr( $this->line_name( $line ) ) . '" width="' . $size . '" style="'
 				. esc_attr( 'width: ' . $size . 'px; height: auto; border-radius: 4px; display: block;' )
 				. '">';
 
@@ -946,8 +1010,7 @@ final class RecoveryMailer {
 				continue;
 			}
 
-			$label   = str_replace( '-', ' ', (string) preg_replace( '/^attribute_(pa_)?/', '', (string) $key ) );
-			$parts[] = ucfirst( $label ) . ': ' . $value;
+			$parts[] = $this->attribute_label( (string) $key ) . ': ' . $this->attribute_value( (string) $key, $value );
 		}
 
 		if ( array() === $parts ) {
@@ -955,6 +1018,49 @@ final class RecoveryMailer {
 		}
 
 		return '<div style="margin-top: 2px; color: #6b7280; font-size: 12px;">' . esc_html( implode( ', ', $parts ) ) . '</div>';
+	}
+
+	/**
+	 * A human label for a stored variation key such as attribute_pa_size.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $key Stored variation key.
+	 * @return string
+	 */
+	private function attribute_label( string $key ): string {
+		$name  = (string) preg_replace( '/^attribute_/', '', $key );
+		$label = function_exists( 'wc_attribute_label' ) ? (string) wc_attribute_label( $name ) : $name;
+
+		// wc_attribute_label() echoes the slug back when the attribute is gone or local.
+		if ( $label === $name ) {
+			$label = ucfirst( str_replace( array( '-', '_' ), ' ', (string) preg_replace( '/^pa_/', '', rawurldecode( $name ) ) ) );
+		}
+
+		return $label;
+	}
+
+	/**
+	 * The display value for a variation: a global attribute's term name, else the raw text.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $key   Stored variation key.
+	 * @param string $value Stored value (a term slug for global attributes).
+	 * @return string
+	 */
+	private function attribute_value( string $key, string $value ): string {
+		$taxonomy = (string) preg_replace( '/^attribute_/', '', $key );
+
+		if ( taxonomy_exists( $taxonomy ) ) {
+			$term = get_term_by( 'slug', $value, $taxonomy );
+
+			if ( $term instanceof \WP_Term ) {
+				return $term->name;
+			}
+		}
+
+		return rawurldecode( $value );
 	}
 
 	/**
@@ -1079,24 +1185,34 @@ final class RecoveryMailer {
 	}
 
 	/**
-	 * Build the From header from the template, if configured.
+	 * Build the From header (when configured) and the one-click unsubscribe headers.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $template The email template.
+	 * @param array<string, mixed> $template        The email template.
+	 * @param string               $unsubscribe_url Tokenised unsubscribe URL; empty skips List-Unsubscribe.
 	 * @return array<int, string>
 	 */
-	private function headers( array $template ): array {
-		$name = (string) ( $template['from_name'] ?? '' );
-		$from = (string) ( $template['from_email'] ?? '' );
+	private function headers( array $template, string $unsubscribe_url ): array {
+		$name    = (string) ( $template['from_name'] ?? '' );
+		$from    = (string) ( $template['from_email'] ?? '' );
+		$headers = array();
 
-		if ( '' === $from || ! is_email( $from ) ) {
-			return array();
+		if ( '' !== $from && is_email( $from ) ) {
+			$label     = '' !== $name ? $name : $from;
+			$headers[] = sprintf( 'From: %1$s <%2$s>', $label, $from );
 		}
 
-		$label = '' !== $name ? $name : $from;
+		// The starter copy invites replies, which must not land on wordpress@ when From is unset.
+		$headers[] = sprintf( 'Reply-To: %s', $this->store_email() );
 
-		return array( sprintf( 'From: %1$s <%2$s>', $label, $from ) );
+		// RFC 8058 one-click unsubscribe, which Gmail and Yahoo expect from bulk senders.
+		if ( '' !== $unsubscribe_url ) {
+			$headers[] = sprintf( 'List-Unsubscribe: <%s>', esc_url_raw( $unsubscribe_url ) );
+			$headers[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+		}
+
+		return $headers;
 	}
 
 	/**

@@ -42,6 +42,8 @@ final class RecoveryMailerTest extends TestCase {
 		Functions\when( 'mysql2date' )->justReturn( '1 January 2026' );
 		Functions\when( 'wp_date' )->justReturn( '2026' );
 		Functions\when( 'get_bloginfo' )->justReturn( 'Test Store' );
+		Functions\when( 'wp_specialchars_decode' )->returnArg();
+		Functions\when( 'esc_url_raw' )->returnArg();
 		Functions\when( 'get_user_by' )->justReturn( false );
 	}
 
@@ -157,6 +159,84 @@ final class RecoveryMailerTest extends TestCase {
 			'WordPress could not send the email. Check the site SMTP or mail transport configuration and try again.',
 			$mailer->get_last_error()
 		);
+	}
+
+	public function test_blank_first_name_leaves_no_dangling_comma(): void {
+		$this->stub_rendering();
+
+		$row      = array(
+			'first_name'     => '',
+			'recovery_token' => 'token',
+			'cart_contents'  => '[]',
+		);
+		$template = array(
+			'subject' => '{first_name}, your cart at {store_name} is saved',
+			'body'    => '<p>Hi {first_name},</p>',
+			'coupon'  => 'SAVE10',
+		);
+
+		$this->assertSame( 'Your cart at Test Store is saved', $this->call( 'subject', $template, $row ) );
+		$this->assertStringContainsString( '<p>Hi,</p>', $this->call( 'build_body', $row, $template ) );
+	}
+
+	public function test_subject_keeps_its_own_casing_when_nothing_was_stripped(): void {
+		$this->stub_rendering();
+
+		$this->assertSame(
+			'iPhone case still in your cart',
+			$this->call( 'subject', array( 'subject' => 'iPhone case still in your cart' ), array( 'cart_contents' => '[]' ) )
+		);
+	}
+
+	public function test_coupon_paragraph_is_dropped_without_a_coupon(): void {
+		$this->stub_rendering();
+
+		$row      = array(
+			'first_name'     => 'Ben',
+			'recovery_token' => 'token',
+			'cart_contents'  => '[]',
+		);
+		$template = array( 'body' => "<p>Hi {first_name},</p>\n<p>Use the code <strong>{coupon_code}</strong> at checkout.</p>\n<p>Thanks</p>" );
+
+		$without = $this->call( 'build_body', $row, $template + array( 'coupon' => '' ) );
+		$with    = $this->call( 'build_body', $row, $template + array( 'coupon' => 'SAVE10' ) );
+
+		$this->assertStringNotContainsString( 'Use the code', $without );
+		$this->assertStringContainsString( '<p>Thanks</p>', $without );
+		$this->assertStringContainsString( '<strong>SAVE10</strong>', $with );
+	}
+
+	public function test_standalone_product_table_is_not_wrapped_in_a_paragraph(): void {
+		$this->stub_rendering();
+		Functions\when( 'wpautop' )->alias(
+			static function ( $text ) {
+				return '<p>' . trim( (string) $text ) . '</p>';
+			}
+		);
+
+		$body = $this->call( 'build_body', array( 'recovery_token' => 'token', 'cart_contents' => '[]' ), array( 'body' => '{products_table}' ) );
+
+		$this->assertStringNotContainsString( '<p>', $body );
+	}
+
+	private function stub_rendering(): void {
+		Functions\when( 'get_option' )->justReturn( null );
+		Functions\when( 'sanitize_text_field' )->returnArg();
+		Functions\when( 'wpautop' )->returnArg();
+		Functions\when( 'wc_get_cart_url' )->justReturn( 'https://shop.test/cart' );
+		Functions\when( 'add_query_arg' )->justReturn( 'https://shop.test/cart?recover' );
+		Functions\when( 'home_url' )->justReturn( 'https://shop.test/' );
+	}
+
+	/**
+	 * @param mixed ...$args Method arguments.
+	 * @return mixed
+	 */
+	private function call( string $method, ...$args ) {
+		$reflection = new \ReflectionMethod( RecoveryMailer::class, $method );
+		$reflection->setAccessible( true );
+
+		return $reflection->invoke( $this->mailer(), ...$args );
 	}
 
 	private function mailer(): RecoveryMailer {
