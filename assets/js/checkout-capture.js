@@ -8,6 +8,7 @@
 	}
 
 	var timer = null;
+	var lastSent = '';
 
 	// Block checkout uses `billing-*` ids only with a separate billing address, else `shipping-*`.
 	var FIELDS = {
@@ -39,11 +40,19 @@
 	}
 
 	function send() {
-		var data = collect();
+		if ( timer ) {
+			window.clearTimeout( timer );
+			timer = null;
+		}
 
-		if ( ! data.email ) {
+		var data = collect();
+		var body = JSON.stringify( data );
+
+		if ( ! data.email || body === lastSent ) {
 			return;
 		}
+
+		lastSent = body;
 
 		fetch( config.endpoint, {
 			method: 'POST',
@@ -52,8 +61,17 @@
 				'Content-Type': 'application/json',
 				'X-WP-Nonce': config.nonce
 			},
-			body: JSON.stringify( data )
-		} ).catch( function () {} );
+			body: body
+		} )
+			.then( function ( response ) {
+				// Allow a retry on the next change, e.g. after a stale nonce on a cached page.
+				if ( ! response.ok ) {
+					lastSent = '';
+				}
+			} )
+			.catch( function () {
+				lastSent = '';
+			} );
 	}
 
 	function schedule() {
