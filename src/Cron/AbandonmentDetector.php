@@ -100,6 +100,7 @@ final class AbandonmentDetector {
 		do {
 			$rows = CartSession::query()
 				->where( 'status', '=', CartSession::STATUS_ACTIVE )
+				->where( 'order_id', '=', 0 )
 				->where( 'abandonment_notified', '=', 0 )
 				->where( 'email', '!=', '' )
 				->where( 'items_count', '>', 0 )
@@ -164,6 +165,7 @@ final class AbandonmentDetector {
 		$flipped = CartSession::query()
 			->where( 'id', '=', $id )
 			->where( 'status', '=', CartSession::STATUS_ACTIVE )
+			->where( 'order_id', '=', 0 )
 			->where( 'items_count', '>', 0 )
 			->where( 'last_activity', '<', $cutoff )
 			->update_where( $fields );

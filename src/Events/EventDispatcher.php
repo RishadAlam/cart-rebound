@@ -376,6 +376,17 @@ final class EventDispatcher {
 	}
 
 	/**
+	 * Take back a lifetime recovery when its order is refunded or cancelled.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @return void
+	 */
+	public function recovery_reversed(): void {
+		update_option( self::OPTION_RECOVERED, max( 0, (int) get_option( self::OPTION_RECOVERED, 0 ) - 1 ), false );
+	}
+
+	/**
 	 * Build the shared, flat payload from a cart row.
 	 *
 	 * @since 0.1.0

@@ -15,6 +15,7 @@ use Automattic\WooCommerce\Utilities\OrderUtil;
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\QueryBuilder;
+use CartRebound\Recovery\OrderLinker;
 use WC_Order;
 
 /**
@@ -184,7 +185,7 @@ final class CartRepository {
 		$lifetime_abandoned = (int) get_option( EventDispatcher::OPTION_ABANDONED, 0 );
 		$lifetime_recovered = (int) get_option( EventDispatcher::OPTION_RECOVERED, 0 );
 		$rate               = $lifetime_abandoned > 0
-			? round( ( $lifetime_recovered / $lifetime_abandoned ) * 100, 1 )
+			? min( 100.0, round( ( $lifetime_recovered / $lifetime_abandoned ) * 100, 1 ) )
 			: 0.0;
 
 		return array(
@@ -368,6 +369,43 @@ final class CartRepository {
 	}
 
 	/**
+	 * Why a cart cannot be marked recovered against an order, or '' when it can.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param int $cart_id  Cart id.
+	 * @param int $order_id Order id.
+	 * @return string
+	 */
+	public function recovery_conflict( int $cart_id, int $order_id ): string {
+		$row = CartSession::find( $cart_id );
+
+		if ( ! is_array( $row ) ) {
+			return __( 'Cart not found.', 'cart-rebound' );
+		}
+
+		if ( (int) ( $row['order_id'] ?? 0 ) > 0 ) {
+			return __( 'This cart is already linked to an order.', 'cart-rebound' );
+		}
+
+		if ( ! function_exists( 'wc_get_order' ) || ! wc_get_order( $order_id ) instanceof WC_Order ) {
+			return __( 'Order not found.', 'cart-rebound' );
+		}
+
+		$holder = CartSession::query()->where( 'order_id', '=', $order_id )->first();
+
+		if ( is_array( $holder ) ) {
+			return sprintf(
+				/* translators: %d: ID of the cart already linked to the order. */
+				__( 'This order is already linked to cart #%d, so its revenue would be counted twice.', 'cart-rebound' ),
+				(int) ( $holder['id'] ?? 0 )
+			);
+		}
+
+		return '';
+	}
+
+	/**
 	 * Manually mark a cart as recovered against an order.
 	 *
 	 * @since 0.1.0
@@ -405,6 +443,10 @@ final class CartRepository {
 		);
 
 		if ( $updated ) {
+			// OrderLinker reads this meta to move the cart to lost if the order is later refunded or cancelled.
+			$order->update_meta_data( OrderLinker::META_CART, (string) $cart_id );
+			$order->save();
+
 			$fresh = CartSession::find( $cart_id );
 			$fresh = is_array( $fresh ) ? $fresh : $row;
 

@@ -121,7 +121,11 @@ final class CartsController extends Controller {
 	public function destroy( WP_REST_Request $request ): WP_REST_Response {
 		$deleted = $this->carts->delete_cart( (int) $request->get_param( 'id' ) );
 
-		return $this->respond( array( 'deleted' => $deleted ) );
+		if ( ! $deleted ) {
+			return $this->respond( array( 'message' => __( 'Cart not found.', 'cart-rebound' ) ), 404 );
+		}
+
+		return $this->respond( array( 'deleted' => true ) );
 	}
 
 	/**
@@ -133,7 +137,13 @@ final class CartsController extends Controller {
 	 * @return WP_REST_Response
 	 */
 	public function mark_recovered( MarkRecoveredRequest $request ): WP_REST_Response {
-		$data    = $request->validated();
+		$data     = $request->validated();
+		$conflict = $this->carts->recovery_conflict( (int) $data['id'], (int) $data['order_id'] );
+
+		if ( '' !== $conflict ) {
+			return $this->respond( array( 'message' => $conflict ), 409 );
+		}
+
 		$updated = $this->carts->mark_recovered( (int) $data['id'], (int) $data['order_id'] );
 
 		return $this->respond( array( 'updated' => $updated ) );

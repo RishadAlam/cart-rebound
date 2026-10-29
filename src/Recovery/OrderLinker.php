@@ -274,6 +274,10 @@ final class OrderLinker {
 
 			if ( CartSession::update( $cart_id, $lost ) ) {
 				$this->events->status_changed( array_merge( $row, $lost ), $status );
+
+				if ( CartSession::STATUS_RECOVERED === $status ) {
+					$this->events->recovery_reversed();
+				}
 			}
 
 			$order->add_order_note(
