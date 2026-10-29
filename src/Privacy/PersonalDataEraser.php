@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Data\CartDataCleaner;
 use CartRebound\Models\CartSession;
+use CartRebound\Models\Unsubscribe;
 
 /**
  * Erases cart sessions and their associated logs by shopper email address.
@@ -93,7 +94,7 @@ final class PersonalDataEraser {
 		);
 
 		if ( array() === $ids ) {
-			return $this->response( false, false, array(), true );
+			return $this->response( false, Unsubscribe::is_suppressed( $email ), $this->retention_notice( $email ), true );
 		}
 
 		$result  = $this->cleaner->delete( $ids );
@@ -109,8 +110,30 @@ final class PersonalDataEraser {
 		}
 
 		$remaining = $this->count_remaining( $email, $user_id );
+		$done      = 0 === $remaining;
 
-		return $this->response( $removed, false, array(), 0 === $remaining );
+		return $this->response(
+			$removed,
+			$done && Unsubscribe::is_suppressed( $email ),
+			$done ? $this->retention_notice( $email ) : array(),
+			$done
+		);
+	}
+
+	/**
+	 * Explain why an opted-out address stays on the suppression list.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $email Validated email address.
+	 * @return array<int, string>
+	 */
+	private function retention_notice( string $email ): array {
+		if ( ! Unsubscribe::is_suppressed( $email ) ) {
+			return array();
+		}
+
+		return array( __( 'The address was kept on the Cart Rebound unsubscribe list so it never receives recovery emails again.', 'cart-rebound' ) );
 	}
 
 	/**

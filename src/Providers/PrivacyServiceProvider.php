@@ -76,6 +76,11 @@ final class PrivacyServiceProvider extends ServiceProvider {
 			'callback'               => array( $exporter, 'export_logs' ),
 		);
 
+		$exporters['cart-rebound-unsubscribes'] = array(
+			'exporter_friendly_name' => __( 'Cart Rebound email opt-outs', 'cart-rebound' ),
+			'callback'               => array( $exporter, 'export_unsubscribes' ),
+		);
+
 		return $exporters;
 	}
 

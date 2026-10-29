@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Models\CartSession;
 use CartRebound\Models\LogEntry;
+use CartRebound\Models\Unsubscribe;
 
 /**
  * Exports cart sessions and related activity logs by shopper email address.
@@ -72,6 +73,41 @@ final class PersonalDataExporter {
 		return array(
 			'data' => array_map( array( $this, 'export_cart' ), $rows ),
 			'done' => $done,
+		);
+	}
+
+	/**
+	 * Export the address's entry on the recovery-email suppression list.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $email_address Email address requested by WordPress.
+	 * @param int    $page          One-based batch number.
+	 * @return array{data: array<int, array<string, mixed>>, done: bool}
+	 */
+	public function export_unsubscribes( string $email_address, int $page = 1 ): array {
+		unset( $page );
+
+		$email = $this->valid_email( $email_address );
+		$row   = '' !== $email ? Unsubscribe::query()->where( 'email', '=', $email )->first() : null;
+
+		if ( ! is_array( $row ) ) {
+			return $this->empty_result();
+		}
+
+		return array(
+			'data' => array(
+				array(
+					'group_id'    => 'cart-rebound-unsubscribes',
+					'group_label' => __( 'Cart Rebound email opt-outs', 'cart-rebound' ),
+					'item_id'     => 'cart-rebound-unsubscribe-' . (int) ( $row['id'] ?? 0 ),
+					'data'        => array(
+						$this->field( __( 'Email', 'cart-rebound' ), (string) ( $row['email'] ?? '' ) ),
+						$this->field( __( 'Unsubscribed at', 'cart-rebound' ), (string) ( $row['created_at'] ?? '' ) ),
+					),
+				),
+			),
+			'done' => true,
 		);
 	}
 
