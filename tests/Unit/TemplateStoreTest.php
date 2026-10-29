@@ -23,6 +23,12 @@ final class TemplateStoreTest extends TestCase {
 	protected function set_up(): void {
 		parent::set_up();
 
+		Functions\when( 'sanitize_hex_color' )->alias(
+			static function ( $color ) {
+				return preg_match( '/^#[0-9a-f]{6}$/i', (string) $color ) ? $color : null;
+			}
+		);
+
 		$this->options = array();
 		$this->counter = 0;
 
@@ -81,6 +87,27 @@ final class TemplateStoreTest extends TestCase {
 		$this->assertTrue( $seeded['table']['enabled'] );
 		$this->assertSame( array( 'image', 'name', 'quantity', 'subtotal' ), $seeded['table']['columns'] );
 		$this->assertSame( $seeded, $reread );
+	}
+
+	public function test_button_config_sanitises_and_falls_back(): void {
+		$config = TemplateStore::button_config(
+			array(
+				'enabled'    => false,
+				'background' => 'red; display:none',
+				'text_color' => '#ffffff',
+				'radius'     => 999,
+				'align'      => 'diagonal',
+				'size'       => 'large',
+			)
+		);
+
+		$this->assertFalse( $config['enabled'] );
+		$this->assertSame( '', $config['background'] );
+		$this->assertSame( '#ffffff', $config['text_color'] );
+		$this->assertSame( 40, $config['radius'] );
+		$this->assertSame( 'left', $config['align'] );
+		$this->assertSame( 'large', $config['size'] );
+		$this->assertSame( TemplateStore::button_defaults(), TemplateStore::button_config( null ) );
 	}
 
 	public function test_create_keeps_the_existing_default(): void {

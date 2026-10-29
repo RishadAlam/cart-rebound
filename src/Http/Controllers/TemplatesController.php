@@ -137,6 +137,7 @@ final class TemplatesController extends Controller {
 					'body'    => wp_kses_post( (string) $request->get_param( 'body' ) ),
 					'coupon'  => sanitize_text_field( (string) $request->get_param( 'coupon' ) ),
 					'table'   => TemplateStore::table_config( $request->get_param( 'table' ) ),
+					'button'  => TemplateStore::button_config( $request->get_param( 'button' ) ),
 				)
 			)
 		);
@@ -159,6 +160,7 @@ final class TemplatesController extends Controller {
 			'from_name'  => sanitize_text_field( (string) $request->get_param( 'from_name' ) ),
 			'from_email' => sanitize_email( (string) $request->get_param( 'from_email' ) ),
 			'table'      => TemplateStore::table_config( $request->get_param( 'table' ) ),
+			'button'     => TemplateStore::button_config( $request->get_param( 'button' ) ),
 		);
 
 		$sent     = $this->mailer->send_test( $email, $template );
@@ -209,6 +211,7 @@ final class TemplatesController extends Controller {
 			'coupon'     => (string) $request->param( 'coupon' ),
 			'is_default' => (bool) $request->param( 'is_default' ),
 			'table'      => $request->param( 'table' ),
+			'button'     => $request->param( 'button' ),
 		);
 	}
 }

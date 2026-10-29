@@ -6,6 +6,7 @@ declare global {
 		nonce: string;
 		initialRoute?: string;
 		pages?: Record<string, { url: string; title: string }>;
+		theme?: { accent: string; ink: string };
 		currency: {
 			code: string;
 			symbol: string;

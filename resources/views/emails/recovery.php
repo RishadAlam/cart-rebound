@@ -8,7 +8,7 @@
  * @package CartRebound
  *
  * @var string $content         The token-replaced message body (already paragraph-wrapped and escaped piece by piece).
- * @var string $recovery_url    The tokenised recovery URL.
+ * @var string $button_html     The recovery button, or '' when switched off or placed in the body via {recovery_button}.
  * @var string $unsubscribe_url The tokenised one-click unsubscribe URL.
  */
 
@@ -33,11 +33,7 @@ $cart_rebound_dir = is_rtl() ? 'rtl' : 'ltr';
 				<tr>
 					<td style="padding: 24px;">
 						<?php echo wp_kses_post( $content ); ?>
-						<p style="margin: 32px 0;">
-							<a href="<?php echo esc_url( $recovery_url ); ?>" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600;">
-								<?php echo esc_html__( 'Complete your order', 'cart-rebound' ); ?>
-							</a>
-						</p>
+						<?php echo wp_kses_post( $button_html ); ?>
 					</td>
 				</tr>
 				<tr>

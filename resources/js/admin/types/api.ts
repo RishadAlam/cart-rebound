@@ -118,6 +118,17 @@ export interface ProductTableConfig {
 	max_items: number;
 }
 
+export interface RecoveryButtonConfig {
+	enabled: boolean;
+	text: string;
+	background: string;
+	text_color: string;
+	radius: number;
+	align: 'left' | 'center' | 'right';
+	size: 'small' | 'medium' | 'large';
+	full_width: boolean;
+}
+
 export interface EmailTemplate {
 	id: string;
 	name: string;
@@ -128,6 +139,7 @@ export interface EmailTemplate {
 	coupon: string;
 	is_default: boolean;
 	table: ProductTableConfig;
+	button: RecoveryButtonConfig;
 }
 
 export interface LogEntry {

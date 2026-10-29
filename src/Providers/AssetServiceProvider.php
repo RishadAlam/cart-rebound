@@ -13,6 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Admin\Menu;
 use CartRebound\Core\ServiceProvider;
+use CartRebound\Support\Branding;
 
 /**
  * Enqueues the compiled admin assets resolved through Vite's manifest.
@@ -190,6 +191,7 @@ final class AssetServiceProvider extends ServiceProvider {
 			'nonce'        => wp_create_nonce( 'wp_rest' ),
 			'initialRoute' => $route,
 			'pages'        => $pages,
+			'theme'        => Branding::colors(),
 			'currency'     => array(
 				'code'              => $currency,
 				'symbol'            => function_exists( 'get_woocommerce_currency_symbol' )

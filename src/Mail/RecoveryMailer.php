@@ -15,6 +15,7 @@ use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
 use CartRebound\Recovery\RecoveryLink;
+use CartRebound\Support\Branding;
 use CartRebound\Support\Settings;
 use WC_Order;
 use WP_Error;
@@ -410,8 +411,9 @@ final class RecoveryMailer {
 		$tokens = $this->tokens( $row, $template );
 
 		// A subject line cannot carry markup, so the list tokens fall back to plain names.
-		$tokens['{products}']       = $tokens['{product_names}'];
-		$tokens['{products_table}'] = $tokens['{product_names}'];
+		$tokens['{products}']        = $tokens['{product_names}'];
+		$tokens['{products_table}']  = $tokens['{product_names}'];
+		$tokens['{recovery_button}'] = '';
 
 		$filled  = trim( $this->tidy_blank_tokens( str_replace( array_keys( $tokens ), array_values( $tokens ), (string) ( $template['subject'] ?? '' ) ) ) );
 		$subject = ltrim( $filled, " ,\t" );
@@ -734,7 +736,7 @@ final class RecoveryMailer {
 		// which would leave a stray </p> inside the injected product table. A list
 		// tag on its own line is then unwrapped so the table never sits inside <p>.
 		$html = wpautop( (string) ( $template['body'] ?? '' ) );
-		$html = (string) preg_replace( '#<p>\s*(\{(?:products|products_table)\})\s*</p>#', '$1', $html );
+		$html = (string) preg_replace( '#<p>\s*(\{(?:products|products_table|recovery_button)\})\s*</p>#', '$1', $html );
 
 		if ( '' === $tokens['{coupon_code}'] ) {
 			$html = (string) preg_replace( '#<p\b[^>]*>(?:(?!</p>).)*\{coupon_code\}(?:(?!</p>).)*</p>\s*#is', '', $html );
@@ -743,11 +745,14 @@ final class RecoveryMailer {
 		$content = $this->tidy_blank_tokens( str_replace( array_keys( $replacements ), array_values( $replacements ), $html ) );
 
 		// The markup tokens are escaped as they are built.
-		$content = str_replace(
-			array( '{products}', '{products_table}' ),
-			array( $this->products_html( $row ), $this->products_table_html( $row, $template ) ),
+		$button      = $this->button_html( $template, $recovery_url );
+		$placed      = false !== strpos( $content, '{recovery_button}' );
+		$content     = str_replace(
+			array( '{products}', '{products_table}', '{recovery_button}' ),
+			array( $this->products_html( $row ), $this->products_table_html( $row, $template ), $button ),
 			$content
 		);
+		$button_html = $placed ? '' : $button;
 
 		$template_path = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/recovery.php' : '';
 
@@ -760,6 +765,52 @@ final class RecoveryMailer {
 		$html = ob_get_clean();
 
 		return is_string( $html ) ? $html : $content;
+	}
+
+	/**
+	 * The recovery call-to-action as a bulletproof (Outlook-safe) table button, or '' when switched off.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array<string, mixed> $template     The email template.
+	 * @param string               $recovery_url Tokenised recovery URL.
+	 * @return string
+	 */
+	private function button_html( array $template, string $recovery_url ): string {
+		$config = TemplateStore::button_config( $template['button'] ?? array() );
+
+		if ( ! $config['enabled'] ) {
+			return '';
+		}
+
+		$theme                       = Branding::colors();
+		$background                  = '' !== $config['background'] ? $config['background'] : $theme['accent'];
+		$ink                         = '' !== $config['text_color']
+			? $config['text_color']
+			: ( '' !== $config['background'] ? Branding::readable_on( $background ) : $theme['ink'] );
+		$text                        = '' !== $config['text'] ? $config['text'] : __( 'Complete your order', 'cart-rebound' );
+		$metrics                     = array(
+			'small'  => array( '8px 16px', 14 ),
+			'medium' => array( '12px 24px', 16 ),
+			'large'  => array( '16px 32px', 18 ),
+		);
+		list( $padding, $font_size ) = $metrics[ $config['size'] ];
+
+		$radius = (int) $config['radius'] . 'px';
+		$width  = $config['full_width'] ? ' width="100%"' : '';
+		$link   = sprintf(
+			'<a href="%1$s" style="%2$s">%3$s</a>',
+			esc_url( $recovery_url ),
+			esc_attr( "display: block; padding: {$padding}; border-radius: {$radius}; color: {$ink}; font-size: {$font_size}px; font-weight: 600; line-height: 1.25; text-align: center; text-decoration: none;" ),
+			esc_html( $text )
+		);
+
+		return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0;"><tr>'
+			. '<td align="' . esc_attr( $config['align'] ) . '">'
+			. '<table role="presentation" cellpadding="0" cellspacing="0" border="0"' . $width . '><tr>'
+			. '<td align="center" bgcolor="' . esc_attr( $background ) . '" style="' . esc_attr( "background: {$background}; border-radius: {$radius};" ) . '">'
+			. $link
+			. '</td></tr></table></td></tr></table>';
 	}
 
 	/**

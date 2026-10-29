@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
+import { ButtonSettings } from '../components/ButtonSettings';
 import { ChipSelect } from '../components/ChipSelect';
 import { Combobox } from '../components/Combobox';
 import { FeedbackNotice, useFeedback } from '../components/FeedbackNotice';
@@ -21,13 +22,15 @@ import type {
 	EmailTemplate,
 	ProductColumn,
 	ProductTableConfig,
+	RecoveryButtonConfig,
 } from '../types/api';
 
-type Pane = 'message' | 'table' | 'delivery';
+type Pane = 'message' | 'table' | 'button' | 'delivery';
 
 const PANES: { id: Pane; label: string }[] = [
 	{ id: 'message', label: __('Message', 'cart-rebound') },
 	{ id: 'table', label: __('Product table', 'cart-rebound') },
+	{ id: 'button', label: __('Button', 'cart-rebound') },
 	{ id: 'delivery', label: __('Delivery', 'cart-rebound') },
 ];
 
@@ -51,6 +54,16 @@ const BLANK: EmailTemplate = {
 		show_variations: true,
 		show_total_row: false,
 		max_items: 0,
+	},
+	button: {
+		enabled: true,
+		text: '',
+		background: '',
+		text_color: '',
+		radius: 6,
+		align: 'left',
+		size: 'medium',
+		full_width: false,
 	},
 };
 
@@ -186,6 +199,13 @@ const TOKEN_DOCS = [
 	{
 		token: '{current_year}',
 		description: __('This year — handy in a footer.', 'cart-rebound'),
+	},
+	{
+		token: '{recovery_button}',
+		description: __(
+			'The “Complete your order” button, styled on the Button tab. Without it, the button sits below the message.',
+			'cart-rebound'
+		),
 	},
 	{
 		token: '{unsubscribe_url}',
@@ -340,6 +360,7 @@ export const Templates = () => {
 				body: form.body,
 				coupon: form.coupon,
 				table: form.table,
+				button: form.button,
 			},
 			{
 				onSuccess: (data) => {
@@ -398,6 +419,32 @@ export const Templates = () => {
 		</span>
 	);
 
+	const setButton = <K extends keyof RecoveryButtonConfig>(
+		key: K,
+		value: RecoveryButtonConfig[K]
+	) => {
+		setForm((previous) => ({
+			...previous,
+			button: { ...previous.button, [key]: value },
+		}));
+	};
+
+	const buttonToggle = (key: 'enabled' | 'full_width', id: string) => (
+		<span className="cr-switch">
+			<input
+				id={id}
+				type="checkbox"
+				checked={form.button[key]}
+				onChange={(event) => {
+					setButton(key, event.target.checked);
+				}}
+			/>
+			<span className="cr-switch__track">
+				<span className="cr-switch__thumb" />
+			</span>
+		</span>
+	);
+
 	const startNew = () => {
 		loadGuarded(
 			{ ...BLANK, name: __('New template', 'cart-rebound') },
@@ -415,6 +462,7 @@ export const Templates = () => {
 				from_name: form.from_name,
 				from_email: form.from_email,
 				table: form.table,
+				button: form.button,
 			},
 			{
 				onSuccess: (data) => {
@@ -475,6 +523,7 @@ export const Templates = () => {
 					coupon: form.coupon,
 					is_default: form.is_default,
 					table: form.table,
+					button: form.button,
 				},
 				{
 					onSuccess: (saved) => {
@@ -833,7 +882,7 @@ export const Templates = () => {
 							/>
 							<p className="cr-field__hint">
 								{__(
-									'Insert tag… drops a merge tag at the caret. A “Complete your order” button is added automatically below the body.',
+									'Insert tag… drops a merge tag at the caret. The button from the Button tab goes below the message, or wherever you place {recovery_button}.',
 									'cart-rebound'
 								)}
 							</p>
@@ -1168,6 +1217,26 @@ export const Templates = () => {
 								</div>
 							</>
 						)}
+					</div>
+
+					<div
+						className="cr-section"
+						id="cr-tpl-panel-button"
+						hidden={pane !== 'button'}
+						role="tabpanel"
+						aria-labelledby="cr-tpl-tab-button"
+					>
+						<p className="cr-section__desc">
+							{__(
+								'Style the button that brings the shopper back to their cart. Place {recovery_button} in the message to choose where it goes.',
+								'cart-rebound'
+							)}
+						</p>
+						<ButtonSettings
+							value={form.button}
+							onChange={setButton}
+							toggle={buttonToggle}
+						/>
 					</div>
 
 					<div

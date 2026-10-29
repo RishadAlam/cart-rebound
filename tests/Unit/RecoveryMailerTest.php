@@ -24,6 +24,12 @@ final class RecoveryMailerTest extends TestCase {
 	protected function set_up(): void {
 		parent::set_up();
 
+		Functions\when( 'sanitize_hex_color' )->alias(
+			static function ( $color ) {
+				return preg_match( '/^#[0-9a-f]{6}$/i', (string) $color ) ? $color : null;
+			}
+		);
+
 		$this->wpdb      = new RecoveryMailerWpdb();
 		$GLOBALS['wpdb'] = $this->wpdb;
 
@@ -217,6 +223,37 @@ final class RecoveryMailerTest extends TestCase {
 		$body = $this->call( 'build_body', array( 'recovery_token' => 'token', 'cart_contents' => '[]' ), array( 'body' => '{products_table}' ) );
 
 		$this->assertStringNotContainsString( '<p>', $body );
+	}
+
+	public function test_recovery_button_tag_places_the_button_inline(): void {
+		$this->stub_rendering();
+
+		$row      = array( 'recovery_token' => 'token', 'cart_contents' => '[]' );
+		$template = array(
+			'body'   => "<p>Top</p>\n{recovery_button}\n<p>Bottom</p>",
+			'button' => array( 'text' => 'Finish checkout', 'background' => '#f97316' ),
+		);
+
+		$body = $this->call( 'build_body', $row, $template );
+
+		$this->assertSame( 1, substr_count( $body, 'Finish checkout' ) );
+		$this->assertLessThan( strpos( $body, 'Bottom' ), strpos( $body, 'Finish checkout' ) );
+		$this->assertStringNotContainsString( '{recovery_button}', $body );
+	}
+
+	public function test_disabled_button_renders_nothing(): void {
+		$this->stub_rendering();
+
+		$body = $this->call(
+			'build_body',
+			array( 'recovery_token' => 'token', 'cart_contents' => '[]' ),
+			array(
+				'body'   => '<p>Hi</p>',
+				'button' => array( 'enabled' => false ),
+			)
+		);
+
+		$this->assertStringNotContainsString( 'Complete your order', $body );
 	}
 
 	private function stub_rendering(): void {

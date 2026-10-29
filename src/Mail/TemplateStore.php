@@ -49,6 +49,20 @@ final class TemplateStore {
 	public const TABLE_IMAGE_SIZES = array( 32, 48, 64 );
 
 	/**
+	 * Where the recovery button can sit across the email width.
+	 *
+	 * @var array<int, string>
+	 */
+	public const BUTTON_ALIGNMENTS = array( 'left', 'center', 'right' );
+
+	/**
+	 * Recovery button sizes.
+	 *
+	 * @var array<int, string>
+	 */
+	public const BUTTON_SIZES = array( 'small', 'medium', 'large' );
+
+	/**
 	 * Settings store (source of the seeded default template).
 	 *
 	 * @since 0.1.0
@@ -367,6 +381,7 @@ final class TemplateStore {
 			'coupon'     => sanitize_text_field( (string) ( $data['coupon'] ?? '' ) ),
 			'is_default' => ! empty( $data['is_default'] ),
 			'table'      => self::table_config( $data['table'] ?? array() ),
+			'button'     => self::button_config( $data['button'] ?? array() ),
 		);
 	}
 
@@ -392,6 +407,52 @@ final class TemplateStore {
 			'show_variations' => true,
 			'show_total_row'  => false,
 			'max_items'       => 0,
+		);
+	}
+
+	/**
+	 * Default recovery-button options. Empty colours follow the theme; empty text uses the translated label.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function button_defaults(): array {
+		return array(
+			'enabled'    => true,
+			'text'       => '',
+			'background' => '',
+			'text_color' => '',
+			'radius'     => 6,
+			'align'      => 'left',
+			'size'       => 'medium',
+			'full_width' => false,
+		);
+	}
+
+	/**
+	 * Sanitise raw recovery-button options against the defaults.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param mixed $raw Raw option data.
+	 * @return array<string, mixed>
+	 */
+	public static function button_config( $raw ): array {
+		$defaults = self::button_defaults();
+		$data     = is_array( $raw ) ? $raw : array();
+		$align    = (string) ( $data['align'] ?? '' );
+		$size     = (string) ( $data['size'] ?? '' );
+
+		return array(
+			'enabled'    => array_key_exists( 'enabled', $data ) ? (bool) $data['enabled'] : $defaults['enabled'],
+			'text'       => sanitize_text_field( (string) ( $data['text'] ?? '' ) ),
+			'background' => (string) sanitize_hex_color( (string) ( $data['background'] ?? '' ) ),
+			'text_color' => (string) sanitize_hex_color( (string) ( $data['text_color'] ?? '' ) ),
+			'radius'     => max( 0, min( 40, (int) ( $data['radius'] ?? $defaults['radius'] ) ) ),
+			'align'      => in_array( $align, self::BUTTON_ALIGNMENTS, true ) ? $align : $defaults['align'],
+			'size'       => in_array( $size, self::BUTTON_SIZES, true ) ? $size : $defaults['size'],
+			'full_width' => array_key_exists( 'full_width', $data ) ? (bool) $data['full_width'] : $defaults['full_width'],
 		);
 	}
 

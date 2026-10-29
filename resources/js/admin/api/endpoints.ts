@@ -13,6 +13,7 @@ import type {
 	PingResponse,
 	ProductReportRow,
 	ProductTableConfig,
+	RecoveryButtonConfig,
 	Settings,
 	Stats,
 	TimeseriesPoint,
@@ -184,6 +185,7 @@ export const previewTemplate = async (input: {
 	body: string;
 	coupon: string;
 	table: ProductTableConfig;
+	button: RecoveryButtonConfig;
 }): Promise<TemplatePreview> => {
 	const { data } = await apiClient.post<TemplatePreview>(
 		'templates/preview',
@@ -201,6 +203,7 @@ export const testTemplate = async (input: {
 	from_name: string;
 	from_email: string;
 	table: ProductTableConfig;
+	button: RecoveryButtonConfig;
 }): Promise<{ sent: boolean; message?: string }> => {
 	const { data } = await apiClient.post<{ sent: boolean; message?: string }>(
 		'templates/test',
