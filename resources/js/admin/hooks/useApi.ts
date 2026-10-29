@@ -104,6 +104,7 @@ export const useUpdateSettings = () => {
 const invalidateCarts = (queryClient: ReturnType<typeof useQueryClient>) => {
 	void queryClient.invalidateQueries({ queryKey: ['carts'] });
 	void queryClient.invalidateQueries({ queryKey: ['stats'] });
+	void queryClient.invalidateQueries({ queryKey: ['logs'] });
 };
 
 export const useDeleteCart = () => {
@@ -139,7 +140,16 @@ export const useUpdateStatus = () => {
 	});
 };
 
-export const useSendEmail = () => useMutation({ mutationFn: sendCartEmail });
+export const useSendEmail = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: sendCartEmail,
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ['logs'] });
+		},
+	});
+};
 
 export const useBulkCarts = () => {
 	const queryClient = useQueryClient();

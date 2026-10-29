@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
+import {
+	FeedbackNotice,
+	useFeedback,
+	type Feedback,
+} from '../components/FeedbackNotice';
 import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
+import { messageOf } from '../lib/errors';
 import { formatMoney } from '../lib/format';
 import { statusLabel } from '../lib/status';
 import {
@@ -35,8 +41,6 @@ const CHANGE_STATUSES = [
 ];
 const COLUMN_COUNT = 9;
 
-type Feedback = { type: 'success' | 'error'; message: string };
-
 const SORTABLE = {
 	id: 'id',
 	email: 'email',
@@ -46,11 +50,6 @@ const SORTABLE = {
 	activity: 'last_activity',
 	order: 'order_id',
 } as const;
-
-const messageOf = (error: unknown): string =>
-	error instanceof Error
-		? error.message
-		: __('Something went wrong.', 'cart-rebound');
 
 const STATUS_GUIDE: Array<[string, string]> = [
 	[
@@ -140,12 +139,11 @@ const orderLabel = (order: Order, currency: string): string => {
 	const who = order.email !== '' ? order.email : __('guest', 'cart-rebound');
 
 	return sprintf(
-		/* translators: 1: order number, 2: customer, 3: total, 4: currency code. */
-		__('#%1$s · %2$s · %3$s %4$s', 'cart-rebound'),
+		/* translators: 1: order number, 2: customer, 3: formatted order total. */
+		__('#%1$s · %2$s · %3$s', 'cart-rebound'),
 		order.number,
 		who,
-		order.total.toFixed(2),
-		currency
+		formatMoney(order.total, order.currency || currency)
 	);
 };
 
@@ -461,7 +459,26 @@ const CartRow = ({
 	};
 
 	const onDelete = () => {
+		// eslint-disable-next-line no-alert
+		const confirmed = window.confirm(
+			sprintf(
+				/* translators: %d: cart ID. */
+				__('Delete cart #%d?', 'cart-rebound'),
+				cart.id
+			)
+		);
+
+		if (!confirmed) {
+			return;
+		}
+
 		remove.mutate(cart.id, {
+			onSuccess: () => {
+				notify({
+					type: 'success',
+					message: __('Cart deleted.', 'cart-rebound'),
+				});
+			},
 			onError: (error: unknown) => {
 				notify({ type: 'error', message: messageOf(error) });
 			},
@@ -500,7 +517,7 @@ const CartRow = ({
 			</td>
 			<td>{cart.items_count}</td>
 			<td className="cr-money" style={{ textAlign: 'right' }}>
-				{formatMoney(cart.cart_total, currency)}
+				{formatMoney(cart.cart_total, cart.currency || currency)}
 			</td>
 			<td>
 				<StatusSelect
@@ -609,7 +626,8 @@ const CartDetail = ({
 		return null;
 	}
 
-	const money = (value: number) => formatMoney(value, currency);
+	const money = (value: number) =>
+		formatMoney(value, cart.currency || currency);
 	const name = `${cart.first_name} ${cart.last_name}`.trim();
 
 	const timeline: Array<[string, string]> = [
@@ -774,7 +792,7 @@ const CartDetail = ({
 
 				<section className="cr-detail__block">
 					<h3 className="cr-detail__blocktitle">
-						{__('Timeline', 'cart-rebound')}
+						{__('Timeline (UTC)', 'cart-rebound')}
 					</h3>
 					<ul className="cr-detail__timeline">
 						{timeline.map(([label, value]) => (
@@ -795,7 +813,11 @@ const CartDetail = ({
 				<button
 					type="button"
 					className="cr-btn is-ghost"
-					onClick={onClose}
+					onClick={() => {
+						// close() (not unmounting) hands focus back to the opener;
+						// the dialog's close event then clears the selection.
+						ref.current?.close();
+					}}
 				>
 					{__('Close', 'cart-rebound')}
 				</button>
@@ -874,8 +896,13 @@ const RecoverDialog = ({
 			className="cr-dialog"
 			aria-labelledby="cr-recover-title"
 			onClose={onClose}
+			onCancel={(event) => {
+				if (mark.isPending) {
+					event.preventDefault();
+				}
+			}}
 			onClick={(event) => {
-				if (event.target === ref.current) {
+				if (event.target === ref.current && !mark.isPending) {
 					onClose();
 				}
 			}}
@@ -1033,8 +1060,13 @@ const SendDialog = ({
 			className="cr-dialog"
 			aria-labelledby="cr-send-title"
 			onClose={onClose}
+			onCancel={(event) => {
+				if (send.isPending) {
+					event.preventDefault();
+				}
+			}}
 			onClick={(event) => {
-				if (event.target === ref.current) {
+				if (event.target === ref.current && !send.isPending) {
 					onClose();
 				}
 			}}
@@ -1099,6 +1131,53 @@ const SendDialog = ({
 	);
 };
 
+const FilteredEmptyHint = ({
+	search,
+	status,
+}: {
+	search: string;
+	status: string;
+}) => {
+	if (search === '') {
+		return (
+			<>
+				{sprintf(
+					/* translators: %s: cart status. */
+					__(
+						'No cart is currently “%s”. Pick another status or show all carts.',
+						'cart-rebound'
+					),
+					statusLabel(status)
+				)}
+			</>
+		);
+	}
+
+	if (status !== '') {
+		return (
+			<>
+				{sprintf(
+					/* translators: %s: cart status. */
+					__(
+						'Only “%s” carts are searched. Try a different search or show all statuses.',
+						'cart-rebound'
+					),
+					statusLabel(status)
+				)}
+			</>
+		);
+	}
+
+	return (
+		<>
+			{__(
+				'Try a different email, name, phone number or cart ID.',
+				'cart-rebound'
+			)}
+		</>
+	);
+};
+
 const skeletonWidth = (col: number): number | string => {
 	if (col === 0) {
 		return 16;
@@ -1142,7 +1221,7 @@ export const Carts = () => {
 	});
 	const [selected, setSelected] = useState<Set<number>>(new Set());
 	const [bulkStatus, setBulkStatus] = useState('');
-	const [feedback, setFeedback] = useState<Feedback | null>(null);
+	const [feedback, setFeedback] = useFeedback();
 	const [recoverCart, setRecoverCart] = useState<Cart | null>(null);
 	const [sendCart, setSendCart] = useState<Cart | null>(null);
 	const [detailCart, setDetailCart] = useState<Cart | null>(null);
@@ -1196,21 +1275,19 @@ export const Carts = () => {
 		};
 	}, [query, search]);
 
+	// Deleting the last rows of the last page leaves `page` past the end.
+	const pageOverflow =
+		!!data && items.length === 0 && data.total > 0 && page > 1;
+	const lastPage = data ? Math.max(1, Math.ceil(data.total / perPage)) : 1;
+
 	useEffect(() => {
-		if (!feedback) {
-			return;
+		if (pageOverflow) {
+			setPage((current) => Math.max(1, Math.min(current - 1, lastPage)));
 		}
+	}, [pageOverflow, lastPage]);
 
-		const timer = window.setTimeout(() => {
-			setFeedback(null);
-		}, 4000);
-
-		return () => {
-			window.clearTimeout(timer);
-		};
-	}, [feedback]);
-
-	const isEmpty = !isLoading && !isError && !!data && items.length === 0;
+	const isEmpty =
+		!isLoading && !isError && !!data && items.length === 0 && !pageOverflow;
 	const isFiltered = search !== '' || status !== '';
 
 	const clearSearch = () => {
@@ -1402,15 +1479,12 @@ export const Carts = () => {
 
 			<StatusGuide />
 
-			{feedback && (
-				<div
-					className={`cr-notice is-${feedback.type}`}
-					role="status"
-					style={{ marginBottom: 12 }}
-				>
-					{feedback.message}
-				</div>
-			)}
+			<FeedbackNotice
+				feedback={feedback}
+				onDismiss={() => {
+					setFeedback(null);
+				}}
+			/>
 
 			{selected.size > 0 && (
 				<div className="cr-bulkbar">
@@ -1443,9 +1517,29 @@ export const Carts = () => {
 							})),
 						]}
 						onChange={(next) => {
-							setBulkStatus(next);
+							if (next === '') {
+								setBulkStatus('');
 
-							if (next !== '') {
+								return;
+							}
+
+							// eslint-disable-next-line no-alert
+							const confirmed = window.confirm(
+								sprintf(
+									/* translators: 1: number of selected carts, 2: cart status. */
+									_n(
+										'Set %1$d selected cart to “%2$s”?',
+										'Set %1$d selected carts to “%2$s”?',
+										selected.size,
+										'cart-rebound'
+									),
+									selected.size,
+									statusLabel(next)
+								)
+							);
+
+							if (confirmed) {
+								setBulkStatus(next);
 								runBulk({ action: 'status', status: next });
 							}
 						}}
@@ -1495,15 +1589,15 @@ export const Carts = () => {
 										search
 									)
 								: __(
-										'No carts match this filter',
+										'No carts have this status',
 										'cart-rebound'
 									)}
 						</p>
 						<p>
-							{__(
-								'Try a different email, name, phone number or cart ID.',
-								'cart-rebound'
-							)}
+							<FilteredEmptyHint
+								search={search}
+								status={status}
+							/>
 						</p>
 						<button
 							type="button"
@@ -1584,7 +1678,7 @@ export const Carts = () => {
 										/>
 										<SortHeader
 											label={__(
-												'Last activity',
+												'Last activity (UTC)',
 												'cart-rebound'
 											)}
 											column={SORTABLE.activity}

@@ -8,7 +8,10 @@ import {
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { AdminLink } from '../components/AdminLink';
 import { Combobox } from '../components/Combobox';
+import { NumberInput } from '../components/NumberInput';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
+import { messageOf } from '../lib/errors';
 import type { Settings as SettingsData } from '../types/api';
 
 type NumberKey =
@@ -55,15 +58,34 @@ const Field = ({
 );
 
 export const Settings = () => {
-	const { data, isLoading } = useSettings();
+	const { data, isLoading, isError, error } = useSettings();
 	const update = useUpdateSettings();
 	const [form, setForm] = useState<SettingsData | null>(null);
+	const dirty =
+		!!form && !!data && JSON.stringify(form) !== JSON.stringify(data);
+
+	useUnsavedChanges(
+		dirty,
+		__('Your settings have unsaved changes. Discard them?', 'cart-rebound')
+	);
 
 	useEffect(() => {
 		if (data) {
 			setForm(data);
 		}
 	}, [data]);
+
+	if (isError && !form) {
+		return (
+			<div className="cr-notice is-error" role="alert">
+				{sprintf(
+					/* translators: %s: error message. */
+					__('Could not load settings: %s', 'cart-rebound'),
+					messageOf(error)
+				)}
+			</div>
+		);
+	}
 
 	if (isLoading || !form) {
 		return (
@@ -84,21 +106,25 @@ export const Settings = () => {
 		);
 	}
 
+	const clearSaveResult = () => {
+		if (!update.isPending) {
+			update.reset();
+		}
+	};
+
 	const setField = <K extends keyof SettingsData>(
 		key: K,
 		value: SettingsData[K]
 	) => {
+		clearSaveResult();
 		setForm((previous) =>
 			previous ? { ...previous, [key]: value } : previous
 		);
 	};
 
-	const onNumber =
-		(key: NumberKey) => (event: ChangeEvent<HTMLInputElement>) => {
-			const parsed = Number.parseInt(event.target.value, 10);
-
-			setField(key, Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
-		};
+	const onNumber = (key: NumberKey) => (value: number) => {
+		setField(key, value);
+	};
 
 	const onToggle =
 		(key: ToggleKey) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -227,11 +253,9 @@ export const Settings = () => {
 							'cart-rebound'
 						)}
 					>
-						<input
+						<NumberInput
 							id="cr-threshold"
 							className="cr-input"
-							type="number"
-							min={1}
 							value={form.abandonment_threshold}
 							onChange={onNumber('abandonment_threshold')}
 						/>
@@ -244,11 +268,9 @@ export const Settings = () => {
 							'cart-rebound'
 						)}
 					>
-						<input
+						<NumberInput
 							id="cr-scan"
 							className="cr-input"
-							type="number"
-							min={1}
 							value={form.scan_interval}
 							onChange={onNumber('scan_interval')}
 						/>
@@ -261,11 +283,9 @@ export const Settings = () => {
 							'cart-rebound'
 						)}
 					>
-						<input
+						<NumberInput
 							id="cr-cleanup"
 							className="cr-input"
-							type="number"
-							min={1}
 							value={form.cleanup_days}
 							onChange={onNumber('cleanup_days')}
 						/>
@@ -281,11 +301,9 @@ export const Settings = () => {
 							'cart-rebound'
 						)}
 					>
-						<input
+						<NumberInput
 							id="cr-converted-cleanup"
 							className="cr-input"
-							type="number"
-							min={1}
 							value={form.converted_cleanup_days}
 							onChange={onNumber('converted_cleanup_days')}
 						/>
@@ -458,11 +476,9 @@ export const Settings = () => {
 							'cart-rebound'
 						)}
 					>
-						<input
+						<NumberInput
 							id="cr-delay"
 							className="cr-input"
-							type="number"
-							min={1}
 							value={form.email_delay_minutes}
 							onChange={onNumber('email_delay_minutes')}
 						/>
@@ -471,20 +487,28 @@ export const Settings = () => {
 
 				<p className="cr-section__desc" style={{ marginTop: 4 }}>
 					{__(
-						'Email content — subject, rich-text body, sender, and coupon — is managed per template on the',
+						'Email content — subject, rich-text body, sender, and coupon — is managed per template. Automatic recovery emails use the template marked default.',
 						'cart-rebound'
 					)}{' '}
 					<AdminLink to="/templates">
-						{__('Templates', 'cart-rebound')}
-					</AdminLink>{' '}
-					{__(
-						'tab. Automatic recovery emails use the template marked default.',
-						'cart-rebound'
-					)}
+						{__('Manage templates', 'cart-rebound')}
+					</AdminLink>
 				</p>
 			</div>
 
 			<div className="cr-savebar">
+				{update.isError && (
+					<div
+						className="cr-notice is-error cr-savebar__notice"
+						role="alert"
+					>
+						{sprintf(
+							/* translators: %s: error message. */
+							__('Settings were not saved: %s', 'cart-rebound'),
+							messageOf(update.error)
+						)}
+					</div>
+				)}
 				<button
 					type="submit"
 					className="cr-btn is-primary"
@@ -494,11 +518,18 @@ export const Settings = () => {
 						? __('Saving…', 'cart-rebound')
 						: __('Save settings', 'cart-rebound')}
 				</button>
-				{update.isSuccess && (
-					<span className="cr-saved">
-						{__('Settings saved.', 'cart-rebound')}
-					</span>
-				)}
+				<span
+					className={
+						update.isSuccess ? 'cr-saved' : 'cr-savebar__state'
+					}
+					role="status"
+				>
+					{update.isSuccess && __('Settings saved.', 'cart-rebound')}
+					{!update.isSuccess &&
+						dirty &&
+						!update.isPending &&
+						__('Unsaved changes', 'cart-rebound')}
+				</span>
 			</div>
 		</form>
 	);

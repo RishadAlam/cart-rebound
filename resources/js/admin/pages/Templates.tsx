@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { ChipSelect } from '../components/ChipSelect';
 import { Combobox } from '../components/Combobox';
+import { FeedbackNotice, useFeedback } from '../components/FeedbackNotice';
 import { RichTextEditor, type MergeTag } from '../components/RichTextEditor';
 import type { TemplatePreview } from '../api/endpoints';
 import {
@@ -14,13 +15,13 @@ import {
 	useTemplates,
 	useUpdateTemplate,
 } from '../hooks/useApi';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
+import { messageOf } from '../lib/errors';
 import type {
 	EmailTemplate,
 	ProductColumn,
 	ProductTableConfig,
 } from '../types/api';
-
-type Feedback = { type: 'success' | 'error'; message: string };
 
 type Pane = 'message' | 'table' | 'delivery';
 
@@ -210,11 +211,6 @@ const TAGS: MergeTag[] = TOKEN_DOCS.map((doc) => ({
 	value: doc.token,
 }));
 
-const messageOf = (error: unknown): string =>
-	error instanceof Error
-		? error.message
-		: __('Something went wrong.', 'cart-rebound');
-
 const EyeIcon = () => (
 	<svg
 		viewBox="0 0 16 16"
@@ -234,7 +230,13 @@ const EyeIcon = () => (
 );
 
 export const Templates = () => {
-	const { data: templates, isLoading, isFetching } = useTemplates();
+	const {
+		data: templates,
+		isLoading,
+		isFetching,
+		isError,
+		error: loadError,
+	} = useTemplates();
 	const { data: coupons } = useCoupons();
 	const create = useCreateTemplate();
 	const update = useUpdateTemplate();
@@ -249,7 +251,7 @@ export const Templates = () => {
 	const [form, setForm] = useState<EmailTemplate>(BLANK);
 	const [baseline, setBaseline] = useState<EmailTemplate>(BLANK);
 	const [editorKey, setEditorKey] = useState(0);
-	const [feedback, setFeedback] = useState<Feedback | null>(null);
+	const [feedback, setFeedback] = useFeedback();
 	const [testEmail, setTestEmail] = useState('');
 	const [previewData, setPreviewData] = useState<TemplatePreview | null>(
 		null
@@ -259,6 +261,12 @@ export const Templates = () => {
 	const isNew = selectedId === 'new';
 	const busy = create.isPending || update.isPending;
 	const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
+	const discardPrompt = __(
+		'This template has unsaved changes. Discard them?',
+		'cart-rebound'
+	);
+
+	useUnsavedChanges(dirty, discardPrompt);
 
 	const load = (template: EmailTemplate, id: string) => {
 		setSelectedId(id);
@@ -276,12 +284,7 @@ export const Templates = () => {
 		if (
 			dirty &&
 			// eslint-disable-next-line no-alert
-			!window.confirm(
-				__(
-					'This template has unsaved changes. Discard them?',
-					'cart-rebound'
-				)
-			)
+			!window.confirm(discardPrompt)
 		) {
 			return;
 		}
@@ -315,20 +318,6 @@ export const Templates = () => {
 			load(initial, initial.id);
 		}
 	}, [templates, selectedId, isFetching]);
-
-	useEffect(() => {
-		if (!feedback) {
-			return;
-		}
-
-		const timer = window.setTimeout(() => {
-			setFeedback(null);
-		}, 4000);
-
-		return () => {
-			window.clearTimeout(timer);
-		};
-	}, [feedback]);
 
 	useEffect(() => {
 		const el = previewRef.current;
@@ -516,6 +505,7 @@ export const Templates = () => {
 		setDefault.mutate(form.id, {
 			onSuccess: () => {
 				setField('is_default', true);
+				setBaseline((previous) => ({ ...previous, is_default: true }));
 				setFeedback({
 					type: 'success',
 					message: __('Default template set.', 'cart-rebound'),
@@ -576,6 +566,18 @@ export const Templates = () => {
 		);
 	}
 
+	if (isError && !templates) {
+		return (
+			<div className="cr-notice is-error" role="alert">
+				{sprintf(
+					/* translators: %s: error message. */
+					__('Could not load templates: %s', 'cart-rebound'),
+					messageOf(loadError)
+				)}
+			</div>
+		);
+	}
+
 	const list = templates ?? [];
 	const needle = query.trim().toLowerCase();
 	const visible =
@@ -597,16 +599,6 @@ export const Templates = () => {
 
 	return (
 		<div>
-			{feedback && (
-				<div
-					className={`cr-notice is-${feedback.type}`}
-					role="status"
-					style={{ marginBottom: 12 }}
-				>
-					{feedback.message}
-				</div>
-			)}
-
 			<div className="cr-templates">
 				<aside className="cr-templates__list cr-card">
 					<div className="cr-templates__listhead">
@@ -744,9 +736,11 @@ export const Templates = () => {
 							{PANES.map((item) => (
 								<button
 									key={item.id}
+									id={`cr-tpl-tab-${item.id}`}
 									type="button"
 									role="tab"
 									aria-selected={pane === item.id}
+									aria-controls={`cr-tpl-panel-${item.id}`}
 									className={`cr-tab${pane === item.id ? ' is-active' : ''}`}
 									onClick={() => {
 										setPane(item.id);
@@ -760,8 +754,10 @@ export const Templates = () => {
 
 					<div
 						className="cr-section"
+						id="cr-tpl-panel-message"
 						hidden={pane !== 'message'}
 						role="tabpanel"
+						aria-labelledby="cr-tpl-tab-message"
 					>
 						<div className="cr-field">
 							<label
@@ -873,8 +869,10 @@ export const Templates = () => {
 
 					<div
 						className="cr-section"
+						id="cr-tpl-panel-table"
 						hidden={pane !== 'table'}
 						role="tabpanel"
+						aria-labelledby="cr-tpl-tab-table"
 					>
 						<p className="cr-section__desc">
 							{__(
@@ -1174,8 +1172,10 @@ export const Templates = () => {
 
 					<div
 						className="cr-section"
+						id="cr-tpl-panel-delivery"
 						hidden={pane !== 'delivery'}
 						role="tabpanel"
+						aria-labelledby="cr-tpl-tab-delivery"
 					>
 						<p className="cr-section__desc">
 							{__(
@@ -1275,6 +1275,12 @@ export const Templates = () => {
 					</div>
 
 					<div className="cr-savebar is-sticky">
+						<FeedbackNotice
+							feedback={feedback}
+							onDismiss={() => {
+								setFeedback(null);
+							}}
+						/>
 						<button
 							type="button"
 							className="cr-btn is-primary"

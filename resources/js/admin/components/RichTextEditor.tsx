@@ -157,6 +157,7 @@ export const RichTextEditor = ({
 
 	const pendingSeed = useRef<string | null>(value);
 	const seedEmits = useRef(false);
+	const lastEmitted = useRef<string | null>(null);
 
 	useEffect(() => {
 		const el = ref.current;
@@ -169,6 +170,7 @@ export const RichTextEditor = ({
 		el.innerHTML = html;
 		wrapLooseNodes(el);
 		pendingSeed.current = null;
+		lastEmitted.current = el.innerHTML;
 
 		try {
 			document.execCommand('defaultParagraphSeparator', false, 'p');
@@ -187,6 +189,7 @@ export const RichTextEditor = ({
 
 	const emit = () => {
 		if (ref.current) {
+			lastEmitted.current = ref.current.innerHTML;
 			onChange(ref.current.innerHTML);
 		}
 	};
@@ -822,7 +825,16 @@ export const RichTextEditor = ({
 							onFocus={syncActive}
 							onBlur={() => {
 								saveSelection();
-								emit();
+
+								// The browser re-serialises seeded HTML (e.g. `<br />`
+								// to `<br>`); emitting that on a bare focus/blur would
+								// mark an untouched template as changed.
+								if (
+									ref.current?.innerHTML !==
+									lastEmitted.current
+								) {
+									emit();
+								}
 							}}
 						/>
 					</div>

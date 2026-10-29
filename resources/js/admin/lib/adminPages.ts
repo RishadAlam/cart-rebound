@@ -132,9 +132,17 @@ export const syncWithAdmin = (router: AppRouter) => {
 	window.addEventListener('popstate', () => {
 		const route = routeForUrl(window.location.href);
 
-		if (route !== undefined) {
-			void router.navigate(route, { replace: true });
+		if (route === undefined) {
+			return;
 		}
+
+		void router.navigate(route, { replace: true }).then(() => {
+			// A blocked navigation (unsaved changes) leaves the browser on the
+			// other page's URL; point it back at the page still on screen.
+			if (router.state.location.pathname !== route) {
+				show(router.state.location.pathname, 'replace');
+			}
+		});
 	});
 
 	document

@@ -3,10 +3,12 @@
 import {
 	useCallback,
 	useEffect,
+	useId,
 	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
+	type FocusEvent,
 	type KeyboardEvent,
 } from 'react';
 import { __ } from '@wordpress/i18n';
@@ -26,6 +28,8 @@ interface Position {
 }
 
 const SEARCH_THRESHOLD = 7;
+const MIN_POP_WIDTH = 200;
+const VIEWPORT_GUTTER = 8;
 
 export const Combobox = ({
 	id,
@@ -64,6 +68,9 @@ export const Combobox = ({
 		maxHeight: 280,
 	});
 
+	const baseId = useId();
+	const listId = `${baseId}-list`;
+	const optionId = (index: number) => `${baseId}-opt-${index}`;
 	const rootRef = useRef<HTMLDivElement>(null);
 	const triggerRef = useRef<HTMLButtonElement>(null);
 	const popRef = useRef<HTMLDivElement>(null);
@@ -98,9 +105,12 @@ export const Combobox = ({
 		const below = window.innerHeight - rect.bottom - margin;
 		const above = rect.top - margin;
 		const openUp = below < 220 && above > below;
+		const popWidth = Math.max(rect.width, MIN_POP_WIDTH);
+		const maxLeft =
+			document.documentElement.clientWidth - popWidth - VIEWPORT_GUTTER;
 
 		setPos({
-			left: rect.left,
+			left: Math.max(VIEWPORT_GUTTER, Math.min(rect.left, maxLeft)),
 			width: rect.width,
 			top: rect.bottom + margin,
 			bottom: window.innerHeight - rect.top + margin,
@@ -197,10 +207,24 @@ export const Combobox = ({
 		}
 	};
 
+	// Tabbing away leaves the popover floating over unrelated content; a null
+	// relatedTarget (click on blank space) is left to the mousedown handler.
+	const onBlur = (event: FocusEvent<HTMLDivElement>) => {
+		const next = event.relatedTarget;
+
+		if (open && next && !rootRef.current?.contains(next)) {
+			setOpen(false);
+		}
+	};
+
+	const activeId =
+		open && filtered[activeIndex] ? optionId(activeIndex) : undefined;
+
 	return (
 		<div
 			className={`cr-combo${compact ? ' is-compact' : ''}`}
 			ref={rootRef}
+			onBlur={onBlur}
 		>
 			<button
 				ref={triggerRef}
@@ -210,8 +234,11 @@ export const Combobox = ({
 					tone ? ` cr-combo__trigger--${tone}` : ''
 				}`}
 				disabled={disabled}
+				role="combobox"
 				aria-haspopup="listbox"
 				aria-expanded={open}
+				aria-controls={open ? listId : undefined}
+				aria-activedescendant={canSearch ? undefined : activeId}
 				aria-label={ariaLabel}
 				onClick={() => {
 					if (open) {
@@ -249,11 +276,9 @@ export const Combobox = ({
 				<div
 					ref={popRef}
 					className="cr-combo__pop"
-					role="listbox"
-					aria-label={ariaLabel}
 					style={{
 						left: pos.left,
-						width: Math.max(pos.width, 200),
+						width: Math.max(pos.width, MIN_POP_WIDTH),
 						maxHeight: pos.maxHeight,
 						...(pos.openUp
 							? { bottom: pos.bottom }
@@ -268,6 +293,8 @@ export const Combobox = ({
 							value={query}
 							placeholder={__('Search…', 'cart-rebound')}
 							aria-label={__('Search options', 'cart-rebound')}
+							aria-controls={listId}
+							aria-activedescendant={activeId}
 							onChange={(event) => {
 								setQuery(event.target.value);
 								setActiveIndex(0);
@@ -276,7 +303,12 @@ export const Combobox = ({
 						/>
 					)}
 
-					<div className="cr-combo__list">
+					<div
+						className="cr-combo__list"
+						id={listId}
+						role="listbox"
+						aria-label={ariaLabel}
+					>
 						{filtered.length === 0 ? (
 							<div className="cr-combo__empty">
 								{__('No matches', 'cart-rebound')}
@@ -285,8 +317,10 @@ export const Combobox = ({
 							filtered.map((option, index) => (
 								<button
 									key={option.value}
+									id={optionId(index)}
 									type="button"
 									role="option"
+									tabIndex={-1}
 									aria-selected={option.value === value}
 									className={`cr-combo__option${
 										index === activeIndex

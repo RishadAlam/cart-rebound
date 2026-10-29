@@ -62,3 +62,18 @@ export const formatMoney = (amount: number, currency: string): string => {
 		return `${amount.toFixed(2)} ${currency}`;
 	}
 };
+
+// Plain numbers have no store setting to mirror, so follow the admin's locale
+// (wp-admin sets <html lang> from the user's language).
+export const formatNumber = (value: number, maximumFractionDigits = 1) => {
+	try {
+		return new Intl.NumberFormat(
+			document.documentElement.lang || undefined,
+			{
+				maximumFractionDigits,
+			}
+		).format(value);
+	} catch {
+		return String(value);
+	}
+};

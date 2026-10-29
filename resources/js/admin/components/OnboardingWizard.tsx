@@ -1,12 +1,8 @@
-import {
-	useEffect,
-	useRef,
-	useState,
-	type ChangeEvent,
-	type ReactNode,
-} from 'react';
-import { __ } from '@wordpress/i18n';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { __, sprintf } from '@wordpress/i18n';
+import { NumberInput } from './NumberInput';
 import { useSettings, useUpdateSettings } from '../hooks/useApi';
+import { messageOf } from '../lib/errors';
 
 interface WizardForm {
 	guest_tracking: boolean;
@@ -201,18 +197,29 @@ export const OnboardingWizard = () => {
 
 	const onNumber =
 		(key: 'abandonment_threshold' | 'email_delay_minutes') =>
-		(event: ChangeEvent<HTMLInputElement>) => {
-			const parsed = Number.parseInt(event.target.value, 10);
-			setField(key, Number.isNaN(parsed) ? 1 : Math.max(1, parsed));
+		(value: number) => {
+			setField(key, value);
 		};
 
+	// Close the dialog only once the choice is stored, so a failed save can be
+	// shown and retried instead of the wizard silently returning next visit.
 	const finish = (apply: boolean) => {
-		setDismissed(true);
-		update.mutate({
-			...settings,
-			...(apply ? form : {}),
-			onboarding_complete: true,
-		});
+		if (update.isPending) {
+			return;
+		}
+
+		update.mutate(
+			{
+				...settings,
+				...(apply ? form : {}),
+				onboarding_complete: true,
+			},
+			{
+				onSuccess: () => {
+					ref.current?.close();
+				},
+			}
+		);
 	};
 
 	const stepLabels = [
@@ -296,11 +303,9 @@ export const OnboardingWizard = () => {
 						{__('Abandonment threshold', 'cart-rebound')}
 					</label>
 					<div className="cr-onb__inputrow">
-						<input
+						<NumberInput
 							id="cr-wiz-threshold"
 							className="cr-input"
-							type="number"
-							min={1}
 							value={form.abandonment_threshold}
 							onChange={onNumber('abandonment_threshold')}
 						/>
@@ -358,11 +363,9 @@ export const OnboardingWizard = () => {
 								{__('Send delay', 'cart-rebound')}
 							</label>
 							<div className="cr-onb__inputrow">
-								<input
+								<NumberInput
 									id="cr-wiz-delay"
 									className="cr-input"
-									type="number"
-									min={1}
 									value={form.email_delay_minutes}
 									onChange={onNumber('email_delay_minutes')}
 								/>
@@ -392,6 +395,10 @@ export const OnboardingWizard = () => {
 			ref={ref}
 			className="cr-onb"
 			aria-label={__('Set up Cart Rebound', 'cart-rebound')}
+			onCancel={(event) => {
+				event.preventDefault();
+				finish(false);
+			}}
 			onClose={() => {
 				setDismissed(true);
 			}}
@@ -441,11 +448,25 @@ export const OnboardingWizard = () => {
 						<div className="cr-onb__fields">{current.body}</div>
 					</div>
 
+					{update.isError && (
+						<div className="cr-notice is-error" role="alert">
+							{sprintf(
+								/* translators: %s: error message. */
+								__(
+									'Your choices were not saved: %s',
+									'cart-rebound'
+								),
+								messageOf(update.error)
+							)}
+						</div>
+					)}
+
 					<div className="cr-onb__footer">
 						<button
 							type="button"
 							className="cr-btn is-ghost is-sm"
 							onClick={() => finish(false)}
+							disabled={update.isPending}
 						>
 							{__('Skip', 'cart-rebound')}
 						</button>
@@ -464,8 +485,11 @@ export const OnboardingWizard = () => {
 								type="button"
 								className="cr-btn is-primary"
 								onClick={() => finish(true)}
+								disabled={update.isPending}
 							>
-								{__('Finish setup', 'cart-rebound')}
+								{update.isPending
+									? __('Saving…', 'cart-rebound')
+									: __('Finish setup', 'cart-rebound')}
 							</button>
 						) : (
 							<button

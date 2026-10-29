@@ -1,5 +1,5 @@
 // Catmull-Rom splines can overshoot the baseline, so the plot is clipped to its rect.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { __, sprintf } from '@wordpress/i18n';
 import { formatMoney } from '../lib/format';
@@ -106,13 +106,13 @@ const smoothPath = (pts: Pt[]): string => {
 	return d;
 };
 
+// A callback ref, so the observer attaches whenever the plot mounts — it is
+// absent while the empty state shows and appears once data arrives.
 const useWidth = () => {
-	const ref = useRef<HTMLDivElement>(null);
+	const [el, setEl] = useState<HTMLDivElement | null>(null);
 	const [width, setWidth] = useState(0);
 
 	useEffect(() => {
-		const el = ref.current;
-
 		if (!el) {
 			return;
 		}
@@ -128,9 +128,9 @@ const useWidth = () => {
 		return () => {
 			observer.disconnect();
 		};
-	}, []);
+	}, [el]);
 
-	return { ref, width };
+	return { ref: setEl, width };
 };
 
 const Legend = () => (

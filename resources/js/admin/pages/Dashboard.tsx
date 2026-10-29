@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { isAxiosError } from 'axios';
 import { __, _n, sprintf } from '@wordpress/i18n';
@@ -10,7 +10,8 @@ import {
 	useStats,
 	useTimeseries,
 } from '../hooks/useApi';
-import { formatMoney } from '../lib/format';
+import { formatMoney, formatNumber } from '../lib/format';
+import { messageOf } from '../lib/errors';
 import { statusLabel } from '../lib/status';
 import type { Cart, ProductReportRow, Stats } from '../types/api';
 
@@ -42,16 +43,42 @@ const ArrowIcon = () => (
 	</svg>
 );
 
-const Hint = ({ text }: { text: string }) => (
-	<span className="cr-hint">
-		<button type="button" className="cr-hint__btn" aria-label={text}>
-			<InfoIcon />
-		</button>
-		<span className="cr-hint__bubble" aria-hidden="true">
-			{text}
+// Centred bubbles on right-column metrics run past the viewport on narrow
+// screens, so those anchor to the hint's right edge instead.
+const Hint = ({ text }: { text: string }) => {
+	const ref = useRef<HTMLSpanElement>(null);
+	const [alignEnd, setAlignEnd] = useState(false);
+
+	const place = () => {
+		const rect = ref.current?.getBoundingClientRect();
+
+		if (rect) {
+			setAlignEnd(
+				rect.left + rect.width / 2 >
+					document.documentElement.clientWidth / 2
+			);
+		}
+	};
+
+	return (
+		<span
+			ref={ref}
+			className="cr-hint"
+			onMouseEnter={place}
+			onFocus={place}
+		>
+			<button type="button" className="cr-hint__btn" aria-label={text}>
+				<InfoIcon />
+			</button>
+			<span
+				className={`cr-hint__bubble${alignEnd ? ' is-end' : ''}`}
+				aria-hidden="true"
+			>
+				{text}
+			</span>
 		</span>
-	</span>
-);
+	);
+};
 
 const Metric = ({
 	label,
@@ -147,7 +174,11 @@ const Overview = ({ stats }: { stats: Stats }) => {
 			/>
 			<Metric
 				label={__('Recovery rate', 'cart-rebound')}
-				value={`${stats.recovery_rate}%`}
+				value={sprintf(
+					/* translators: %s: recovery rate as a number, e.g. 12.5. */
+					__('%1$s%%', 'cart-rebound'),
+					formatNumber(stats.recovery_rate)
+				)}
 				hint={__(
 					'Share of all abandoned carts that were recovered, measured over the plugin’s lifetime so cleanup cannot inflate it.',
 					'cart-rebound'
@@ -265,7 +296,9 @@ const RecentCarts = () => {
 									{__('Cart total', 'cart-rebound')}
 								</th>
 								<th>{__('Status', 'cart-rebound')}</th>
-								<th>{__('Last activity', 'cart-rebound')}</th>
+								<th>
+									{__('Last activity (UTC)', 'cart-rebound')}
+								</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -297,7 +330,8 @@ const RecentCarts = () => {
 										>
 											{formatMoney(
 												cart.cart_total,
-												data?.currency ?? ''
+												cart.currency ||
+													(data?.currency ?? '')
 											)}
 										</td>
 										<td>
@@ -409,6 +443,37 @@ const ProductReport = ({
 	</section>
 );
 
+const TrendBody = ({
+	series,
+	currency,
+}: {
+	series: ReturnType<typeof useTimeseries>;
+	currency: string;
+}) => {
+	if (series.isError) {
+		return (
+			<div className="cr-notice is-error" role="alert">
+				{sprintf(
+					/* translators: %s: error message. */
+					__('Could not load the revenue chart: %s', 'cart-rebound'),
+					messageOf(series.error)
+				)}
+			</div>
+		);
+	}
+
+	if (!series.data) {
+		return (
+			<div
+				className="cr-skeleton"
+				style={{ height: 288, borderRadius: 10 }}
+			/>
+		);
+	}
+
+	return <RevenueChart points={series.data} currency={currency} />;
+};
+
 export const Dashboard = () => {
 	const [days, setDays] = useState(30);
 	const stats = useStats();
@@ -471,17 +536,10 @@ export const Dashboard = () => {
 					<RangePicker days={days} onChange={setDays} />
 				</header>
 
-				{series.isLoading || !series.data ? (
-					<div
-						className="cr-skeleton"
-						style={{ height: 288, borderRadius: 10 }}
-					/>
-				) : (
-					<RevenueChart
-						points={series.data}
-						currency={stats.data?.currency ?? ''}
-					/>
-				)}
+				<TrendBody
+					series={series}
+					currency={stats.data?.currency ?? ''}
+				/>
 			</section>
 
 			<div className="cr-reports">

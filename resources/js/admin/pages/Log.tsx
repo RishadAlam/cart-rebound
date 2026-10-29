@@ -4,6 +4,7 @@ import { AdminLink } from '../components/AdminLink';
 import { Combobox } from '../components/Combobox';
 import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
 import { useClearLog, useLogs, useSettings } from '../hooks/useApi';
+import { messageOf } from '../lib/errors';
 import type { LogEntry } from '../types/api';
 
 const LEVELS = ['', 'info', 'success', 'warning', 'error'];
@@ -103,6 +104,14 @@ export const Log = () => {
 
 	const items = data?.items ?? [];
 	const isEmpty = !isLoading && !isError && items.length === 0;
+	const isFiltered = level !== '' || event !== '' || cart !== '';
+
+	const clearFilters = () => {
+		setLevel('');
+		setEvent('');
+		setCart('');
+		setPage(1);
+	};
 
 	const onClear = () => {
 		// eslint-disable-next-line no-alert
@@ -189,13 +198,30 @@ export const Log = () => {
 					type="button"
 					className="cr-btn is-danger is-sm"
 					onClick={onClear}
-					disabled={clear.isPending || (!!data && data.total === 0)}
+					disabled={
+						clear.isPending ||
+						(!isFiltered && !!data && data.total === 0)
+					}
 				>
 					{clear.isPending
 						? __('Clearing…', 'cart-rebound')
 						: __('Clear log', 'cart-rebound')}
 				</button>
 			</div>
+
+			{clear.isError && (
+				<div
+					className="cr-notice is-error"
+					role="alert"
+					style={{ marginBottom: 12 }}
+				>
+					{sprintf(
+						/* translators: %s: error message. */
+						__('Could not clear the log: %s', 'cart-rebound'),
+						messageOf(clear.error)
+					)}
+				</div>
+			)}
 
 			<div className="cr-card">
 				{isError && (
@@ -208,7 +234,31 @@ export const Log = () => {
 					</div>
 				)}
 
-				{isEmpty && (
+				{isEmpty && isFiltered && (
+					<div className="cr-empty">
+						<p className="cr-empty__title">
+							{__(
+								'No entries match these filters',
+								'cart-rebound'
+							)}
+						</p>
+						<p>
+							{__(
+								'Try another level, event or cart ID.',
+								'cart-rebound'
+							)}
+						</p>
+						<button
+							type="button"
+							className="cr-btn is-ghost is-sm"
+							onClick={clearFilters}
+						>
+							{__('Clear filters', 'cart-rebound')}
+						</button>
+					</div>
+				)}
+
+				{isEmpty && !isFiltered && (
 					<div className="cr-empty">
 						<p className="cr-empty__title">
 							{__('Nothing logged yet', 'cart-rebound')}
