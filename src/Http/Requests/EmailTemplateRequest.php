@@ -29,8 +29,10 @@ final class EmailTemplateRequest extends FormRequest {
 	 */
 	public function rules(): array {
 		return array(
-			'name'    => 'required|string|max:120',
-			'subject' => 'required|string|max:200',
+			'name'       => 'required|string|max:120',
+			'subject'    => 'required|string|max:200',
+			'from_name'  => 'string|max:120',
+			'from_email' => 'email|max:100',
 		);
 	}
 }

@@ -97,17 +97,18 @@ abstract class FormRequest {
 			$rules      = explode( '|', $definition );
 			$value      = $this->request->get_param( $field );
 			$is_present = null !== $value && '' !== $value;
+			$label      = str_replace( '_', ' ', $field );
 
 			if ( ! $is_present ) {
 				if ( in_array( 'required', $rules, true ) ) {
 					/* translators: %s: form field name. */
-					$errors[ $field ][] = sprintf( __( 'The %s field is required.', 'cart-rebound' ), $field );
+					$errors[ $field ][] = sprintf( __( 'The %s field is required.', 'cart-rebound' ), $label );
 				}
 				continue;
 			}
 
 			foreach ( $rules as $rule ) {
-				$message = $this->check_rule( $rule, $field, $value );
+				$message = $this->check_rule( $rule, $label, $value );
 
 				if ( null !== $message ) {
 					$errors[ $field ][] = $message;
@@ -118,9 +119,11 @@ abstract class FormRequest {
 		}
 
 		if ( array() !== $errors ) {
+			$first = reset( $errors );
+
 			return new WP_Error(
 				'cart_rebound_validation_failed',
-				__( 'The submitted data is invalid.', 'cart-rebound' ),
+				is_array( $first ) && isset( $first[0] ) ? $first[0] : __( 'The submitted data is invalid.', 'cart-rebound' ),
 				array(
 					'status' => 422,
 					'errors' => $errors,
@@ -220,7 +223,7 @@ abstract class FormRequest {
 	 */
 	private function length_of( $value ): ?int {
 		if ( is_string( $value ) ) {
-			return strlen( $value );
+			return function_exists( 'mb_strlen' ) ? mb_strlen( $value ) : strlen( $value );
 		}
 
 		if ( is_array( $value ) ) {

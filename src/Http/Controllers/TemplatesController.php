@@ -107,9 +107,18 @@ final class TemplatesController extends Controller {
 	 * @return WP_REST_Response
 	 */
 	public function destroy( WP_REST_Request $request ): WP_REST_Response {
-		$deleted = $this->templates->delete( sanitize_text_field( (string) $request->get_param( 'id' ) ) );
+		$id       = sanitize_text_field( (string) $request->get_param( 'id' ) );
+		$template = $this->templates->get( $id );
 
-		return $this->respond( array( 'deleted' => $deleted ) );
+		if ( null === $template ) {
+			return $this->respond( array( 'message' => __( 'Template not found.', 'cart-rebound' ) ), 404 );
+		}
+
+		if ( ! empty( $template['is_default'] ) ) {
+			return $this->respond( array( 'message' => __( 'The default template can’t be deleted. Make another template the default first.', 'cart-rebound' ) ), 409 );
+		}
+
+		return $this->respond( array( 'deleted' => $this->templates->delete( $id ) ) );
 	}
 
 	/**
@@ -173,7 +182,11 @@ final class TemplatesController extends Controller {
 	public function set_default( WP_REST_Request $request ): WP_REST_Response {
 		$updated = $this->templates->set_default( sanitize_text_field( (string) $request->get_param( 'id' ) ) );
 
-		return $this->respond( array( 'updated' => $updated ) );
+		if ( ! $updated ) {
+			return $this->respond( array( 'message' => __( 'Template not found.', 'cart-rebound' ) ), 404 );
+		}
+
+		return $this->respond( array( 'updated' => true ) );
 	}
 
 	/**
