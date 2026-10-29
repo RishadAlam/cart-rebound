@@ -82,18 +82,34 @@ final class TemplateStore {
 		}
 
 		$templates = array();
+		$upgraded  = false;
 
 		foreach ( $stored as $row ) {
-			if ( is_array( $row ) ) {
-				$templates[] = $this->normalise( $row );
+			if ( ! is_array( $row ) ) {
+				continue;
 			}
+
+			$template = $this->normalise( $row );
+
+			if ( $this->is_untouched_legacy_seed( $template ) ) {
+				$template = array_merge( $template, $this->starter() );
+				$upgraded = true;
+			}
+
+			$templates[] = $template;
 		}
 
 		if ( array() === $templates ) {
 			return $this->seed_and_persist();
 		}
 
-		return $this->ensure_one_default( $templates );
+		$templates = $this->ensure_one_default( $templates );
+
+		if ( $upgraded ) {
+			$this->save( $templates );
+		}
+
+		return $templates;
 	}
 
 	/**
@@ -240,18 +256,82 @@ final class TemplateStore {
 	 * @return array<string, mixed>
 	 */
 	private function seed(): array {
+		$defaults = $this->settings->defaults();
+		$subject  = (string) $this->settings->get( 'email_subject' );
+		$body     = (string) $this->settings->get( 'email_body' );
+		$content  = $subject === $defaults['email_subject'] && $body === $defaults['email_body']
+			? $this->starter()
+			: array(
+				'subject' => $subject,
+				'body'    => wpautop( $body ),
+			);
+
 		return $this->sanitise(
-			array(
-				'id'         => $this->new_id(),
-				'name'       => __( 'Default', 'cart-rebound' ),
-				'subject'    => (string) $this->settings->get( 'email_subject' ),
-				'body'       => wpautop( (string) $this->settings->get( 'email_body' ) ),
-				'from_name'  => (string) $this->settings->get( 'email_from_name' ),
-				'from_email' => (string) $this->settings->get( 'email_from_email' ),
-				'coupon'     => (string) $this->settings->get( 'email_coupon' ),
-				'is_default' => true,
+			array_merge(
+				array(
+					'id'         => $this->new_id(),
+					'name'       => __( 'Default', 'cart-rebound' ),
+					'from_name'  => (string) $this->settings->get( 'email_from_name' ),
+					'from_email' => (string) $this->settings->get( 'email_from_email' ),
+					'coupon'     => (string) $this->settings->get( 'email_coupon' ),
+					'is_default' => true,
+				),
+				$content
 			)
 		);
+	}
+
+	/**
+	 * The starter subject, body and product table for a fresh default template.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function starter(): array {
+		$paragraphs = array(
+			'<h2>' . __( 'Your cart is still here', 'cart-rebound' ) . '</h2>',
+			'<p>' . __( 'Hi {first_name},', 'cart-rebound' ) . '</p>',
+			'<p>' . __( 'You left a few things in your cart at {store_name}. We saved them for you, so you can pick up where you stopped.', 'cart-rebound' ) . '</p>',
+			'{products_table}',
+			'<p>' . sprintf(
+				/* translators: %s: the {coupon_code} merge tag wrapped in <strong>. */
+				__( 'Use the code %s at checkout to save on this order.', 'cart-rebound' ),
+				'<strong>{coupon_code}</strong>'
+			) . '</p>',
+			'<p>' . __( 'Questions about your order or delivery? Reply to this email and {manager_name} will help.', 'cart-rebound' ) . '</p>',
+		);
+
+		return array(
+			'subject' => __( '{first_name}, your cart at {store_name} is saved', 'cart-rebound' ),
+			'body'    => implode( "\n", $paragraphs ),
+			'table'   => self::table_config(
+				array_merge(
+					self::table_defaults(),
+					array(
+						'enabled'        => true,
+						'columns'        => array( 'image', 'name', 'quantity', 'subtotal' ),
+						'show_total_row' => true,
+					)
+				)
+			),
+		);
+	}
+
+	/**
+	 * Whether a stored template is still the pre-1.1.3 seed nobody edited.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array<string, mixed> $template Normalised template.
+	 * @return bool
+	 */
+	private function is_untouched_legacy_seed( array $template ): bool {
+		$defaults = $this->settings->defaults();
+
+		return $template['subject'] === $defaults['email_subject']
+			&& trim( (string) $template['body'] ) === trim( wpautop( (string) $defaults['email_body'] ) )
+			&& self::table_defaults() === $template['table'];
 	}
 
 	/**

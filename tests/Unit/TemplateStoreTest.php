@@ -77,8 +77,10 @@ final class TemplateStoreTest extends TestCase {
 		$seeded = $store->all()[0];
 		$reread = $store->all()[0];
 
-		$this->assertSame( TemplateStore::table_defaults(), $seeded['table'] );
-		$this->assertSame( array_keys( $reread ), array_keys( $seeded ) );
+		$this->assertSame( array_keys( TemplateStore::table_defaults() ), array_keys( $seeded['table'] ) );
+		$this->assertTrue( $seeded['table']['enabled'] );
+		$this->assertSame( array( 'image', 'name', 'quantity', 'subtotal' ), $seeded['table']['columns'] );
+		$this->assertSame( $seeded, $reread );
 	}
 
 	public function test_create_keeps_the_existing_default(): void {
