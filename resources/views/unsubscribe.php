@@ -13,11 +13,21 @@
  * @var string $field_flag  Hidden-field name carrying the unsubscribe flag.
  * @var string $field_token Hidden-field name carrying the token.
  * @var string $home_url    Store home URL.
+ * @var string $store_name  Store name, entity-decoded.
+ * @var string $store_email Store contact address.
+ * @var array{url: string, is_icon: bool}  $logo   Site logo, else site icon (url may be empty).
+ * @var array{accent: string, ink: string} $colors Theme accent and the text colour readable on it.
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid';
+$cart_rebound_state  = isset( $state ) && is_string( $state ) ? $state : 'invalid';
+$cart_rebound_titles = array(
+	'confirm' => __( 'Unsubscribe from recovery emails?', 'cart-rebound' ),
+	'done'    => __( 'You’re unsubscribed', 'cart-rebound' ),
+	'invalid' => __( 'This link is no longer valid', 'cart-rebound' ),
+);
+$cart_rebound_title  = $cart_rebound_titles[ $cart_rebound_state ] ?? $cart_rebound_titles['invalid'];
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo esc_attr( str_replace( '_', '-', get_locale() ) ); ?>">
@@ -25,23 +35,54 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="robots" content="noindex, nofollow" />
-	<title><?php echo esc_html__( 'Unsubscribe', 'cart-rebound' ); ?></title>
+	<title><?php echo esc_html( $cart_rebound_title . ' – ' . $store_name ); ?></title>
 	<style>
 		:root {
-			--cr-bg: oklch(0.985 0.003 256);
-			--cr-surface: oklch(1 0 0);
-			--cr-border: oklch(0.916 0.006 256);
-			--cr-ink: oklch(0.27 0.02 264);
-			--cr-muted: oklch(0.52 0.018 264);
-			--cr-accent: oklch(0.55 0.16 264);
-			--cr-accent-hover: oklch(0.49 0.16 264);
-			--cr-accent-ink: oklch(0.99 0 0);
-			--cr-accent-soft: oklch(0.955 0.03 264);
-			--cr-success: oklch(0.5 0.12 155);
-			--cr-success-soft: oklch(0.95 0.04 155);
-			--cr-warning: oklch(0.5 0.1 70);
-			--cr-warning-soft: oklch(0.945 0.05 80);
+			--cr-bg: #f8f9fb;
+			--cr-surface: #fff;
+			--cr-border: #e3e5ea;
+			--cr-ink: #262b36;
+			--cr-muted: #616774;
+			--cr-accent: #3d55c4;
+			--cr-accent-hover: #2f45a8;
+			--cr-accent-ink: #fdfdfd;
+			--cr-accent-soft: #eaeefb;
+			--cr-success: #23714a;
+			--cr-success-soft: #e3f4ea;
+			--cr-warning: #7a5a14;
+			--cr-warning-soft: #fbefd6;
 			--cr-ease: cubic-bezier(0.23, 1, 0.32, 1);
+		}
+
+		@supports (color: oklch(0 0 0)) {
+			:root {
+				--cr-bg: oklch(0.985 0.003 256);
+				--cr-surface: oklch(1 0 0);
+				--cr-border: oklch(0.916 0.006 256);
+				--cr-ink: oklch(0.27 0.02 264);
+				--cr-muted: oklch(0.52 0.018 264);
+				--cr-accent: oklch(0.55 0.16 264);
+				--cr-accent-hover: oklch(0.49 0.16 264);
+				--cr-accent-ink: oklch(0.99 0 0);
+				--cr-accent-soft: oklch(0.955 0.03 264);
+				--cr-success: oklch(0.5 0.12 155);
+				--cr-success-soft: oklch(0.95 0.04 155);
+				--cr-warning: oklch(0.5 0.1 70);
+				--cr-warning-soft: oklch(0.945 0.05 80);
+			}
+		}
+
+		:root {
+			--cr-accent: <?php echo esc_html( $colors['accent'] ); ?>;
+			--cr-accent-hover: <?php echo esc_html( $colors['accent'] ); ?>;
+			--cr-accent-ink: <?php echo esc_html( $colors['ink'] ); ?>;
+		}
+
+		@supports (color: color-mix(in srgb, red, red)) {
+			:root {
+				--cr-accent-hover: color-mix(in srgb, var(--cr-accent) 85%, #000);
+				--cr-accent-soft: color-mix(in srgb, var(--cr-accent) 12%, #fff);
+			}
 		}
 
 		* { box-sizing: border-box; }
@@ -81,22 +122,26 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 		.cr-brand {
 			display: inline-flex;
 			align-items: center;
-			gap: 8px;
+			gap: 10px;
 			margin-bottom: 28px;
-			color: var(--cr-accent);
-			font-size: 14px;
+			color: var(--cr-ink);
+			font-size: 15px;
 			font-weight: 600;
 			letter-spacing: -0.01em;
 		}
 
-		.cr-brand__mark {
-			display: grid;
-			place-items: center;
-			width: 26px;
-			height: 26px;
-			border-radius: 8px;
-			background: var(--cr-accent);
-			color: var(--cr-accent-ink);
+		.cr-brand__logo {
+			display: block;
+			max-width: 180px;
+			max-height: 48px;
+			width: auto;
+			height: auto;
+		}
+
+		.cr-brand__icon {
+			width: 28px;
+			height: 28px;
+			border-radius: 6px;
 		}
 
 		.cr-icon {
@@ -127,6 +172,11 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 			font-size: 15px;
 		}
 
+		.cr-text a {
+			color: var(--cr-accent);
+			text-underline-offset: 2px;
+		}
+
 		.cr-actions {
 			margin-top: 28px;
 			display: flex;
@@ -142,6 +192,7 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 			padding: 12px 20px;
 			border: 1px solid transparent;
 			border-radius: 10px;
+			font-family: inherit;
 			font-size: 15px;
 			font-weight: 600;
 			text-decoration: none;
@@ -174,12 +225,14 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 <body>
 	<main class="cr-card">
 		<div class="cr-brand">
-			<span class="cr-brand__mark" aria-hidden="true">
-				<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" aria-hidden="true">
-					<path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" />
-				</svg>
-			</span>
-			<?php echo esc_html__( 'Cart Rebound', 'cart-rebound' ); ?>
+			<?php if ( '' !== $logo['url'] && ! $logo['is_icon'] ) : ?>
+				<img class="cr-brand__logo" src="<?php echo esc_url( $logo['url'] ); ?>" alt="<?php echo esc_attr( $store_name ); ?>" />
+			<?php else : ?>
+				<?php if ( '' !== $logo['url'] ) : ?>
+					<img class="cr-brand__icon" src="<?php echo esc_url( $logo['url'] ); ?>" alt="" />
+				<?php endif; ?>
+				<?php echo esc_html( $store_name ); ?>
+			<?php endif; ?>
 		</div>
 
 		<?php if ( 'confirm' === $cart_rebound_state ) : ?>
@@ -189,9 +242,7 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 					<path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
 				</svg>
 			</div>
-			<h1 class="cr-title">
-				<?php echo esc_html__( 'Unsubscribe from recovery emails?', 'cart-rebound' ); ?>
-			</h1>
+			<h1 class="cr-title"><?php echo esc_html( $cart_rebound_title ); ?></h1>
 			<p class="cr-text">
 				<?php echo esc_html__( 'You’ll stop receiving reminder emails about items left in your cart. This won’t affect order or account emails.', 'cart-rebound' ); ?>
 			</p>
@@ -214,9 +265,7 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 					<path d="m5 12.5 4.2 4.2L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
 				</svg>
 			</div>
-			<h1 class="cr-title">
-				<?php echo esc_html__( 'You’re unsubscribed', 'cart-rebound' ); ?>
-			</h1>
+			<h1 class="cr-title"><?php echo esc_html( $cart_rebound_title ); ?></h1>
 			<p class="cr-text">
 				<?php echo esc_html__( 'You won’t receive any more cart recovery emails from this store.', 'cart-rebound' ); ?>
 			</p>
@@ -234,11 +283,15 @@ $cart_rebound_state = isset( $state ) && is_string( $state ) ? $state : 'invalid
 					<circle cx="12" cy="16" r="1" fill="currentColor" />
 				</svg>
 			</div>
-			<h1 class="cr-title">
-				<?php echo esc_html__( 'This link is no longer valid', 'cart-rebound' ); ?>
-			</h1>
+			<h1 class="cr-title"><?php echo esc_html( $cart_rebound_title ); ?></h1>
 			<p class="cr-text">
-				<?php echo esc_html__( 'This unsubscribe link has expired or has already been used.', 'cart-rebound' ); ?>
+				<?php
+				printf(
+					/* translators: %s: store contact email address. */
+					esc_html__( 'This unsubscribe link has expired. To stop these emails, reply to any of them or write to %s.', 'cart-rebound' ),
+					'<a href="' . esc_url( 'mailto:' . $store_email ) . '">' . esc_html( $store_email ) . '</a>'
+				);
+				?>
 			</p>
 			<div class="cr-actions">
 				<a class="cr-btn cr-btn--primary" href="<?php echo esc_url( $home_url ); ?>">

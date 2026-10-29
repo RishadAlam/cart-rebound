@@ -14,6 +14,7 @@ defined( 'ABSPATH' ) || exit;
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
+use CartRebound\Support\Branding;
 
 /**
  * Intercepts a tokenised unsubscribe link and suppresses the address.
@@ -69,13 +70,13 @@ final class UnsubscribeHandler {
 			return;
 		}
 
-		if ( ! $this->is_post() ) {
-			// A GET may be a mail-client or scanner prefetch: never unsubscribe on it, only offer a confirmation.
-			$this->render( 'confirm', $token );
-		}
-
 		$row   = CartSession::query()->where( 'recovery_token', '=', $token )->first();
 		$email = is_array( $row ) ? (string) ( $row['email'] ?? '' ) : '';
+
+		if ( ! $this->is_post() ) {
+			// A GET may be a mail-client or scanner prefetch: never unsubscribe on it, only offer a confirmation.
+			$this->render( '' !== $email ? 'confirm' : 'invalid', $token );
+		}
 
 		$result = '' !== $email ? Unsubscribe::suppress( $email ) : '';
 
@@ -126,6 +127,10 @@ final class UnsubscribeHandler {
 		$field_flag  = RecoveryLink::QUERY_UNSUBSCRIBE;
 		$field_token = RecoveryLink::QUERY_TOKEN;
 		$home_url    = home_url( '/' );
+		$store_name  = Branding::store_name();
+		$store_email = (string) get_option( 'admin_email' );
+		$logo        = Branding::logo();
+		$colors      = Branding::colors();
 
 		require $view;
 		exit;
