@@ -79,8 +79,10 @@ export const Combobox = ({
 			return options;
 		}
 
-		return options.filter((option) =>
-			option.label.toLowerCase().includes(term)
+		return options.filter(
+			(option) =>
+				option.label.toLowerCase().includes(term) ||
+				option.value.toLowerCase().includes(term)
 		);
 	}, [options, query, canSearch]);
 
