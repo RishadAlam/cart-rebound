@@ -1,6 +1,6 @@
-=== Cart Rebound – Cart Abandonment Recovery for WooCommerce ===
+=== Cart Rebound – Abandoned Cart Recovery for WooCommerce ===
 Contributors: rishadbitcode
-Tags: woocommerce, abandoned cart, cart abandonment, cart recovery, recovery emails
+Tags: abandoned cart, cart recovery, woocommerce, cart abandonment, abandoned cart recovery
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -8,32 +8,33 @@ Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Free, self-hosted WooCommerce cart abandonment recovery with automated emails, secure restore links, coupons, and revenue reports.
+Self-hosted WooCommerce abandoned cart recovery plugin. Track cart abandonment, send automated recovery emails, and restore checkouts in 1 click.
 
 == Description ==
 
-Cart Rebound is a **free, self-hosted WooCommerce cart abandonment recovery plugin**. Track abandoned carts, send automated recovery emails, restore saved carts in one click, and measure recovered revenue without an external account, subscription, or cart recovery service.
+**Cart Rebound** is a lightweight, self-hosted **abandoned cart recovery plugin for WooCommerce**. It helps you track abandoned carts, send automated **cart recovery** emails with coupon codes, and restore lost checkouts in one click — without monthly SaaS fees or external accounts.
 
 Shopping cart abandonment happens when a customer adds products but leaves before completing checkout. Cart Rebound records eligible carts, detects when they become inactive, and gives the shopper a direct path back to purchase. Store owners get clear abandoned cart reports, customizable reminder emails, secure recovery URLs, product insights, and accurate cart-to-order attribution inside WordPress.
 
-The plugin supports logged-in customers, optional guest cart tracking, classic WooCommerce checkout, the Checkout Block / Store API, variable products, applied coupons, and WooCommerce High-Performance Order Storage (HPOS). Guest tracking and automatic emails are disabled by default so each store can choose when to enable them.
+The plugin supports logged-in customers, optional guest cart tracking, classic WooCommerce checkout, the **Checkout Block / Store API**, **variable products**, applied coupons, and **WooCommerce High-Performance Order Storage (HPOS)**. Guest tracking and automatic emails are disabled by default so each store can choose when to enable them.
 
 = WooCommerce abandoned cart recovery at a glance =
 
-* Track active shopping carts for registered customers.
-* Optionally capture guest carts and checkout email addresses.
-* Detect cart abandonment after a configurable period of inactivity.
-* Send one automatic cart reminder email after a chosen delay.
-* Create reusable rich-text recovery email templates.
-* Personalize email content with customer, product, recovery-link, and coupon data.
-* Restore saved products, quantities, variations, and coupon codes in one click.
-* Send recovery emails manually when a personal follow-up is appropriate.
-* Measure abandoned carts, recovered orders, recovery rate, and recovered revenue.
-* Review product-level abandonment and recovery data.
-* Receive an optional admin email when a tracked cart becomes a paid order.
-* Keep tracking data in the site's own WordPress database.
-* Use WordPress privacy exporters, erasers, retention controls, and unsubscribe links.
-* Connect custom workflows through WordPress actions and protected REST endpoints.
+- Track active shopping carts for registered customers, with a one-switch option to pause tracking anytime.
+- Optionally capture guest carts and checkout email addresses, names, and phone numbers.
+- Detect cart abandonment after a configurable period of inactivity using WooCommerce Action Scheduler.
+- Send one automatic cart reminder email after a chosen delay, or send manual follow-ups anytime.
+- Create reusable rich-text and HTML recovery email templates with live sample-data previews and test sends.
+- Insert a customizable `{products_table}` with configurable columns, product thumbnails, variations, and tax-inclusive pricing.
+- Personalize email content with customer, product, recovery-link, store, and existing WooCommerce coupon merge tags.
+- Restore saved products, quantities, variations, and coupon codes in one click via secure tokenized URLs.
+- Auto-fill the returning shopper's email, name, and phone number at checkout for faster conversion.
+- Search tracked carts by customer email, name, phone number, cart ID, or WooCommerce order number.
+- Measure abandoned carts, recovered orders, recovery rate, recovered revenue, and product-level abandonment data.
+- Receive an optional admin email notification when a tracked cart becomes a paid order.
+- Keep all tracking data in your site's own WordPress database with configurable retention and auto-cleanup controls.
+- Use built-in WordPress privacy exporters, erasers, and one-click email unsubscribe links.
+- Connect custom workflows through WordPress lifecycle actions and protected REST endpoints.
 
 = How Cart Rebound recovers abandoned carts =
 
@@ -195,11 +196,37 @@ WooCommerce must be installed and active. Compatibility with a specific third-pa
 * WordPress 6.2 or later.
 * PHP 7.4 or later.
 
+= Privacy =
+
+Cart Rebound may store a plugin-specific session identifier, WordPress user ID, email address, first and last name, phone number, cart products, quantities, variations, prices, coupon codes, totals, currency, cart and order status, order references, recovered amounts, timestamps, and related activity logs.
+
+For tracked carts, a first-party `cart_rebound_ref` cookie associates a browser with its cart. It contains a random plugin-specific identifier, is HTTP-only, uses SameSite=Lax, uses the Secure attribute on HTTPS, and expires after approximately 30 days.
+
+Guest tracking is disabled by default. Logged-in cart tracking operates while the plugin is active. Store owners should evaluate their legal basis and consent requirements before enabling and using tracking or recovery email features.
+
+Automatic recovery emails are disabled by default. When enabled, messages use the site's WordPress mail system. Cart Rebound does not transmit tracked-cart data, telemetry, or usage information to the plugin author or a Cart Rebound service. A site's hosting, SMTP, mail, security, backup, or integration providers may process data according to that site's configuration.
+
+By default, stale active and unrecovered carts are removed after 30 days, while recovered and completed carts are removed after 365 days. Both periods are configurable. Associated activity logs are deleted with each removed cart.
+
+Cart Rebound registers exporters and erasers with the WordPress personal-data tools. Requests are matched by email and, for registered shoppers, WordPress user ID. Security-sensitive recovery tokens and checkout URLs are excluded from personal-data exports.
+
+Suggested disclosure text is added to the WordPress privacy-policy guide. Site owners remain responsible for consent, lawful processing, email-marketing rules, retention settings, responding to privacy requests, securing stored information, and publishing an accurate privacy notice.
+
+= Development =
+
+Human-readable PHP, TypeScript, React, and CSS source, tests, build configuration, and documentation are available at [github.com/RishadAlam/cart-rebound](https://github.com/RishadAlam/cart-rebound).
+
+The plugin exposes lifecycle actions for custom integrations, including `cart_rebound_abandoned`, `cart_rebound_recovered` and `cart_rebound_cart_status_changed`. Administrative REST routes use the `cart-rebound/v1` namespace and require the appropriate permission.
+
+Production packages can be created with `pnpm production-zip`. See the repository documentation for Composer, Node.js, pnpm, testing, translation, and local-development instructions.
+
+Bundled third-party JavaScript libraries are GPL-compatible and distributed under the MIT License. Copyright and license notices are included in `THIRD-PARTY-LICENSES.txt`.
+
 == Installation ==
 
 1. Install and activate WooCommerce.
-2. In WordPress, go to **Plugins → Add New → Upload Plugin** and upload the Cart Rebound zip file. You can also copy the plugin directory to `/wp-content/plugins/`.
-3. Activate **Cart Rebound – Cart Abandonment Recovery for WooCommerce**.
+2. In WordPress, go to **Plugins → Add New Plugin**, search for **Cart Rebound**, and click **Install Now** (or upload the zip file via **Plugins → Add New Plugin → Upload Plugin**).
+3. Activate **Cart Rebound – Abandoned Cart Recovery for WooCommerce**.
 4. Open **Cart Rebound** in the WordPress admin menu.
 5. Review the onboarding screen and open **Settings**.
 6. Choose the abandonment threshold, scan interval, paid order statuses, and retention periods.
@@ -384,7 +411,22 @@ Cart Rebound focuses on recovering eligible carts after shoppers leave. Its prod
 
 = Can developers integrate Cart Rebound with other automation? =
 
-Yes. Cart Rebound fires a WordPress action at every step of the cart lifecycle: `cart_rebound_cart_created`, `cart_rebound_cart_captured`, `cart_rebound_abandoned`, `cart_rebound_recovery_email_sent`, `cart_rebound_recovery_coupon_sent`, `cart_rebound_recovery_email_failed`, `cart_rebound_recovery_link_clicked`, `cart_rebound_order_linked`, `cart_rebound_recovered`, `cart_rebound_unsubscribed`, plus `cart_rebound_cart_status_changed` and one `cart_rebound_cart_status_{status}` action per status. Each passes one flat payload array designed for custom code and automation tools. The plugin's administrative application also uses protected REST endpoints.
+Yes. Cart Rebound fires a WordPress action at every step of the cart lifecycle, passing a flat payload array designed for custom code, webhooks, and automation plugins:
+
+- `cart_rebound_cart_created` — when a new tracked cart record is created.
+- `cart_rebound_cart_captured` — when a shopper's cart contents or checkout contact details are saved.
+- `cart_rebound_abandoned` — when an eligible cart crosses the inactivity threshold and is marked abandoned.
+- `cart_rebound_recovery_email_sent` — when an automatic or manual recovery email is sent.
+- `cart_rebound_recovery_coupon_sent` — when a recovery email containing a coupon code is sent.
+- `cart_rebound_recovery_email_failed` — when a recovery email fails to send.
+- `cart_rebound_recovery_link_clicked` — when a shopper follows a tokenized cart recovery link.
+- `cart_rebound_order_linked` — when a WooCommerce order is associated with a tracked cart.
+- `cart_rebound_recovered` — when a previously abandoned cart reaches a configured paid order status.
+- `cart_rebound_unsubscribed` — when a recipient opts out via the recovery email unsubscribe link.
+- `cart_rebound_cart_status_changed` — whenever a cart moves between statuses.
+- `cart_rebound_cart_status_{status}` — dynamic action fired for the specific new status (for example, `active`, `abandoned`, `recovered`, `completed`, or `lost`).
+
+The plugin's administrative interface also uses protected REST endpoints under the `cart-rebound/v1` namespace.
 
 == Screenshots ==
 
@@ -393,32 +435,6 @@ Yes. Cart Rebound fires a WordPress action at every step of the cart lifecycle: 
 3. **Recovery email template builder** — Create reusable rich-text abandoned cart emails with merge tags, Media Library images, WooCommerce coupons, previews, sender details, and test sends.
 4. **Cart recovery activity log** — Trace abandoned carts, sent reminder emails, linked WooCommerce orders, recovered carts, cleanup, and failures using level, event, and cart filters.
 5. **Flexible cart abandonment settings** — Control guest tracking, abandonment timing, scan interval, retention, paid statuses, automatic recovery emails, admin notifications, and email delay.
-
-== Privacy ==
-
-Cart Rebound may store a plugin-specific session identifier, WordPress user ID, email address, first and last name, phone number, cart products, quantities, variations, prices, coupon codes, totals, currency, cart and order status, order references, recovered amounts, timestamps, and related activity logs.
-
-For tracked carts, a first-party `cart_rebound_ref` cookie associates a browser with its cart. It contains a random plugin-specific identifier, is HTTP-only, uses SameSite=Lax, uses the Secure attribute on HTTPS, and expires after approximately 30 days.
-
-Guest tracking is disabled by default. Logged-in cart tracking operates while the plugin is active. Store owners should evaluate their legal basis and consent requirements before enabling and using tracking or recovery email features.
-
-Automatic recovery emails are disabled by default. When enabled, messages use the site's WordPress mail system. Cart Rebound does not transmit tracked-cart data, telemetry, or usage information to the plugin author or a Cart Rebound service. A site's hosting, SMTP, mail, security, backup, or integration providers may process data according to that site's configuration.
-
-By default, stale active and unrecovered carts are removed after 30 days, while recovered and completed carts are removed after 365 days. Both periods are configurable. Associated activity logs are deleted with each removed cart.
-
-Cart Rebound registers exporters and erasers with the WordPress personal-data tools. Requests are matched by email and, for registered shoppers, WordPress user ID. Security-sensitive recovery tokens and checkout URLs are excluded from personal-data exports.
-
-Suggested disclosure text is added to the WordPress privacy-policy guide. Site owners remain responsible for consent, lawful processing, email-marketing rules, retention settings, responding to privacy requests, securing stored information, and publishing an accurate privacy notice.
-
-== Development ==
-
-Human-readable PHP, TypeScript, React, and CSS source, tests, build configuration, and documentation are available at [github.com/RishadAlam/cart-rebound](https://github.com/RishadAlam/cart-rebound).
-
-The plugin exposes lifecycle actions for custom integrations, including `cart_rebound_abandoned`, `cart_rebound_recovered` and `cart_rebound_cart_status_changed`. Administrative REST routes use the `cart-rebound/v1` namespace and require the appropriate permission.
-
-Production packages can be created with `pnpm production-zip`. See the repository documentation for Composer, Node.js, pnpm, testing, translation, and local-development instructions.
-
-Bundled third-party JavaScript libraries are GPL-compatible and distributed under the MIT License. Copyright and license notices are included in `THIRD-PARTY-LICENSES.txt`.
 
 == Changelog ==
 
