@@ -14,6 +14,7 @@ import type {
 	ProductReportRow,
 	ProductTableConfig,
 	RecoveryButtonConfig,
+	ReviewChoice,
 	Settings,
 	Stats,
 	TimeseriesPoint,
@@ -246,4 +247,10 @@ export const updateSettings = async (payload: Settings): Promise<Settings> => {
 	const { data } = await apiClient.post<Settings>('settings', payload);
 
 	return data;
+};
+
+export const answerReviewPrompt = async (
+	choice: ReviewChoice
+): Promise<void> => {
+	await apiClient.post('review-prompt', { choice });
 };

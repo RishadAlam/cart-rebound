@@ -85,6 +85,17 @@ export interface Settings {
 	onboarding_complete: boolean;
 }
 
+export interface ReviewPrompt {
+	recoveries: number;
+	recoveriesText: string;
+	amount: string;
+	orderNumber: string;
+	reviewUrl: string;
+	snoozeDays: number;
+}
+
+export type ReviewChoice = 'review' | 'later' | 'dismiss';
+
 export interface Order {
 	id: number;
 	number: string;

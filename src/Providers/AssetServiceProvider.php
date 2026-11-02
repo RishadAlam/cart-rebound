@@ -12,6 +12,7 @@ namespace CartRebound\Providers;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Admin\Menu;
+use CartRebound\Admin\ReviewPrompt;
 use CartRebound\Core\ServiceProvider;
 use CartRebound\Support\Branding;
 
@@ -192,6 +193,7 @@ final class AssetServiceProvider extends ServiceProvider {
 			'initialRoute' => $route,
 			'pages'        => $pages,
 			'theme'        => Branding::colors(),
+			'reviewPrompt' => $this->app->make( ReviewPrompt::class )->for_admin(),
 			'currency'     => array(
 				'code'              => $currency,
 				'symbol'            => function_exists( 'get_woocommerce_currency_symbol' )

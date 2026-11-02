@@ -1,4 +1,4 @@
-export {};
+import type { ReviewPrompt } from './api';
 
 declare global {
 	interface CartReboundBootData {
@@ -7,6 +7,7 @@ declare global {
 		initialRoute?: string;
 		pages?: Record<string, { url: string; title: string }>;
 		theme?: { accent: string; ink: string };
+		reviewPrompt?: ReviewPrompt | null;
 		currency: {
 			code: string;
 			symbol: string;

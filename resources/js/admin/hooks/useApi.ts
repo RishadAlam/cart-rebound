@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+	answerReviewPrompt,
 	bulkCarts,
 	clearLogs,
 	createTemplate,
@@ -239,3 +240,6 @@ export const useClearLog = () => {
 		},
 	});
 };
+
+export const useAnswerReviewPrompt = () =>
+	useMutation({ mutationFn: answerReviewPrompt });

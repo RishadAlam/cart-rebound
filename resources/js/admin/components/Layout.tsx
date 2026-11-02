@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { __ } from '@wordpress/i18n';
 import { AdminLink } from './AdminLink';
 import { OnboardingWizard } from './OnboardingWizard';
+import { ReviewPrompt } from './ReviewPrompt';
 
 interface Tab {
 	to: string;
@@ -26,6 +27,9 @@ const tabClass = ({ isActive }: { isActive: boolean }): string =>
 	isActive ? 'cr-tab is-active' : 'cr-tab';
 
 const WIDE_ROUTES = ['/', '/carts', '/logs'];
+
+// Ask for a review only where recovery results are on screen, not over setup work.
+const REVIEW_ROUTES = ['/', '/carts'];
 
 // WordPress sizes its sticky admin menu from a page height it measures only on load
 // and resize, so re-pin it whenever the app's own height changes.
@@ -93,6 +97,7 @@ export const Layout = () => {
 			</nav>
 
 			<div className={wide ? 'cr-page' : 'cr-page is-narrow'}>
+				<ReviewPrompt visible={REVIEW_ROUTES.includes(pathname)} />
 				<Outlet />
 			</div>
 		</div>
