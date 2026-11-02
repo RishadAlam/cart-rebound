@@ -11,6 +11,8 @@ namespace CartRebound\Mail;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Admin\Menu;
+use CartRebound\Admin\ReviewPrompt;
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Models\CartSession;
 use CartRebound\Models\Unsubscribe;
@@ -69,6 +71,14 @@ final class RecoveryMailer {
 	private $events;
 
 	/**
+	 * Review request appended to the admin recovery email.
+	 *
+	 * @since 1.1.3
+	 * @var ReviewPrompt
+	 */
+	private $review;
+
+	/**
 	 * Human-readable reason the most recent on-demand send failed.
 	 *
 	 * @since 0.1.0
@@ -85,12 +95,14 @@ final class RecoveryMailer {
 	 * @param RecoveryLink    $links     Recovery link builder.
 	 * @param TemplateStore   $templates Email template store.
 	 * @param EventDispatcher $events    Event dispatcher.
+	 * @param ReviewPrompt    $review    Review request.
 	 */
-	public function __construct( Settings $settings, RecoveryLink $links, TemplateStore $templates, EventDispatcher $events ) {
+	public function __construct( Settings $settings, RecoveryLink $links, TemplateStore $templates, EventDispatcher $events, ReviewPrompt $review ) {
 		$this->settings  = $settings;
 		$this->links     = $links;
 		$this->templates = $templates;
 		$this->events    = $events;
+		$this->review    = $review;
 	}
 
 	/**
@@ -199,32 +211,65 @@ final class RecoveryMailer {
 			$order->get_order_number()
 		);
 
-		$body = implode(
-			"\n",
-			array(
-				__( 'A tracked cart was recovered into a paid order.', 'cart-rebound' ),
-				'',
-				sprintf(
-					/* translators: %s: order number. */
-					__( 'Order: #%s', 'cart-rebound' ),
-					$order->get_order_number()
-				),
-				sprintf(
-					/* translators: %s: formatted order total. */
-					__( 'Amount: %s', 'cart-rebound' ),
-					$amount
-				),
-				sprintf(
-					/* translators: %s: customer name or email. */
-					__( 'Customer: %s', 'cart-rebound' ),
-					'' !== $customer ? $customer : __( '(unknown)', 'cart-rebound' )
-				),
-				'',
-				$order->get_edit_order_url(),
-			)
+		$lines = array(
+			__( 'A tracked cart was recovered into a paid order.', 'cart-rebound' ),
+			'',
+			sprintf(
+				/* translators: %s: order number. */
+				__( 'Order: #%s', 'cart-rebound' ),
+				$order->get_order_number()
+			),
+			sprintf(
+				/* translators: %s: formatted order total. */
+				__( 'Amount: %s', 'cart-rebound' ),
+				$amount
+			),
+			sprintf(
+				/* translators: %s: customer name or email. */
+				__( 'Customer: %s', 'cart-rebound' ),
+				'' !== $customer ? $customer : __( '(unknown)', 'cart-rebound' )
+			),
+			'',
+			$order->get_edit_order_url(),
 		);
 
-		wp_mail( $recipient, $subject, $body );
+		$ask_review = $this->review->claim_email();
+
+		if ( $ask_review ) {
+			$lines = array_merge( $lines, $this->review_request_lines() );
+		}
+
+		if ( ! wp_mail( $recipient, $subject, implode( "\n", $lines ) ) && $ask_review ) {
+			$this->review->release_email();
+		}
+	}
+
+	/**
+	 * The plain-text review request appended to the admin recovery email.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @return array<int, string>
+	 */
+	private function review_request_lines(): array {
+		$recoveries = $this->review->recoveries();
+
+		return array(
+			'',
+			'—',
+			sprintf(
+				/* translators: %s: number of abandoned carts Cart Rebound has recovered. */
+				_n( '%s abandoned cart recovered so far.', '%s abandoned carts recovered so far.', $recoveries, 'cart-rebound' ),
+				number_format_i18n( $recoveries )
+			),
+			__( 'How has Cart Rebound worked for you? Your honest review helps other store owners decide.', 'cart-rebound' ),
+			'',
+			__( 'Write a review (WordPress.org account required):', 'cart-rebound' ),
+			ReviewPrompt::REVIEW_URL,
+			'',
+			__( 'To be reminded later, or not asked again, answer on the Cart Rebound dashboard:', 'cart-rebound' ),
+			admin_url( 'admin.php?page=' . Menu::SLUG ),
+		);
 	}
 
 	/**

@@ -5,6 +5,7 @@ declare( strict_types=1 );
 namespace CartRebound\Tests\Unit;
 
 use Brain\Monkey\Functions;
+use CartRebound\Admin\ReviewPrompt;
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Mail\RecoveryMailer;
 use CartRebound\Mail\TemplateStore;
@@ -279,7 +280,7 @@ final class RecoveryMailerTest extends TestCase {
 	private function mailer(): RecoveryMailer {
 		$settings = new Settings();
 
-		return new RecoveryMailer( $settings, new RecoveryLink(), new TemplateStore( $settings ), new EventDispatcher( new RecoveryLink() ) );
+		return new RecoveryMailer( $settings, new RecoveryLink(), new TemplateStore( $settings ), new EventDispatcher( new RecoveryLink() ), new ReviewPrompt() );
 	}
 }
 
