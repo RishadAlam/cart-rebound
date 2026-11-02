@@ -162,6 +162,7 @@ export const OnboardingWizard = () => {
 	const [dismissed, setDismissed] = useState(false);
 	const [form, setForm] = useState<WizardForm | null>(null);
 	const ref = useRef<HTMLDialogElement>(null);
+	const saved = useRef(false);
 
 	useEffect(() => {
 		if (settings && form === null) {
@@ -216,6 +217,7 @@ export const OnboardingWizard = () => {
 			},
 			{
 				onSuccess: () => {
+					saved.current = true;
 					ref.current?.close();
 				},
 			}
@@ -400,6 +402,14 @@ export const OnboardingWizard = () => {
 				finish(false);
 			}}
 			onClose={() => {
+				// Chrome lets a repeated Escape close the dialog without a cancel
+				// event; keep it open until the choice is stored.
+				if (!saved.current) {
+					ref.current?.showModal();
+
+					return;
+				}
+
 				setDismissed(true);
 			}}
 		>
