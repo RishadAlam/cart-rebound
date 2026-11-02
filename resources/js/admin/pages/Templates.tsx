@@ -216,15 +216,30 @@ const TOKEN_DOCS = [
 	},
 ];
 
-const tagLabel = (token: string): string => {
-	const words = token
-		.replace(/[{}]/g, '')
-		.split('_')
-		.map((word) => (word === 'url' ? 'URL' : word));
-	const text = words.join(' ');
-
-	return text.charAt(0).toUpperCase() + text.slice(1);
+const TAG_LABELS: Record<string, string> = {
+	'{first_name}': __('First name', 'cart-rebound'),
+	'{last_name}': __('Last name', 'cart-rebound'),
+	'{full_name}': __('Full name', 'cart-rebound'),
+	'{email}': __('Email', 'cart-rebound'),
+	'{products}': __('Products', 'cart-rebound'),
+	'{products_table}': __('Products table', 'cart-rebound'),
+	'{product_names}': __('Product names', 'cart-rebound'),
+	'{items_count}': __('Items count', 'cart-rebound'),
+	'{cart_total}': __('Cart total', 'cart-rebound'),
+	'{abandoned_on}': __('Abandoned on', 'cart-rebound'),
+	'{recovery_url}': __('Recovery URL', 'cart-rebound'),
+	'{checkout_url}': __('Checkout URL', 'cart-rebound'),
+	'{coupon_code}': __('Coupon code', 'cart-rebound'),
+	'{store_name}': __('Store name', 'cart-rebound'),
+	'{store_url}': __('Store URL', 'cart-rebound'),
+	'{store_email}': __('Store email', 'cart-rebound'),
+	'{manager_name}': __('Manager name', 'cart-rebound'),
+	'{current_year}': __('Current year', 'cart-rebound'),
+	'{recovery_button}': __('Recovery button', 'cart-rebound'),
+	'{unsubscribe_url}': __('Unsubscribe URL', 'cart-rebound'),
 };
+
+const tagLabel = (token: string): string => TAG_LABELS[token] ?? token;
 
 const TAGS: MergeTag[] = TOKEN_DOCS.map((doc) => ({
 	label: tagLabel(doc.token),
