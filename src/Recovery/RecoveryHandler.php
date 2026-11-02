@@ -104,12 +104,29 @@ final class RecoveryHandler {
 			return;
 		}
 
+		$lines   = $this->stored_lines( $row );
+		$buyable = array_values(
+			array_filter(
+				$lines,
+				function ( array $line ): bool {
+					return $this->is_available( $line );
+				}
+			)
+		);
+
+		// Leave the visitor's current cart and tracking session alone when nothing saved can be bought any more.
+		if ( array() === $buyable ) {
+			$this->notice( __( 'The items in this saved cart are no longer available.', 'cart-rebound' ) );
+
+			return;
+		}
+
 		// Adopt the row before the rebuild: CartTracker runs on those writes and would open a duplicate row.
 		$this->adopt_session( (int) ( $row['id'] ?? 0 ) );
 
 		$restored = $this->tracker->without_tracking(
-			function () use ( $row ): bool {
-				return $this->restore_cart( $row );
+			function () use ( $row, $buyable, $lines ): bool {
+				return $this->restore_cart( $row, $buyable, count( $lines ) );
 			}
 		);
 
@@ -236,14 +253,32 @@ final class RecoveryHandler {
 	}
 
 	/**
-	 * Empty the cart and re-add the stored lines + coupons.
+	 * The cart lines stored on a tracked cart row.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array<string, mixed> $row The cart row.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function stored_lines( array $row ): array {
+		$decoded = ( isset( $row['cart_contents'] ) && is_string( $row['cart_contents'] ) )
+			? json_decode( $row['cart_contents'], true )
+			: array();
+
+		return array_values( array_filter( is_array( $decoded ) ? $decoded : array(), 'is_array' ) );
+	}
+
+	/**
+	 * Empty the cart and re-add the buyable stored lines + coupons.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row The cart row.
+	 * @param array<string, mixed>             $row     The cart row.
+	 * @param array<int, array<string, mixed>> $buyable Stored lines that can still be bought.
+	 * @param int                              $stored  How many lines the cart row stored.
 	 * @return bool Whether at least one stored line was put back in the cart.
 	 */
-	private function restore_cart( array $row ): bool {
+	private function restore_cart( array $row, array $buyable, int $stored ): bool {
 		if ( ! function_exists( 'WC' ) ) {
 			return false;
 		}
@@ -251,26 +286,6 @@ final class RecoveryHandler {
 		$cart = WC()->cart;
 
 		if ( null === $cart ) {
-			return false;
-		}
-
-		$decoded = ( isset( $row['cart_contents'] ) && is_string( $row['cart_contents'] ) )
-			? json_decode( $row['cart_contents'], true )
-			: array();
-		$lines   = array_values( array_filter( is_array( $decoded ) ? $decoded : array(), 'is_array' ) );
-		$buyable = array_values(
-			array_filter(
-				$lines,
-				function ( array $line ): bool {
-					return $this->is_available( $line );
-				}
-			)
-		);
-
-		// Leave the visitor's current cart alone when nothing saved can be bought any more.
-		if ( array() === $buyable ) {
-			$this->notice( __( 'The items in this saved cart are no longer available.', 'cart-rebound' ) );
-
 			return false;
 		}
 
@@ -292,10 +307,12 @@ final class RecoveryHandler {
 		}
 
 		if ( 0 === $added ) {
+			$this->notice( __( 'The items in this saved cart are no longer available.', 'cart-rebound' ) );
+
 			return false;
 		}
 
-		if ( $added < count( $lines ) ) {
+		if ( $added < $stored ) {
 			$this->notice( __( 'Some items from your saved cart are no longer available and were left out.', 'cart-rebound' ) );
 		}
 
