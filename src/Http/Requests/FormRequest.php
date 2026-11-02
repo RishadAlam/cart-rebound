@@ -115,7 +115,9 @@ abstract class FormRequest {
 				}
 			}
 
-			$validated[ $field ] = $this->sanitize( $rules, $value );
+			if ( ! isset( $errors[ $field ] ) ) {
+				$validated[ $field ] = $this->sanitize( $rules, $value );
+			}
 		}
 
 		if ( array() !== $errors ) {
@@ -180,12 +182,12 @@ abstract class FormRequest {
 			return sprintf( __( 'The %s field must be an integer.', 'cart-rebound' ), $field );
 		}
 
-		if ( 'email' === $rule && ! is_email( (string) $value ) ) {
+		if ( 'email' === $rule && ! ( is_string( $value ) && is_email( $value ) ) ) {
 			/* translators: %s: form field name. */
 			return sprintf( __( 'The %s field must be a valid email address.', 'cart-rebound' ), $field );
 		}
 
-		if ( 'url' === $rule && false === wp_http_validate_url( (string) $value ) ) {
+		if ( 'url' === $rule && ! ( is_string( $value ) && false !== wp_http_validate_url( $value ) ) ) {
 			/* translators: %s: form field name. */
 			return sprintf( __( 'The %s field must be a valid URL.', 'cart-rebound' ), $field );
 		}

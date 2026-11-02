@@ -68,6 +68,14 @@ final class FormRequestTest extends TestCase {
 		$this->assertInstanceOf( WP_Error::class, ( new SizeRequest( $this->request( array( 'size' => array( 'm' ) ) ) ) )->validate() );
 	}
 
+	public function test_email_rule_rejects_an_array_without_casting_it(): void {
+		Functions\expect( 'is_email' )->never();
+
+		$result = ( new ContactRequest( $this->request( array( 'email' => array( 'a@example.com' ) ) ) ) )->validate();
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+	}
+
 	public function test_failed_authorize_returns_403_even_after_a_prior_pass(): void {
 		$form = new ToggleableRequest( $this->request( array( 'title' => 'Hi' ) ) );
 
@@ -111,6 +119,12 @@ class TagsRequest extends FormRequest {
 class SizeRequest extends FormRequest {
 	public function rules(): array {
 		return array( 'size' => 'required|in:s,m,l' );
+	}
+}
+
+class ContactRequest extends FormRequest {
+	public function rules(): array {
+		return array( 'email' => 'required|email' );
 	}
 }
 
