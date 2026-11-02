@@ -19,6 +19,7 @@ use CartRebound\Http\Requests\MarkRecoveredRequest;
 use CartRebound\Http\Requests\UpdateStatusRequest;
 use CartRebound\Mail\RecoveryMailer;
 use CartRebound\Models\CartSession;
+use CartRebound\Recovery\OrderLinker;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -138,7 +139,11 @@ final class CartsController extends Controller {
 	 */
 	public function mark_recovered( MarkRecoveredRequest $request ): WP_REST_Response {
 		$data     = $request->validated();
-		$conflict = $this->carts->recovery_conflict( (int) $data['id'], (int) $data['order_id'] );
+		$conflict = $this->carts->recovery_conflict(
+			(int) $data['id'],
+			(int) $data['order_id'],
+			$this->app->make( OrderLinker::class )->paid_statuses()
+		);
 
 		if ( '' !== $conflict ) {
 			return $this->respond( array( 'message' => $conflict ), 409 );

@@ -373,11 +373,12 @@ final class CartRepository {
 	 *
 	 * @since 1.1.3
 	 *
-	 * @param int $cart_id  Cart id.
-	 * @param int $order_id Order id.
+	 * @param int                $cart_id       Cart id.
+	 * @param int                $order_id      Order id.
+	 * @param array<int, string> $paid_statuses Order statuses that count as paid.
 	 * @return string
 	 */
-	public function recovery_conflict( int $cart_id, int $order_id ): string {
+	public function recovery_conflict( int $cart_id, int $order_id, array $paid_statuses ): string {
 		$row = CartSession::find( $cart_id );
 
 		if ( ! is_array( $row ) ) {
@@ -388,8 +389,14 @@ final class CartRepository {
 			return __( 'This cart is already linked to an order.', 'cart-rebound' );
 		}
 
-		if ( ! function_exists( 'wc_get_order' ) || ! wc_get_order( $order_id ) instanceof WC_Order ) {
+		$order = function_exists( 'wc_get_order' ) ? wc_get_order( $order_id ) : null;
+
+		if ( ! $order instanceof WC_Order ) {
 			return __( 'Order not found.', 'cart-rebound' );
+		}
+
+		if ( ! $order->has_status( $paid_statuses ) ) {
+			return __( 'This order has not been paid, so it cannot count as recovered.', 'cart-rebound' );
 		}
 
 		$holder = CartSession::query()->where( 'order_id', '=', $order_id )->first();

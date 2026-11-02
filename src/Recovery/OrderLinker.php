@@ -207,7 +207,7 @@ final class OrderLinker {
 	 *
 	 * @return array<int, string>
 	 */
-	private function paid_statuses(): array {
+	public function paid_statuses(): array {
 		if ( null !== $this->paid_statuses_cache ) {
 			return $this->paid_statuses_cache;
 		}
