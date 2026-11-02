@@ -215,6 +215,11 @@ export const ReviewPrompt = ({ visible }: { visible: boolean }) => {
 							target="_blank"
 							rel="noopener noreferrer"
 							onClick={() => choose('review')}
+							onAuxClick={(event) => {
+								if (event.button === 1) {
+									choose('review');
+								}
+							}}
 						>
 							{__('Write a review', 'cart-rebound')}
 							<ExternalIcon />
