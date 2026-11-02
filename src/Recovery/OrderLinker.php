@@ -362,9 +362,11 @@ final class OrderLinker {
 			$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
 		}
 
-		$this->events->recovered( $fresh, $order, $via_link ? 'email_link' : 'direct' );
+		$method = $via_link ? 'email_link' : 'direct';
+
+		$this->events->recovered( $fresh, $order, $method );
 		$this->review->record_recovery( $order );
-		$this->mailer->notify_admin( $fresh, $order );
+		$this->mailer->notify_admin( $fresh, $order, $method );
 
 		$this->sessions->clear();
 	}

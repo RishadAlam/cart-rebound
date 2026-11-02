@@ -175,13 +175,16 @@ final class RecoveryMailer {
 	/**
 	 * Email the site admin that a tracked cart was recovered into a paid order.
 	 *
+	 * Sends an HTML email with the same content as a plain-text alternative.
+	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed> $row   The recovered cart row.
-	 * @param WC_Order             $order The paid order that recovered it.
+	 * @param array<string, mixed> $row    The recovered cart row.
+	 * @param WC_Order             $order  The paid order that recovered it.
+	 * @param string               $method How the shopper came back: 'email_link' or 'direct'.
 	 * @return void
 	 */
-	public function notify_admin( array $row, WC_Order $order ): void {
+	public function notify_admin( array $row, WC_Order $order, string $method = 'direct' ): void {
 		if ( ! $this->settings->get( 'admin_recovery_email' ) ) {
 			return;
 		}
@@ -196,52 +199,273 @@ final class RecoveryMailer {
 			return;
 		}
 
-		$name     = trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) );
-		$email    = (string) ( $row['email'] ?? '' );
-		$customer = '' !== $name ? $name : ( '' !== $email ? $email : $order->get_billing_email() );
-		$amount   = html_entity_decode(
-			wp_strip_all_tags( wc_price( (float) $order->get_total(), array( 'currency' => $order->get_currency() ) ) ),
-			ENT_QUOTES,
-			'UTF-8'
-		);
-
-		$subject = sprintf(
-			/* translators: %s: order number. */
-			__( '[Cart Rebound] Recovered cart — order #%s', 'cart-rebound' ),
-			$order->get_order_number()
-		);
-
-		$lines = array(
-			__( 'A tracked cart was recovered into a paid order.', 'cart-rebound' ),
-			'',
-			sprintf(
-				/* translators: %s: order number. */
-				__( 'Order: #%s', 'cart-rebound' ),
-				$order->get_order_number()
-			),
-			sprintf(
-				/* translators: %s: formatted order total. */
-				__( 'Amount: %s', 'cart-rebound' ),
-				$amount
-			),
-			sprintf(
-				/* translators: %s: customer name or email. */
-				__( 'Customer: %s', 'cart-rebound' ),
-				'' !== $customer ? $customer : __( '(unknown)', 'cart-rebound' )
-			),
-			'',
-			$order->get_edit_order_url(),
-		);
-
+		$summary    = $this->recovery_summary( $row, $order, $method );
 		$ask_review = $this->review->claim_email();
+
+		$subject = '' !== $summary['amount']
+			? sprintf(
+				/* translators: 1: formatted order total, 2: order number. */
+				__( '[Cart Rebound] %1$s recovered — order #%2$s', 'cart-rebound' ),
+				$summary['amount'],
+				$summary['number']
+			)
+			: sprintf(
+				/* translators: %s: order number. */
+				__( '[Cart Rebound] Abandoned cart recovered — order #%s', 'cart-rebound' ),
+				$summary['number']
+			);
+
+		$text = $this->admin_text( $summary, $ask_review );
+		$html = $this->admin_html( $summary, $ask_review );
+
+		if ( ! $this->send_admin( $recipient, $subject, $html, $text ) && $ask_review ) {
+			$this->review->release_email();
+		}
+	}
+
+	/**
+	 * The facts the admin recovery email reports, as plain text.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array<string, mixed> $row    The recovered cart row.
+	 * @param WC_Order             $order  The paid order.
+	 * @param string               $method 'email_link' or 'direct'.
+	 * @return array{number: string, amount: string, customer: string, contact: string, via: string, paid_on: string, order_url: string}
+	 */
+	private function recovery_summary( array $row, WC_Order $order, string $method ): array {
+		$name    = trim( ( $row['first_name'] ?? '' ) . ' ' . ( $row['last_name'] ?? '' ) );
+		$email   = (string) ( $row['email'] ?? '' );
+		$contact = '' !== $email ? $email : (string) $order->get_billing_email();
+		$total   = (float) $order->get_total();
+		$paid    = $order->get_date_paid();
+		$format  = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+
+		return array(
+			'number'    => (string) $order->get_order_number(),
+			'amount'    => $total > 0 ? $this->money( $total, (string) $order->get_currency() ) : '',
+			'customer'  => '' !== $name ? $name : ( '' !== $contact ? $contact : __( '(unknown)', 'cart-rebound' ) ),
+			'contact'   => '' !== $name ? $contact : '',
+			'via'       => 'email_link' === $method
+				? __( 'Recovery email link', 'cart-rebound' )
+				: __( 'The customer came back on their own', 'cart-rebound' ),
+			'paid_on'   => (string) wp_date( $format, null !== $paid ? $paid->getTimestamp() : time() ),
+			'order_url' => (string) $order->get_edit_order_url(),
+		);
+	}
+
+	/**
+	 * The admin email heading, split around the amount so it can be highlighted.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $amount Formatted amount, or '' for a free order.
+	 * @return array{before: string, amount: string, after: string}
+	 */
+	private function admin_headline( string $amount ): array {
+		if ( '' === $amount ) {
+			return array(
+				'before' => __( 'Abandoned cart recovered', 'cart-rebound' ),
+				'amount' => '',
+				'after'  => '',
+			);
+		}
+
+		$slot  = "\0";
+		$parts = explode(
+			$slot,
+			/* translators: %s: formatted recovered amount. */
+			sprintf( __( '%s recovered', 'cart-rebound' ), $slot ),
+			2
+		);
+
+		return array(
+			'before' => $parts[0],
+			'amount' => $amount,
+			'after'  => $parts[1] ?? '',
+		);
+	}
+
+	/**
+	 * The sentence under the admin email heading.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $number Order number.
+	 * @return string
+	 */
+	private function admin_intro( string $number ): string {
+		return sprintf(
+			/* translators: %s: order number. */
+			__( 'Order #%s was paid after its cart had been abandoned.', 'cart-rebound' ),
+			$number
+		);
+	}
+
+	/**
+	 * Order facts as label/value rows for the admin email.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array{number: string, customer: string, contact: string, via: string, paid_on: string} $summary Recovery facts.
+	 * @return array<int, array{label: string, value: string, note: string}>
+	 */
+	private function admin_details( array $summary ): array {
+		return array(
+			array(
+				'label' => __( 'Order', 'cart-rebound' ),
+				'value' => '#' . $summary['number'],
+				'note'  => '',
+			),
+			array(
+				'label' => __( 'Customer', 'cart-rebound' ),
+				'value' => $summary['customer'],
+				'note'  => $summary['contact'],
+			),
+			array(
+				'label' => __( 'Recovered via', 'cart-rebound' ),
+				'value' => $summary['via'],
+				'note'  => '',
+			),
+			array(
+				'label' => __( 'Paid', 'cart-rebound' ),
+				'value' => $summary['paid_on'],
+				'note'  => '',
+			),
+		);
+	}
+
+	/**
+	 * The plain-text admin recovery email, also sent as the HTML version's alternative.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array{number: string, amount: string, customer: string, contact: string, via: string, paid_on: string, order_url: string} $summary    Recovery facts.
+	 * @param bool                                                                                                                      $ask_review Whether to append the review request.
+	 * @return string
+	 */
+	private function admin_text( array $summary, bool $ask_review ): string {
+		$lines = array(
+			implode( '', $this->admin_headline( $summary['amount'] ) ),
+			$this->admin_intro( $summary['number'] ),
+			'',
+		);
+
+		foreach ( $this->admin_details( $summary ) as $detail ) {
+			$lines[] = $detail['label'] . ': ' . $detail['value'] . ( '' !== $detail['note'] ? ' (' . $detail['note'] . ')' : '' );
+		}
+
+		$lines = array_merge(
+			$lines,
+			array(
+				'',
+				__( 'View order:', 'cart-rebound' ),
+				$summary['order_url'],
+			)
+		);
 
 		if ( $ask_review ) {
 			$lines = array_merge( $lines, $this->review_request_lines() );
 		}
 
-		if ( ! wp_mail( $recipient, $subject, implode( "\n", $lines ) ) && $ask_review ) {
-			$this->review->release_email();
+		$lines[] = '';
+		$lines[] = '—';
+		$lines[] = __( 'You get this email because “Notify admin on recovery” is on in Cart Rebound. Change email settings:', 'cart-rebound' );
+		$lines[] = $this->settings_url();
+
+		return implode( "\n", $lines );
+	}
+
+	/**
+	 * The HTML admin recovery email, or '' when the view is missing.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param array{number: string, amount: string, customer: string, contact: string, via: string, paid_on: string, order_url: string} $summary    Recovery facts.
+	 * @param bool                                                                                                                      $ask_review Whether to include the review request.
+	 * @return string
+	 */
+	private function admin_html( array $summary, bool $ask_review ): string {
+		$template_path = defined( 'CART_REBOUND_PATH' ) ? CART_REBOUND_PATH . 'resources/views/emails/admin-recovered.php' : '';
+
+		if ( '' === $template_path || ! is_readable( $template_path ) ) {
+			return '';
 		}
+
+		$recoveries    = $this->review->recoveries();
+		$store_name    = Branding::store_name();
+		$headline      = $this->admin_headline( $summary['amount'] );
+		$intro         = $this->admin_intro( $summary['number'] );
+		$preheader     = $intro;
+		$details       = $this->admin_details( $summary );
+		$order_url     = $summary['order_url'];
+		$dashboard_url = admin_url( 'admin.php?page=' . Menu::SLUG );
+		$settings_url  = $this->settings_url();
+		$review        = $ask_review
+			? array(
+				'count' => sprintf(
+					/* translators: %s: number of abandoned carts Cart Rebound has recovered. */
+					_n( '%s abandoned cart recovered so far.', '%s abandoned carts recovered so far.', $recoveries, 'cart-rebound' ),
+					number_format_i18n( $recoveries )
+				),
+				'url'   => ReviewPrompt::REVIEW_URL,
+			)
+			: null;
+
+		ob_start();
+		require $template_path;
+		$html = ob_get_clean();
+
+		return is_string( $html ) ? $html : '';
+	}
+
+	/**
+	 * Send the admin email as HTML with a plain-text alternative.
+	 *
+	 * The From name changes only while it is still WordPress's generic default.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @param string $recipient Recipient address.
+	 * @param string $subject   Subject line.
+	 * @param string $html      HTML body, or '' to send plain text only.
+	 * @param string $text      Plain-text body.
+	 * @return bool
+	 */
+	private function send_admin( string $recipient, string $subject, string $html, string $text ): bool {
+		if ( '' === $html ) {
+			return wp_mail( $recipient, $subject, $text );
+		}
+
+		$alternative = static function ( $mailer ) use ( $text ): void {
+			$mailer->AltBody = $text; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- PHPMailer property.
+		};
+		$from_name   = static function ( $name ) {
+			return 'WordPress' === $name ? __( 'Cart Rebound', 'cart-rebound' ) : $name;
+		};
+
+		add_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
+		add_filter( 'wp_mail_from_name', $from_name );
+		add_action( 'phpmailer_init', $alternative );
+
+		try {
+			return wp_mail( $recipient, $subject, $html );
+		} finally {
+			remove_action( 'phpmailer_init', $alternative );
+			remove_filter( 'wp_mail_from_name', $from_name );
+			remove_filter( 'wp_mail_content_type', array( $this, 'html_content_type' ) );
+		}
+	}
+
+	/**
+	 * The Cart Rebound settings screen URL.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @return string
+	 */
+	private function settings_url(): string {
+		return admin_url( 'admin.php?page=' . Menu::SLUG . '-settings' );
 	}
 
 	/**
@@ -257,17 +481,17 @@ final class RecoveryMailer {
 		return array(
 			'',
 			'—',
+			__( 'How has Cart Rebound worked for you?', 'cart-rebound' ),
 			sprintf(
 				/* translators: %s: number of abandoned carts Cart Rebound has recovered. */
 				_n( '%s abandoned cart recovered so far.', '%s abandoned carts recovered so far.', $recoveries, 'cart-rebound' ),
 				number_format_i18n( $recoveries )
-			),
-			__( 'How has Cart Rebound worked for you? Your honest review helps other store owners decide.', 'cart-rebound' ),
+			) . ' ' . __( 'Your honest review helps other store owners decide.', 'cart-rebound' ),
 			'',
 			__( 'Write a review (WordPress.org account required):', 'cart-rebound' ),
 			ReviewPrompt::REVIEW_URL,
 			'',
-			__( 'To be reminded later, or not asked again, answer on the Cart Rebound dashboard:', 'cart-rebound' ),
+			__( 'Not now? You can be reminded later, or not asked again, from your Cart Rebound dashboard:', 'cart-rebound' ),
 			admin_url( 'admin.php?page=' . Menu::SLUG ),
 		);
 	}
