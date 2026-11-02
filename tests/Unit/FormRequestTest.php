@@ -62,6 +62,12 @@ final class FormRequestTest extends TestCase {
 		$this->assertInstanceOf( WP_Error::class, $result );
 	}
 
+	public function test_in_rule_accepts_only_listed_values(): void {
+		$this->assertSame( array( 'size' => 'm' ), ( new SizeRequest( $this->request( array( 'size' => 'm' ) ) ) )->validate() );
+		$this->assertInstanceOf( WP_Error::class, ( new SizeRequest( $this->request( array( 'size' => 'xl' ) ) ) )->validate() );
+		$this->assertInstanceOf( WP_Error::class, ( new SizeRequest( $this->request( array( 'size' => array( 'm' ) ) ) ) )->validate() );
+	}
+
 	public function test_failed_authorize_returns_403_even_after_a_prior_pass(): void {
 		$form = new ToggleableRequest( $this->request( array( 'title' => 'Hi' ) ) );
 
@@ -99,6 +105,12 @@ class AgeRequest extends FormRequest {
 class TagsRequest extends FormRequest {
 	public function rules(): array {
 		return array( 'tags' => 'required|max:2' );
+	}
+}
+
+class SizeRequest extends FormRequest {
+	public function rules(): array {
+		return array( 'size' => 'required|in:s,m,l' );
 	}
 }
 

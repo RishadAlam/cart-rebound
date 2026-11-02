@@ -190,6 +190,11 @@ abstract class FormRequest {
 			return sprintf( __( 'The %s field must be a valid URL.', 'cart-rebound' ), $field );
 		}
 
+		if ( 0 === strpos( $rule, 'in:' ) && ! in_array( is_scalar( $value ) ? (string) $value : null, explode( ',', substr( $rule, 3 ) ), true ) ) {
+			/* translators: %s: form field name. */
+			return sprintf( __( 'The selected %s is invalid.', 'cart-rebound' ), $field );
+		}
+
 		$length = $this->length_of( $value );
 
 		if ( null !== $length && 0 === strpos( $rule, 'max:' ) ) {
