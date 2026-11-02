@@ -182,12 +182,12 @@ abstract class FormRequest {
 			return sprintf( __( 'The %s field must be an integer.', 'cart-rebound' ), $field );
 		}
 
-		if ( 'email' === $rule && ! ( is_string( $value ) && is_email( $value ) ) ) {
+		if ( 'email' === $rule && ( ! is_string( $value ) || ! is_email( $value ) ) ) {
 			/* translators: %s: form field name. */
 			return sprintf( __( 'The %s field must be a valid email address.', 'cart-rebound' ), $field );
 		}
 
-		if ( 'url' === $rule && ! ( is_string( $value ) && false !== wp_http_validate_url( $value ) ) ) {
+		if ( 'url' === $rule && ( ! is_string( $value ) || false === wp_http_validate_url( $value ) ) ) {
 			/* translators: %s: form field name. */
 			return sprintf( __( 'The %s field must be a valid URL.', 'cart-rebound' ), $field );
 		}
