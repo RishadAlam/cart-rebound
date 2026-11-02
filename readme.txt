@@ -4,7 +4,7 @@ Tags: abandoned cart, cart recovery, woocommerce, cart abandonment, abandoned ca
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -437,6 +437,48 @@ The plugin's administrative interface also uses protected REST endpoints under t
 5. **Flexible cart abandonment settings** — Control guest tracking, abandonment timing, scan interval, retention, paid statuses, automatic recovery emails, admin notifications, and email delay.
 
 == Changelog ==
+
+= 1.1.3 =
+
+**Release date:** 2026-11-02
+
+**New**
+
+* Design your own email button. Each email template has a new **Button** tab where you can change the button's text, size, colours, rounded corners, alignment and width, with a live preview. Add the `{recovery_button}` tag to place the button anywhere in your message, or switch the button off.
+* A friendlier starter email. New stores get a ready-to-send recovery email with a greeting, a table of the items left in the cart, a coupon line and an invitation to reply. If you never changed the old default email, it is updated for you. Emails you have edited stay exactly as they are.
+* A clearer "cart recovered" email for you. When a cart turns into a paid order, the email you get now shows the amount, the order, the customer and how the cart came back, with a **View order** button.
+* Your store's look on the unsubscribe page. Shoppers who unsubscribe now see your site logo and colours instead of the Cart Rebound logo.
+* After Cart Rebound brings back its first paid order, a short note on the Dashboard and Carts screens asks how the plugin has worked for you. You can write a review, be reminded in 14 days, or not be asked again. Your answer is remembered for the whole store.
+
+**Improved**
+
+* Recovery emails now look right in more email apps, including Outlook and Gmail, and on right-to-left language sites.
+* Emails show product options by name (for example "Blue" instead of "blue-1"), and product images keep their shape.
+* No email is sent when every product in the cart has since been deleted, or when the cart already has an order.
+* Emails now include a reply-to address and a one-click unsubscribe option that Gmail and Yahoo show next to the sender.
+* The date a cart was left behind now uses your site's time zone, and the `{manager_name}` tag says "our team" when no name is set.
+* Shoppers who open an expired recovery link now see a message explaining what happened. If some items are out of stock, the rest of the cart is restored and the shopper is told what was left out.
+* Cart Rebound now warns you before you leave the Templates or Settings screen with unsaved changes.
+* When something can't be saved, you now see a clear message that names the field in plain words.
+* The Carts screen asks before deleting a cart, shows each cart's total in its own currency, and marks times as UTC.
+* The Dashboard tells you when its numbers fail to load, and shows numbers in your language's format.
+* The setup wizard now closes only after your choices are saved, and lets you try again if saving fails.
+* Merge tag names in the tag picker now match the tag reference list (for example "First name" for `{first_name}`), and you can search for a tag by typing its code.
+* Personal data exports now include whether a shopper unsubscribed. When personal data is erased, unsubscribed email addresses are kept, so those shoppers still receive no reminders. The erasure report says why.
+* Better keyboard support, screen reader labels and small-screen layouts across Cart Rebound screens.
+
+**Fixed**
+
+* Recovered revenue and the recovery rate now stay correct when orders change. A recovered order that is later refunded or cancelled is taken out of the totals, and the recovery rate never goes above 100%.
+* **Mark recovered** now refuses an order that hasn't been paid, an order that doesn't exist, or an order already linked to another cart, so no sale is counted twice or too early.
+* When a payment gateway and the checkout page both report a payment at the same moment, the recovery is now counted once and you get one "cart recovered" email, not two.
+* A recovery link whose items are all out of stock no longer replaces the shopper's current cart.
+* Checkout no longer fills in the original shopper's details when a different customer is logged in.
+* The checkout page no longer sends the same customer details to your store over and over while a shopper types.
+* Carts that already have an order are no longer marked as abandoned.
+* Switches and checkboxes stay visible even when another plugin or a browser extension changes the page styles.
+* Fixed layout jumps in the tab bar, Settings fields and Carts table, and sideways scrolling on small screens.
+* Opening an email template without changing it no longer shows it as having unsaved changes.
 
 = 1.1.2 =
 
