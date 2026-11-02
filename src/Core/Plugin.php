@@ -95,6 +95,7 @@ final class Plugin {
 			'cart_rebound_settings',
 			'cart_rebound_email_templates',
 			'cart_rebound_db_version',
+			'cart_rebound_migrations',
 			'cart_rebound_lifetime_abandoned',
 			'cart_rebound_lifetime_recovered',
 			'cart_rebound_review_prompt',
