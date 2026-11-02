@@ -45,6 +45,7 @@ $cart_rebound_font  = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, He
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #f0f0f1;">
 	<tr>
 		<td align="center" style="padding: 32px 12px;">
+			<!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 			<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" dir="<?php echo esc_attr( $cart_rebound_dir ); ?>" style="width: 100%; max-width: 600px; font-family: <?php echo esc_attr( $cart_rebound_font ); ?>; color: #1d2327; line-height: 1.5;">
 				<tr>
 					<td style="padding: 0 4px 12px; font-size: 13px; color: #50575e;">
@@ -86,7 +87,7 @@ $cart_rebound_font  = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, He
 								<td class="cr-pad" style="padding: 24px 32px 32px;">
 									<table role="presentation" cellpadding="0" cellspacing="0" border="0">
 										<tr>
-											<td align="center" bgcolor="#2271b1" style="background: #2271b1; border-radius: 6px;">
+											<td align="center" bgcolor="#2271b1" style="background: #2271b1; border-radius: 6px; mso-padding-alt: 12px 24px;">
 												<a href="<?php echo esc_url( $order_url ); ?>" style="display: block; padding: 12px 24px; border-radius: 6px; color: #ffffff; font-size: 15px; font-weight: 600; line-height: 1.25; text-decoration: none;"><?php echo esc_html__( 'View order', 'cart-rebound' ); ?></a>
 											</td>
 										</tr>
@@ -112,7 +113,7 @@ $cart_rebound_font  = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, He
 										</p>
 										<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px;">
 											<tr>
-												<td align="center" style="border: 1px solid #2271b1; border-radius: 6px;">
+												<td align="center" style="border: 1px solid #2271b1; border-radius: 6px; mso-padding-alt: 10px 20px;">
 													<a href="<?php echo esc_url( $review['url'] ); ?>" style="display: block; padding: 10px 20px; border-radius: 6px; color: #2271b1; font-size: 14px; font-weight: 600; line-height: 1.25; text-decoration: none;"><?php echo esc_html__( 'Write a review', 'cart-rebound' ); ?></a>
 												</td>
 											</tr>
@@ -148,6 +149,7 @@ $cart_rebound_font  = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, He
 					</td>
 				</tr>
 			</table>
+			<!--[if mso]></td></tr></table><![endif]-->
 		</td>
 	</tr>
 </table>

@@ -1070,14 +1070,15 @@ final class RecoveryMailer {
 		$link   = sprintf(
 			'<a href="%1$s" style="%2$s">%3$s</a>',
 			esc_url( $recovery_url ),
-			esc_attr( "display: block; padding: {$padding}; border-radius: {$radius}; color: {$ink}; font-size: {$font_size}px; font-weight: 600; line-height: 1.25; text-align: center; text-decoration: none;" ),
+			esc_attr( "display: block; border-radius: {$radius}; color: {$ink}; font-size: {$font_size}px; font-weight: 600; line-height: 1.25; text-align: center; text-decoration: none;" ),
 			esc_html( $text )
 		);
 
+		// Padding sits on the cell, not the link: Outlook ignores padding on <a>, and wp_kses_post() strips mso-padding-alt.
 		return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0;"><tr>'
 			. '<td align="' . esc_attr( $config['align'] ) . '">'
 			. '<table role="presentation" cellpadding="0" cellspacing="0" border="0"' . $width . '><tr>'
-			. '<td align="center" bgcolor="' . esc_attr( $background ) . '" style="' . esc_attr( "background: {$background}; border-radius: {$radius};" ) . '">'
+			. '<td align="center" bgcolor="' . esc_attr( $background ) . '" style="' . esc_attr( "padding: {$padding}; background: {$background}; border-radius: {$radius};" ) . '">'
 			. $link
 			. '</td></tr></table></td></tr></table>';
 	}

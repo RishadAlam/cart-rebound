@@ -3,7 +3,7 @@
  * Recovery email template.
  *
  * Rendered by RecoveryMailer::build_body() with these variables in scope.
- * The table layout keeps the 600px width intact in Outlook's Word engine.
+ * The table layout, with an Outlook-only fixed-width wrapper, keeps the 600px width intact in Outlook's Word engine.
  *
  * @package CartRebound
  *
@@ -29,6 +29,7 @@ $cart_rebound_dir = is_rtl() ? 'rtl' : 'ltr';
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #ffffff;">
 	<tr>
 		<td align="center" style="padding: 0;">
+			<!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 			<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" dir="<?php echo esc_attr( $cart_rebound_dir ); ?>" style="width: 100%; max-width: 600px; font-family: Arial, Helvetica, sans-serif; color: #1a1a1a; line-height: 1.5;">
 				<tr>
 					<td style="padding: 24px;">
@@ -45,6 +46,7 @@ $cart_rebound_dir = is_rtl() ? 'rtl' : 'ltr';
 					</td>
 				</tr>
 			</table>
+			<!--[if mso]></td></tr></table><![endif]-->
 		</td>
 	</tr>
 </table>
