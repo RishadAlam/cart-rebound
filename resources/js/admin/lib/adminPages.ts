@@ -138,9 +138,10 @@ export const syncWithAdmin = (router: AppRouter) => {
 
 		void router.navigate(route, { replace: true }).then(() => {
 			// A blocked navigation (unsaved changes) leaves the browser on the
-			// other page's URL; point it back at the page still on screen.
+			// other page's URL; point it back at the page still on screen. Push,
+			// so the entry the browser moved to stays in history.
 			if (router.state.location.pathname !== route) {
-				show(router.state.location.pathname, 'replace');
+				show(router.state.location.pathname, 'push');
 			}
 		});
 	});
