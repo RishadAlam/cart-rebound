@@ -7,6 +7,7 @@ export const NumberInput = ({
 	onChange,
 	min = 1,
 	onBlur,
+	onKeyDown,
 	...rest
 }: {
 	value: number;
@@ -37,6 +38,14 @@ export const NumberInput = ({
 			onBlur={(event) => {
 				setDraft(null);
 				onBlur?.(event);
+			}}
+			onKeyDown={(event) => {
+				// Enter submits the form without a blur, so show the value that gets saved.
+				if (event.key === 'Enter') {
+					setDraft(null);
+				}
+
+				onKeyDown?.(event);
 			}}
 		/>
 	);
