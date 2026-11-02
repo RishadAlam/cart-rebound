@@ -305,7 +305,9 @@ final class TemplateStore {
 	private function starter(): array {
 		$paragraphs = array(
 			'<h2>' . __( 'Your cart is still here', 'cart-rebound' ) . '</h2>',
+			/* translators: Keep the {first_name} merge tag exactly as written. */
 			'<p>' . __( 'Hi {first_name},', 'cart-rebound' ) . '</p>',
+			/* translators: Keep the {store_name} merge tag exactly as written. */
 			'<p>' . __( 'You left a few things in your cart at {store_name}. We saved them for you, so you can pick up where you stopped.', 'cart-rebound' ) . '</p>',
 			'{products_table}',
 			'<p>' . sprintf(
@@ -313,10 +315,12 @@ final class TemplateStore {
 				__( 'Use the code %s at checkout to save on this order.', 'cart-rebound' ),
 				'<strong>{coupon_code}</strong>'
 			) . '</p>',
+			/* translators: Keep the {manager_name} merge tag exactly as written. */
 			'<p>' . __( 'Questions about your order or delivery? Reply to this email and {manager_name} will help.', 'cart-rebound' ) . '</p>',
 		);
 
 		return array(
+			/* translators: Keep the {first_name} and {store_name} merge tags exactly as written. */
 			'subject' => __( '{first_name}, your cart at {store_name} is saved', 'cart-rebound' ),
 			'body'    => implode( "\n", $paragraphs ),
 			'table'   => self::table_config(
