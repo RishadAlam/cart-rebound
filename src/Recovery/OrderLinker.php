@@ -288,6 +288,7 @@ final class OrderLinker {
 
 				if ( CartSession::STATUS_RECOVERED === $status ) {
 					$this->events->recovery_reversed();
+					$this->review->recovery_reversed();
 				}
 			}
 

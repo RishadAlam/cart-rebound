@@ -134,21 +134,46 @@ final class ReviewPrompt {
 	 * @return void
 	 */
 	public function record_recovery( WC_Order $order ): void {
-		$state = $this->state();
+		$this->mutate(
+			function ( array $state ) use ( $order ): ?array {
+				if ( $this->is_closed( $state ) ) {
+					return null;
+				}
 
-		if ( $this->is_closed( $state ) ) {
+				$state['amount']       = (float) $order->get_total();
+				$state['currency']     = (string) $order->get_currency();
+				$state['order_number'] = (string) $order->get_order_number();
+
+				if ( self::STATUS_IDLE === $state['status'] ) {
+					$state['status'] = self::STATUS_READY;
+				}
+
+				return $state;
+			}
+		);
+	}
+
+	/**
+	 * Stand the prompt down when a refund or cancellation leaves no recovered cart to point to.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @return void
+	 */
+	public function recovery_reversed(): void {
+		if ( $this->recovered_carts() > 0 ) {
 			return;
 		}
 
-		$state['amount']       = (float) $order->get_total();
-		$state['currency']     = (string) $order->get_currency();
-		$state['order_number'] = (string) $order->get_order_number();
+		$this->mutate(
+			function ( array $state ): ?array {
+				if ( $this->is_closed( $state ) || self::STATUS_IDLE === $state['status'] ) {
+					return null;
+				}
 
-		if ( self::STATUS_IDLE === $state['status'] ) {
-			$state['status'] = self::STATUS_READY;
-		}
-
-		$this->save( $state );
+				return array_merge( $this->normalise( array() ), array( 'emailed_at' => $state['emailed_at'] ) );
+			}
+		);
 	}
 
 	/**
@@ -204,11 +229,16 @@ final class ReviewPrompt {
 			return;
 		}
 
-		$state               = $this->state();
-		$state['emailed_at'] = $this->claimed_from;
-
+		$emailed_at         = $this->claimed_from;
 		$this->claimed_from = null;
-		$this->save( $state );
+
+		$this->mutate(
+			static function ( array $state ) use ( $emailed_at ): array {
+				$state['emailed_at'] = $emailed_at;
+
+				return $state;
+			}
+		);
 	}
 
 	/**
@@ -252,20 +282,27 @@ final class ReviewPrompt {
 			return false;
 		}
 
-		$state = $this->state();
+		return $this->mutate(
+			function ( array $state ) use ( $choice ): ?array {
+				if ( $this->is_closed( $state ) ) {
+					return null;
+				}
 
-		if ( $this->is_closed( $state ) ) {
-			return true;
-		}
+				if ( self::CHOICE_LATER === $choice ) {
+					// Nothing has been asked yet, so there is nothing to put off.
+					if ( self::STATUS_IDLE === $state['status'] ) {
+						return null;
+					}
 
-		if ( self::CHOICE_LATER === $choice ) {
-			$state['status']        = self::STATUS_SNOOZED;
-			$state['snoozed_until'] = time() + self::SNOOZE_DAYS * DAY_IN_SECONDS;
-		} else {
-			$state['status'] = self::CHOICE_REVIEW === $choice ? self::STATUS_REVIEW_CLICKED : self::STATUS_DISMISSED;
-		}
+					$state['status']        = self::STATUS_SNOOZED;
+					$state['snoozed_until'] = time() + self::SNOOZE_DAYS * DAY_IN_SECONDS;
+				} else {
+					$state['status'] = self::CHOICE_REVIEW === $choice ? self::STATUS_REVIEW_CLICKED : self::STATUS_DISMISSED;
+				}
 
-		return $this->save( $state );
+				return $state;
+			}
+		);
 	}
 
 	/**
@@ -276,7 +313,18 @@ final class ReviewPrompt {
 	 * @return int
 	 */
 	public function recoveries(): int {
-		return max( 1, CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->count() );
+		return max( 1, $this->recovered_carts() );
+	}
+
+	/**
+	 * How many tracked carts are currently recovered.
+	 *
+	 * @since 1.1.3
+	 *
+	 * @return int
+	 */
+	private function recovered_carts(): int {
+		return CartSession::query()->where( 'status', '=', CartSession::STATUS_RECOVERED )->count();
 	}
 
 	/**
@@ -349,15 +397,31 @@ final class ReviewPrompt {
 	}
 
 	/**
-	 * Persist the prompt state.
+	 * Apply a change to the stored state without overwriting a concurrent write.
 	 *
 	 * @since 1.1.3
 	 *
-	 * @param array<string, mixed> $state Prompt state.
-	 * @return bool True when the state is stored, including when it was already current.
+	 * @param callable $change Receives the current state and returns the new one, or null to leave it as it is.
+	 * @return bool True when the change is stored or none was needed.
+	 *
+	 * @phpstan-param callable(array{status: string, snoozed_until: int, emailed_at: int, amount: float, currency: string, order_number: string}): ?array<string, mixed> $change
 	 */
-	private function save( array $state ): bool {
-		return update_option( self::OPTION, $state, false ) || get_option( self::OPTION ) === $state;
+	private function mutate( callable $change ): bool {
+		for ( $attempt = 0; $attempt < 3; $attempt++ ) {
+			$raw   = $this->raw_option();
+			$state = $this->normalise( null === $raw ? array() : maybe_unserialize( $raw ) );
+			$next  = $change( $state );
+
+			if ( null === $next || $next === $state ) {
+				return true;
+			}
+
+			if ( null === $raw ? add_option( self::OPTION, $next, '', false ) : $this->swap( $raw, $next ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

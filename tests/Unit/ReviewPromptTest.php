@@ -37,6 +37,17 @@ final class ReviewPromptTest extends TestCase {
 				return $changed;
 			}
 		);
+		Functions\when( 'add_option' )->alias(
+			function ( $key, $value ) {
+				if ( array_key_exists( $key, $this->options ) ) {
+					return false;
+				}
+
+				$this->options[ $key ] = $value;
+
+				return true;
+			}
+		);
 		Functions\when( 'maybe_serialize' )->alias( 'serialize' );
 		Functions\when( 'maybe_unserialize' )->alias( 'unserialize' );
 		Functions\when( 'wp_cache_delete' )->justReturn( true );
@@ -120,6 +131,48 @@ final class ReviewPromptTest extends TestCase {
 		$prompt->respond( ReviewPrompt::CHOICE_REVIEW );
 
 		$this->assertSame( 'review_clicked', $this->options[ ReviewPrompt::OPTION ]['status'] );
+	}
+
+	public function test_remind_later_before_any_recovery_changes_nothing(): void {
+		$prompt = new ReviewPrompt();
+
+		$this->assertTrue( $prompt->respond( ReviewPrompt::CHOICE_LATER ) );
+		$this->assertArrayNotHasKey( ReviewPrompt::OPTION, $this->options );
+	}
+
+	public function test_a_recovery_does_not_undo_a_dismissal_saved_meanwhile(): void {
+		$prompt = new ReviewPrompt();
+		$prompt->record_recovery( $this->order( 10, '1' ) );
+
+		$GLOBALS['wpdb']->before_update = function () {
+			$GLOBALS['wpdb']->before_update            = null;
+			$this->options[ ReviewPrompt::OPTION ]['status'] = 'dismissed';
+		};
+
+		$prompt->record_recovery( $this->order( 20, '2' ) );
+
+		$this->assertSame( 'dismissed', $this->options[ ReviewPrompt::OPTION ]['status'] );
+		$this->assertFalse( $prompt->is_due() );
+	}
+
+	public function test_reversing_the_only_recovery_stands_the_prompt_down(): void {
+		$prompt = new ReviewPrompt();
+		$prompt->record_recovery( $this->order( 10, '1' ) );
+
+		$GLOBALS['wpdb']->recovered = 0;
+		$prompt->recovery_reversed();
+
+		$this->assertFalse( $prompt->is_due() );
+		$this->assertNull( $prompt->for_admin() );
+	}
+
+	public function test_reversal_keeps_the_prompt_while_other_recoveries_remain(): void {
+		$prompt = new ReviewPrompt();
+		$prompt->record_recovery( $this->order( 10, '1' ) );
+
+		$prompt->recovery_reversed();
+
+		$this->assertTrue( $prompt->is_due() );
 	}
 
 	public function test_rejects_an_unknown_choice_without_changing_state(): void {
