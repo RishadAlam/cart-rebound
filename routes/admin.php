@@ -19,6 +19,7 @@ use CartRebound\Http\Controllers\CartsController;
 use CartRebound\Http\Controllers\CouponsController;
 use CartRebound\Http\Controllers\LogController;
 use CartRebound\Http\Controllers\OrdersController;
+use CartRebound\Http\Controllers\ReviewPromptController;
 use CartRebound\Http\Controllers\SettingsController;
 use CartRebound\Http\Controllers\StatsController;
 use CartRebound\Http\Controllers\TemplatesController;
@@ -49,3 +50,4 @@ Route::delete( 'templates/(?P<id>[0-9a-f-]+)', array( TemplatesController::class
 Route::post( 'templates/(?P<id>[0-9a-f-]+)/default', array( TemplatesController::class, 'set_default' ) )->middleware( $cart_rebound_admin );
 Route::get( 'settings', array( SettingsController::class, 'index' ) )->middleware( $cart_rebound_admin );
 Route::post( 'settings', array( SettingsController::class, 'update' ) )->middleware( $cart_rebound_admin );
+Route::post( 'review-prompt', array( ReviewPromptController::class, 'update' ) )->middleware( $cart_rebound_admin );

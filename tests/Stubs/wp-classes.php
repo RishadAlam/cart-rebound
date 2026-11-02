@@ -5,6 +5,7 @@ declare( strict_types=1 );
 defined( 'ARRAY_A' ) || define( 'ARRAY_A', 'ARRAY_A' );
 defined( 'ARRAY_N' ) || define( 'ARRAY_N', 'ARRAY_N' );
 defined( 'OBJECT' ) || define( 'OBJECT', 'OBJECT' );
+defined( 'DAY_IN_SECONDS' ) || define( 'DAY_IN_SECONDS', 86400 );
 
 if ( ! class_exists( 'WP_Error' ) ) {
 	class WP_Error {
@@ -142,6 +143,35 @@ if ( ! class_exists( 'WP_REST_Response' ) ) {
 		/** @return int */
 		public function get_status(): int {
 			return $this->status;
+		}
+	}
+}
+
+if ( ! class_exists( 'WC_Order' ) ) {
+	class WC_Order {
+
+		/** @var float */
+		public $total = 0.0;
+
+		/** @var string */
+		public $currency = 'USD';
+
+		/** @var string */
+		public $number = '';
+
+		/** @return float */
+		public function get_total() {
+			return $this->total;
+		}
+
+		/** @return string */
+		public function get_currency() {
+			return $this->currency;
+		}
+
+		/** @return string */
+		public function get_order_number() {
+			return $this->number;
 		}
 	}
 }

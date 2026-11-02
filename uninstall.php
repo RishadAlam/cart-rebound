@@ -52,6 +52,7 @@ if ( is_readable( $cart_rebound_autoloader ) ) {
 		'cart_rebound_migrations',
 		'cart_rebound_lifetime_abandoned',
 		'cart_rebound_lifetime_recovered',
+		'cart_rebound_review_prompt',
 	);
 
 	foreach ( $cart_rebound_options as $cart_rebound_option ) {

@@ -12,6 +12,7 @@ namespace CartRebound\Providers;
 defined( 'ABSPATH' ) || exit;
 
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
+use CartRebound\Admin\ReviewPrompt;
 use CartRebound\Core\ServiceProvider;
 use CartRebound\Cron\AbandonmentDetector;
 use CartRebound\Cron\Janitor;
@@ -57,6 +58,7 @@ final class CartReboundServiceProvider extends ServiceProvider {
 			RecoveryHandler::class,
 			OrderLinker::class,
 			RecoveryMailer::class,
+			ReviewPrompt::class,
 		);
 
 		foreach ( $singletons as $service ) {

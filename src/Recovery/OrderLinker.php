@@ -11,6 +11,7 @@ namespace CartRebound\Recovery;
 
 defined( 'ABSPATH' ) || exit;
 
+use CartRebound\Admin\ReviewPrompt;
 use CartRebound\Cron\Scheduler;
 use CartRebound\Events\EventDispatcher;
 use CartRebound\Mail\RecoveryMailer;
@@ -81,6 +82,14 @@ final class OrderLinker {
 	private $settings;
 
 	/**
+	 * Review request, armed by each recovered cart.
+	 *
+	 * @since 1.1.3
+	 * @var ReviewPrompt
+	 */
+	private $review;
+
+	/**
 	 * Per-request memo of the resolved paid-order-status list.
 	 *
 	 * @since 0.1.0
@@ -98,13 +107,15 @@ final class OrderLinker {
 	 * @param Scheduler       $scheduler Job scheduler.
 	 * @param RecoveryMailer  $mailer    Recovery mailer.
 	 * @param Settings        $settings  Settings store.
+	 * @param ReviewPrompt    $review    Review request.
 	 */
-	public function __construct( EventDispatcher $events, SessionManager $sessions, Scheduler $scheduler, RecoveryMailer $mailer, Settings $settings ) {
+	public function __construct( EventDispatcher $events, SessionManager $sessions, Scheduler $scheduler, RecoveryMailer $mailer, Settings $settings, ReviewPrompt $review ) {
 		$this->events    = $events;
 		$this->sessions  = $sessions;
 		$this->scheduler = $scheduler;
 		$this->mailer    = $mailer;
 		$this->settings  = $settings;
+		$this->review    = $review;
 	}
 
 	/**
@@ -352,6 +363,7 @@ final class OrderLinker {
 		}
 
 		$this->events->recovered( $fresh, $order, $via_link ? 'email_link' : 'direct' );
+		$this->review->record_recovery( $order );
 		$this->mailer->notify_admin( $fresh, $order );
 
 		$this->sessions->clear();

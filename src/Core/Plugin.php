@@ -97,6 +97,7 @@ final class Plugin {
 			'cart_rebound_db_version',
 			'cart_rebound_lifetime_abandoned',
 			'cart_rebound_lifetime_recovered',
+			'cart_rebound_review_prompt',
 		);
 
 		foreach ( $options as $option ) {
