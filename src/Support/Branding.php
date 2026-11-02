@@ -121,10 +121,11 @@ final class Branding {
 	 * @since 1.1.3
 	 *
 	 * @param mixed $value Raw value such as "#111", "var(--wp--preset--color--contrast)" or "var:preset|color|contrast".
+	 * @param int   $depth Preset references followed so far; a palette whose entries point at each other stops here.
 	 * @return string Hex colour, or '' when it cannot be resolved.
 	 */
-	private static function resolve( $value ): string {
-		if ( ! is_string( $value ) || '' === $value ) {
+	private static function resolve( $value, int $depth = 0 ): string {
+		if ( ! is_string( $value ) || '' === $value || $depth > 3 ) {
 			return '';
 		}
 
@@ -143,7 +144,7 @@ final class Branding {
 		foreach ( array( 'custom', 'theme', 'default' ) as $origin ) {
 			foreach ( (array) ( $palette[ $origin ] ?? array() ) as $entry ) {
 				if ( is_array( $entry ) && ( $entry['slug'] ?? '' ) === $match[1] ) {
-					return self::resolve( $entry['color'] ?? '' );
+					return self::resolve( $entry['color'] ?? '', $depth + 1 );
 				}
 			}
 		}
