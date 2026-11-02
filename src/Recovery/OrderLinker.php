@@ -345,7 +345,16 @@ final class OrderLinker {
 			'recovered_at'     => gmdate( 'Y-m-d H:i:s' ),
 		);
 
-		$saved = CartSession::update( $cart_id, $recovered );
+		// Compare-and-set on the status read above: when a gateway webhook and the thank-you page
+		// race, only one of them counts the recovery, arms the review request and emails the admin.
+		$claimed = CartSession::query()
+			->where( 'id', '=', $cart_id )
+			->where( 'status', '=', (string) ( $row['status'] ?? '' ) )
+			->update_where( $recovered );
+
+		if ( $claimed < 1 ) {
+			return;
+		}
 
 		$order->add_order_note(
 			sprintf(
@@ -358,9 +367,7 @@ final class OrderLinker {
 
 		$fresh = array_merge( $row, $recovered );
 
-		if ( $saved ) {
-			$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
-		}
+		$this->events->status_changed( $fresh, (string) ( $row['status'] ?? '' ) );
 
 		$method = $via_link ? 'email_link' : 'direct';
 
