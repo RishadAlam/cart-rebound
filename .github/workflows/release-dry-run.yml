@@ -34,7 +34,7 @@ jobs:
               with:
                   php-version: '8.2'
                   coverage: none
-                  tools: composer:v2
+                  tools: composer:v2, wp-cli
 
             - name: Read and verify the plugin version
               id: version
