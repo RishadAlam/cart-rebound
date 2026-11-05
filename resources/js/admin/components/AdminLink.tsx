@@ -1,19 +1,25 @@
-import type { MouseEvent, ReactNode } from 'react';
+import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { isPlainLeftClick, pageUrl } from '../lib/adminPages';
 
-interface AdminLinkProps {
+type AdminLinkProps = Omit<
+	AnchorHTMLAttributes<HTMLAnchorElement>,
+	'href' | 'className' | 'onClick'
+> & {
 	to: string;
 	end?: boolean;
+	state?: unknown;
 	className?: string | ((state: { isActive: boolean }) => string);
 	children: ReactNode;
-}
+};
 
 export const AdminLink = ({
 	to,
 	end = false,
+	state,
 	className,
 	children,
+	...rest
 }: AdminLinkProps) => {
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
@@ -27,11 +33,12 @@ export const AdminLink = ({
 		}
 
 		event.preventDefault();
-		void navigate(to);
+		void navigate(to, state === undefined ? undefined : { state });
 	};
 
 	return (
 		<a
+			{...rest}
 			href={pageUrl(to)}
 			className={
 				typeof className === 'function'
