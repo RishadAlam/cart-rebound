@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { Combobox } from '../components/Combobox';
 import {
@@ -95,6 +96,41 @@ const STATUS_GUIDE: Array<[string, string]> = [
 		),
 	],
 ];
+
+interface CartsPreset {
+	status: string;
+	search: string;
+	sort: { by: string; order: SortOrder };
+}
+
+const DEFAULT_SORT = { by: 'last_activity', order: 'desc' as SortOrder };
+
+const presetFrom = (state: unknown): CartsPreset => {
+	const preset: CartsPreset = { status: '', search: '', sort: DEFAULT_SORT };
+
+	if (typeof state !== 'object' || state === null) {
+		return preset;
+	}
+
+	const { status, search, orderby } = state as Record<string, unknown>;
+
+	if (typeof status === 'string' && FILTER_STATUSES.includes(status)) {
+		preset.status = status;
+	}
+
+	if (typeof search === 'string') {
+		preset.search = search.trim();
+	}
+
+	if (
+		typeof orderby === 'string' &&
+		(Object.values(SORTABLE) as string[]).includes(orderby)
+	) {
+		preset.sort = { by: orderby, order: 'desc' };
+	}
+
+	return preset;
+};
 
 const GuideBadge = ({ status }: { status: string }) => (
 	<span className={`cr-badge is-${status}`}>{statusLabel(status)}</span>
@@ -1210,15 +1246,15 @@ const SkeletonRows = () => (
 );
 
 export const Carts = () => {
-	const [status, setStatus] = useState('');
-	const [query, setQuery] = useState('');
-	const [search, setSearch] = useState('');
+	const preset = presetFrom(useLocation().state);
+	const [status, setStatus] = useState(preset.status);
+	const [query, setQuery] = useState(preset.search);
+	const [search, setSearch] = useState(preset.search);
 	const [page, setPage] = useState(1);
 	const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
-	const [sort, setSort] = useState<{ by: string; order: SortOrder }>({
-		by: 'last_activity',
-		order: 'desc',
-	});
+	const [sort, setSort] = useState<{ by: string; order: SortOrder }>(
+		preset.sort
+	);
 	const [selected, setSelected] = useState<Set<number>>(new Set());
 	const [bulkStatus, setBulkStatus] = useState('');
 	const [feedback, setFeedback] = useFeedback();
