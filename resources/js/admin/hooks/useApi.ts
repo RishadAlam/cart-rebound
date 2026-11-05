@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+	keepPreviousData,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from '@tanstack/react-query';
 import {
 	answerReviewPrompt,
 	bulkCarts,
@@ -57,12 +62,14 @@ export const useTimeseries = (days: number) =>
 	useQuery<TimeseriesPoint[]>({
 		queryKey: ['stats', 'timeseries', days],
 		queryFn: () => fetchTimeseries(days),
+		placeholderData: keepPreviousData,
 	});
 
 export const useProductReport = (days: number, limit: number) =>
 	useQuery<ProductReportRow[]>({
 		queryKey: ['stats', 'products', days, limit],
 		queryFn: () => fetchProductReport({ days, limit }),
+		placeholderData: keepPreviousData,
 	});
 
 export const useCarts = (query: CartsQuery) =>
