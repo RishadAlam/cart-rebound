@@ -1,3 +1,24 @@
+const withSymbol = (
+	number: string,
+	format: CartReboundBootData['currency']
+): string => {
+	const symbol = format.symbol !== '' ? format.symbol : format.code;
+	// Non-breaking, as in WooCommerce: a price must never wrap away from its symbol.
+	const space = ' ';
+
+	switch (format.position) {
+		case 'right':
+			return `${number}${symbol}`;
+		case 'left_space':
+			return `${symbol}${space}${number}`;
+		case 'right_space':
+			return `${number}${space}${symbol}`;
+		case 'left':
+		default:
+			return `${symbol}${number}`;
+	}
+};
+
 // Not Intl: it follows the browser locale, so an en-US admin would see `€1,234.50`
 // for a store configured with a comma decimal. Mirror the store's own settings.
 const formatWooCommerceMoney = (
@@ -16,26 +37,7 @@ const formatWooCommerceMoney = (
 		decimals > 0
 			? `${grouped}${format.decimalSeparator}${fraction}`
 			: grouped;
-	const symbol = format.symbol !== '' ? format.symbol : format.code;
-	// Non-breaking, as in WooCommerce: a price must never wrap away from its symbol.
-	const space = ' ';
-	let price: string;
-
-	switch (format.position) {
-		case 'right':
-			price = `${number}${symbol}`;
-			break;
-		case 'left_space':
-			price = `${symbol}${space}${number}`;
-			break;
-		case 'right_space':
-			price = `${number}${space}${symbol}`;
-			break;
-		case 'left':
-		default:
-			price = `${symbol}${number}`;
-			break;
-	}
+	const price = withSymbol(number, format);
 
 	return amount < 0 ? `-${price}` : price;
 };
@@ -76,4 +78,20 @@ export const formatNumber = (value: number, maximumFractionDigits = 1) => {
 	} catch {
 		return String(value);
 	}
+};
+
+export const formatMoneyTick = (amount: number, currency: string): string => {
+	let number = formatNumber(Math.round(amount), 0);
+
+	if (amount >= 1000000) {
+		number = `${formatNumber(amount / 1000000)}M`;
+	} else if (amount >= 10000) {
+		number = `${formatNumber(amount / 1000)}K`;
+	}
+
+	const wooCurrency = window.CartRebound?.currency;
+
+	return wooCurrency?.code === currency
+		? withSymbol(number, wooCurrency)
+		: number;
 };
