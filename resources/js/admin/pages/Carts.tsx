@@ -10,7 +10,7 @@ import {
 import { DEFAULT_PER_PAGE, Pagination } from '../components/Pagination';
 import { messageOf } from '../lib/errors';
 import { formatMoney } from '../lib/format';
-import { statusLabel } from '../lib/status';
+import { statusLabel, statusMeaning } from '../lib/status';
 import {
 	useBulkCarts,
 	useCarts,
@@ -51,51 +51,6 @@ const SORTABLE = {
 	activity: 'last_activity',
 	order: 'order_id',
 } as const;
-
-const STATUS_GUIDE: Array<[string, string]> = [
-	[
-		'active',
-		__(
-			'Shopper is still building their cart — no order placed yet.',
-			'cart-rebound'
-		),
-	],
-	[
-		'abandoned',
-		__(
-			'Idle past the threshold; a recovery email may be scheduled.',
-			'cart-rebound'
-		),
-	],
-	[
-		'pending-payment',
-		__(
-			'Order placed but not paid yet (e.g. cheque or bank transfer). Items are kept and no recovery email is sent.',
-			'cart-rebound'
-		),
-	],
-	[
-		'recovered',
-		__(
-			'An abandoned cart that came back and paid — a recovery win.',
-			'cart-rebound'
-		),
-	],
-	[
-		'completed',
-		__(
-			'Converted to a paid order without ever being abandoned.',
-			'cart-rebound'
-		),
-	],
-	[
-		'lost',
-		__(
-			'Abandoned and cleaned up, or a paid order later refunded or cancelled.',
-			'cart-rebound'
-		),
-	],
-];
 
 interface CartsPreset {
 	status: string;
@@ -143,10 +98,12 @@ const StatusGuide = () => (
 		</summary>
 		<div className="cr-guide__body">
 			<ul className="cr-guide__list">
-				{STATUS_GUIDE.map(([key, meaning]) => (
+				{CHANGE_STATUSES.map((key) => (
 					<li key={key} className="cr-guide__item">
 						<GuideBadge status={key} />
-						<span className="cr-guide__meaning">{meaning}</span>
+						<span className="cr-guide__meaning">
+							{statusMeaning(key)}
+						</span>
 					</li>
 				))}
 			</ul>
