@@ -536,26 +536,26 @@ Cart Rebound adds a single top-level admin menu entry. In `src/Admin/Menu.php` t
 
 The screen is a React single-page app with two views: a **Dashboard** of statistics and a **Carts** list. Both views read and write through the plugin's own REST routes (defined in `routes/admin.php`), every one of which is guarded by the middleware stack `array( 'nonce', 'can:manage_woocommerce' )`. So beyond seeing the menu, each data request also re-checks the nonce and the `manage_woocommerce` capability server-side.
 
-### Dashboard stat cards
+### Dashboard
 
-The Dashboard (`resources/js/admin/pages/Dashboard.tsx`) calls `GET stats`, which is served by `StatsController::index()` → `CartRepository::get_stats()`. It renders six cards in a responsive grid (2 columns on small screens, 3 on medium and up):
+The Dashboard (`resources/js/admin/pages/Dashboard.tsx`) reads existing REST routes only and does its period maths in the browser:
 
-| Card                  | Source value        | Notes                                                             |
-| --------------------- | ------------------- | ----------------------------------------------------------------- |
-| **Active**            | `counts.active`     | Count of carts with status `active`.                              |
-| **Abandoned**         | `counts.abandoned`  | Count of carts currently in status `abandoned`.                   |
-| **Recovered**         | `counts.recovered`  | Count of carts in status `recovered`.                             |
-| **Completed**         | `counts.completed`  | Count of carts in status `completed`.                             |
-| **Recovered revenue** | `recovered_revenue` | Sum of `recovered_amount` across all carts in status `recovered`. |
-| **Recovery rate**     | `recovery_rate`     | Shown as `{value}%`.                                              |
+| Area                       | Source                                                                | Notes                                                                                                                                                                                                                    |
+| -------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Summary sentence**       | `GET stats/timeseries?days={2 × period}` and `GET stats`              | The series is fetched two periods long: the latest `days` points are the period on screen, the rest the one it is compared with (`lib/period.ts`). The open-cart figure is `counts.abandoned` and `recoverable_revenue`. |
+| **Status band**            | `GET stats`                                                           | All six `counts`, drawn proportionally. Each legend entry links to the Carts list pre-filtered through router state. Shows `recovery_rate` (all time) and `recovered_revenue`.                                           |
+| **Abandoned and won back** | the same series                                                       | Grouped columns per day; weekly buckets at 90 days or when a day would get less than 14px. A table view sits under the chart.                                                                                            |
+| **Products**               | `GET stats/products?days={period}&limit=5`                            | Carts holding each product in the period, abandoned and won back.                                                                                                                                                        |
+| **Worth chasing**          | `GET carts?status=abandoned&orderby=cart_total&order=desc&per_page=5` | The biggest open carts; each row opens Carts filtered to that shopper.                                                                                                                                                   |
+| **Recovery setup**         | `GET settings`                                                        | `tracking_enabled`, `guest_tracking`, `recovery_email_enabled`, `email_delay_minutes`, `abandonment_threshold`.                                                                                                          |
 
 A few details worth knowing, grounded in `CartRepository::get_stats()`:
 
-- The per-status counts are live `COUNT` queries against the cart sessions table for each of the five statuses (`active`, `abandoned`, `recovered`, `completed`, `lost`). The Dashboard surfaces four of them as cards; `lost` is counted but not given its own card.
+- The per-status counts are live `COUNT` queries against the cart sessions table for each status (`active`, `abandoned`, `pending-payment`, `recovered`, `completed`, `lost`). The status band shows all of them.
 - **Recovery rate is computed from purge-immune lifetime counters, not the live counts.** It uses two persisted options (`EventDispatcher::OPTION_ABANDONED` and `EventDispatcher::OPTION_RECOVERED`) as `round( ( lifetime_recovered / lifetime_abandoned ) * 100, 1 )`, and is `0.0` when no carts have ever been abandoned. This is deliberate: the background Janitor deletes unrecovered abandoned carts, so a rate based on live status counts would drift upward over time.
-- **Recovered revenue** is formatted client-side with `Intl.NumberFormat` in `currency` style using the `currency` field returned by the API (which is `get_woocommerce_currency()`, or an empty string if WooCommerce is unavailable). If the currency is empty or `Intl` throws, it falls back to a plain two-decimal number.
+- Money is formatted client-side with the store's WooCommerce currency settings (symbol, position, separators, decimals) from the admin boot data. Other currencies fall back to `Intl.NumberFormat`, and an empty currency to a plain two-decimal number.
 
-The Dashboard shows `Loading…` while fetching. On error it shows `Could not load statistics.`, except for a `401` response, which renders `Your session has expired. Please reload the page.`
+The Dashboard shows skeleton placeholders while fetching. On error it shows `Could not load statistics.`, except for a `401` response, which renders `Your session has expired. Please reload the page.`
 
 ### Carts tab
 

@@ -232,28 +232,23 @@ So you know what normal looks like:
 
 **Cart Rebound → Dashboard** answers one question: is this making me money?
 
-![The Cart Rebound dashboard: overview metrics, a revenue chart, recent activity and a product report](images/dashboard.png)
+![The Cart Rebound dashboard: a one-sentence summary, a bar of every cart by status, a chart of abandoned and won-back value, and the open carts worth chasing](images/dashboard.png)
 
-The six boxes across the top:
+**The sentence at the top** says, in plain words, how much you won back in the period you picked (the last 7, 30 or 90 days) and from how many carts. Under it you see how that compares with the period before, and how many abandoned carts are still open right now and what they are worth.
 
-| Box                     | In one line                                                    |
-| ----------------------- | -------------------------------------------------------------- |
-| **Recoverable orders**  | Carts sitting in Abandoned right now — your live opportunity.  |
-| **Recovered orders**    | How many you have won back.                                    |
-| **Lost orders**         | Ones that got away, plus sales later refunded or cancelled.    |
-| **Recoverable revenue** | What those abandoned carts are worth if every one came back.   |
-| **Recovered revenue**   | Money you have actually won back. **The number that matters.** |
-| **Recovery rate**       | The share of all abandoned carts you have ever won back.       |
+**The coloured bar** below it splits every cart on record by status: Active, Abandoned, Pending payment, Recovered, Completed and Lost. Point at a colour to see what that status means. Click a name in the key to open the Carts list already filtered to it. Above the bar you see your **all-time recovery rate** and how much your recovered carts have brought in. The **ⓘ** next to each one explains it, so you never have to come back here.
 
-Every box has a small **ⓘ** — hover it and the definition appears, so you never have to come back here.
+> **One thing that confuses people:** the recovery rate will not match _recovered ÷ abandoned_ from the bar. That is on purpose. The bar is a snapshot of the carts on record right now, but old unconverted carts get cleaned up after 30 days — so if the rate were worked out from them, it would creep upward every time the store tidied itself and flatter you with a number that was not true. The rate is counted separately, across your whole history, and cleanup cannot touch it.
 
-> **One thing that confuses people:** the recovery rate will not match _recovered ÷ recoverable_ from the boxes beside it. That is on purpose. Those two boxes are a snapshot of right now, but old unconverted carts get cleaned up after 30 days — so if the rate were worked out from them, it would creep upward every time the store tidied itself and flatter you with a number that was not true. The rate is counted separately, across your whole history, and cleanup cannot touch it.
+Below the summary:
 
-Below the boxes:
+- **Abandoned and won back** — value abandoned against value won back, day by day (week by week for 90 days, or on a narrow screen). Point at a day, or tab into the chart and use the arrow keys, to read its numbers. **Show these numbers as a table** lists every day.
+- **Products left in abandoned carts** — which products turn up most in abandoned carts in the period, and how many of those carts came back. Useful for spotting a product where something at checkout is putting people off.
 
-- **Revenue over time** — value abandoned against value won back, day by day. Switch between the last 7, 30 or 90 days.
-- **Recent activity** — the six most recent carts, whatever their status.
-- **Product report** — which products get abandoned most, and how many of each came back. Useful for spotting a product where something at checkout is putting people off.
+Down the right-hand side:
+
+- **Worth chasing** — your biggest open carts, with how long ago each one was abandoned. Click one to find it in **Carts**.
+- **Recovery setup** — whether cart tracking, guest tracking and the recovery email are on, and how long a cart must sit untouched before it counts as abandoned. Anything that stops you recovering carts is highlighted, with a link to fix it.
 
 ---
 
@@ -542,5 +537,5 @@ Open the WooCommerce order and read the order note. If it says _linked to tracke
 **My revenue went down after a refund.**
 That is intended. Refunding or cancelling an order moves the cart to **Lost** and removes the money from recovered revenue, so your reporting only ever shows sales you actually kept.
 
-**The recovery rate does not match the boxes above it.**
-It is not supposed to. The boxes are right now; the rate is your whole history, counted in a way that cleanup cannot inflate. See [Dashboard](#dashboard--how-am-i-doing).
+**The recovery rate does not match the bar next to it.**
+It is not supposed to. The bar shows the carts on record right now; the rate is your whole history, counted in a way that cleanup cannot inflate. See [Dashboard](#dashboard--how-am-i-doing).

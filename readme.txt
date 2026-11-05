@@ -153,10 +153,11 @@ The Cart Rebound dashboard turns tracked sessions into practical cart recovery r
 * recovered revenue;
 * lifetime cart recovery rate;
 * abandoned versus recovered value over time;
-* recent cart activity; and
+* the biggest open carts still worth chasing;
+* whether tracking and recovery emails are switched on; and
 * products found in abandoned and recovered carts.
 
-Revenue trends can be viewed over recent 7-day, 30-day, or 90-day periods. The product report helps identify items that frequently appear in abandoned shopping carts and shows which products later appear in recovered carts.
+Revenue trends can be viewed over recent 7-day, 30-day, or 90-day periods, each compared with the period before it. The product report helps identify items that frequently appear in abandoned shopping carts and shows which products later appear in recovered carts.
 
 These reports describe recorded recovery activity; they do not claim that the plugin caused every purchasing decision or guarantee a particular recovery percentage.
 
@@ -430,7 +431,7 @@ The plugin's administrative interface also uses protected REST endpoints under t
 
 == Screenshots ==
 
-1. **WooCommerce cart recovery dashboard** — Monitor recoverable orders, recovered orders, lost orders, recoverable revenue, recovered revenue, lifetime recovery rate, revenue trends, recent activity, and product performance.
+1. **WooCommerce cart recovery dashboard** — See recovered revenue in plain words, every cart by status, lifetime recovery rate, abandoned versus recovered value over time, the open carts worth chasing, recovery setup, and product performance.
 2. **Abandoned cart management** — Filter every tracked cart, review status and order attribution, inspect details, copy recovery links, send follow-up emails, update statuses, and perform bulk actions.
 3. **Recovery email template builder** — Create reusable rich-text abandoned cart emails with merge tags, Media Library images, WooCommerce coupons, previews, sender details, and test sends.
 4. **Cart recovery activity log** — Trace abandoned carts, sent reminder emails, linked WooCommerce orders, recovered carts, cleanup, and failures using level, event, and cart filters.
