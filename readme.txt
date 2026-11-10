@@ -20,7 +20,7 @@ Every abandoned checkout is a sale that almost happened. Some store owners call 
 
 It works for logged-in customers and, if you turn it on, for guest shoppers too. It supports the classic WooCommerce checkout, the **Checkout Block / Store API**, **variable products**, coupons, and **WooCommerce High-Performance Order Storage (HPOS)**. Guest tracking and automatic emails start switched off, so you decide when to use them.
 
-New here? The [Quick start guide](https://cart-rebound.com/docs/quick-start) walks you through the first setup, and the full [Cart Rebound documentation](https://cart-rebound.com/docs/quick-start) explains every screen and setting.
+New here? The [Quick start guide](https://cart-rebound.com/docs/quick-start) walks you through the first setup, and the documentation links below explain every screen and setting.
 
 = WooCommerce abandoned cart recovery at a glance =
 
@@ -79,9 +79,7 @@ When checkout creates an order, Cart Rebound tags the order with the cart it cam
 
 = Automated abandoned cart emails =
 
-Once you turn on email, Cart Rebound schedules one email for each abandoned cart that qualifies. You choose how long to wait and which template to use.
-
-Before each send, Cart Rebound checks that the cart still qualifies, so a customer who already bought doesn't get a pointless reminder. Every sent email is recorded, so the same automatic email never goes out twice.
+Once you turn on email, Cart Rebound schedules one email for each abandoned cart that qualifies. You choose how long to wait and which template to use. Every sent email is recorded, so the same automatic email never goes out twice.
 
 Emails go out through the normal WordPress mail system. If you use an SMTP or transactional email plugin that works with `wp_mail()`, Cart Rebound uses it too. Whether an email reaches the inbox still depends on your hosting, DNS, mail provider, and SMTP setup.
 
@@ -121,9 +119,7 @@ Cart Rebound works with coupons in two ways:
 1. Coupon codes that were already on the cart are saved and applied again when the cart is restored.
 2. You can attach an existing WooCommerce coupon to an email template and show its code with `{coupon_code}`.
 
-Cart Rebound doesn't create new coupons for you. WooCommerce still controls each coupon's expiry, usage limits, product rules, and discount.
-
-Recovery links also bring back product quantities and variations. WooCommerce runs its usual checks as items go back into the cart, so current stock, purchasability, and catalog rules still apply.
+Cart Rebound doesn't create new coupons for you. WooCommerce still controls each coupon's expiry, usage limits, product rules, and discount, and runs its usual stock and catalog checks as items go back into the cart.
 
 = Secure one-click cart recovery links =
 
@@ -169,7 +165,7 @@ The dashboard turns your tracked carts into WooCommerce cart recovery reports yo
 
 You can view the last 7, 30, or 90 days, and each period is compared with the one before it. The product report shows which items are often left in abandoned shopping carts and which of them later come back in recovered carts.
 
-The reports show what was recorded. They don't claim that Cart Rebound caused every sale, and they don't promise any particular recovery rate.
+The reports show what was recorded; they don't claim Cart Rebound caused every sale.
 
 = Privacy tools and safe defaults =
 
@@ -183,29 +179,17 @@ Cart and checkout details can be personal data. Cart Rebound gives you tools to 
 * the WordPress personal data tools can export cart and activity data
 * the same tools can erase matching cart and log data
 
-No plugin can make a store compliant with GDPR, PECR, CCPA, CAN-SPAM, or any other privacy or email marketing law on its own. It is up to you to decide your legal basis, get consent where it's needed, respect each customer's marketing choices, set retention periods, keep your site secure, and publish an accurate privacy notice.
+No plugin can make a store compliant with GDPR, PECR, CCPA, CAN-SPAM, or any other privacy or email marketing law on its own. Your legal basis, consent, and privacy notice stay your responsibility.
 
 = WooCommerce compatibility =
 
-Cart Rebound is built for how WooCommerce works today:
-
-* the classic checkout
-* the Checkout Block and Store API
-* registered customers, plus guest customers if you turn it on
-* simple and variable products
-* WooCommerce coupons
-* High-Performance Order Storage (HPOS)
-* background jobs through Action Scheduler
-* the WooCommerce order APIs
-* paid order statuses you choose
-
-WooCommerce must be installed and active. Some third-party checkout, cart, caching, translation, or email extensions change how WooCommerce normally behaves, so compatibility with a specific one can vary.
+Cart Rebound is built for how WooCommerce works today: the classic checkout and the Checkout Block, simple and variable products, coupons, High-Performance Order Storage (HPOS), Action Scheduler background jobs, and the WooCommerce order APIs. Some third-party checkout, cart, caching, translation, or email extensions change how WooCommerce normally behaves, so compatibility with a specific one can vary.
 
 = Documentation and support =
 
 Getting started:
 
-* [Installation](https://cart-rebound.com/docs/installation) and [Quick start](https://cart-rebound.com/docs/quick-start)
+* [Quick start](https://cart-rebound.com/docs/quick-start)
 * [Cart statuses](https://cart-rebound.com/docs/cart-statuses): what active, abandoned, recovered, completed, and lost mean
 
 Setting it up:
@@ -218,21 +202,7 @@ Daily use and reports:
 
 * [Dashboard and reports](https://cart-rebound.com/docs/dashboard), [Manage carts](https://cart-rebound.com/docs/manage-carts), and the [Activity log](https://cart-rebound.com/docs/activity-log)
 * [Revenue attribution](https://cart-rebound.com/docs/attribution): how a recovered order is counted
-* [Privacy and data](https://cart-rebound.com/docs/privacy-and-data)
 * [Troubleshooting](https://cart-rebound.com/docs/troubleshooting)
-
-For developers:
-
-* [Actions and filters](https://cart-rebound.com/docs/developers/hooks)
-* [REST API](https://cart-rebound.com/docs/developers/rest-api)
-
-Guides:
-
-* [WooCommerce cart abandonment explained](https://cart-rebound.com/guides/woocommerce-cart-abandonment)
-* [How to reduce your cart abandonment rate](https://cart-rebound.com/guides/reduce-cart-abandonment-rate)
-* [Abandoned cart emails not sending](https://cart-rebound.com/guides/woocommerce-abandoned-cart-not-sending-emails)
-* [GDPR and abandoned cart emails](https://cart-rebound.com/guides/gdpr-abandoned-cart-emails)
-* [How to measure your cart recovery rate](https://cart-rebound.com/guides/measure-cart-recovery-rate)
 
 More links:
 
@@ -241,7 +211,6 @@ More links:
 * [Changelog](https://cart-rebound.com/changelog) and [roadmap](https://cart-rebound.com/roadmap)
 * [Support forum](https://wordpress.org/support/plugin/cart-rebound/)
 * [Report a bug or request a feature](https://github.com/RishadAlam/cart-rebound/issues)
-* [Source code on GitHub](https://github.com/RishadAlam/cart-rebound)
 
 = Requirements =
 
@@ -251,27 +220,13 @@ More links:
 
 = Privacy =
 
-Cart Rebound may store a plugin session ID, WordPress user ID, email address, first and last name, phone number, cart products, quantities, variations, prices, coupon codes, totals, currency, cart and order status, order references, recovered amounts, timestamps, and related activity logs.
-
-To keep track of a cart, Cart Rebound sets a first-party cookie called `cart_rebound_ref`. It holds a random ID created by the plugin. The cookie is HTTP-only, uses SameSite=Lax, is marked Secure on HTTPS sites, and lasts about 30 days.
-
-Guest tracking is off by default. Carts of logged-in customers are tracked while the plugin is active. Before you turn on tracking or recovery emails, check your legal basis and whether you need consent.
-
-Automatic recovery emails are also off by default. When you turn them on, they are sent through your site's WordPress mail system. Cart Rebound does not send tracked cart data, telemetry, or usage information to the plugin author or to any Cart Rebound service. Your hosting, SMTP, mail, security, backup, or integration providers may still handle data, depending on how your site is set up.
-
-By default, open and unrecovered carts that have gone stale are deleted after 30 days, and recovered or completed carts after 365 days. You can change both. A cart's activity log is deleted along with the cart.
-
-Cart Rebound adds exporters and erasers to the WordPress personal data tools. Requests are matched by email address and, for registered shoppers, by WordPress user ID. Recovery tokens and checkout links are left out of exports for security.
-
-Suggested text is added to the WordPress privacy policy guide. You stay responsible for consent, lawful processing, email marketing rules, retention settings, answering privacy requests, keeping stored data safe, and publishing an accurate privacy notice.
+Cart Rebound stores cart and customer details in your own WordPress database and sets one first-party cookie, `cart_rebound_ref`. It does not send tracked cart data, telemetry, or usage information to the plugin author or to any Cart Rebound service. The FAQ below lists exactly what is stored, and [Privacy and data](https://cart-rebound.com/docs/privacy-and-data) covers it in full.
 
 = Development =
 
 The full, human-readable source (PHP, TypeScript, React, and CSS), along with tests, build setup, and documentation, is on GitHub at [github.com/RishadAlam/cart-rebound](https://github.com/RishadAlam/cart-rebound).
 
 Cart Rebound fires WordPress actions for custom integrations, including `cart_rebound_abandoned`, `cart_rebound_recovered` and `cart_rebound_cart_status_changed`. Its admin REST routes live under the `cart-rebound/v1` namespace and need the right permission. See the [actions and filters reference](https://cart-rebound.com/docs/developers/hooks) and the [REST API reference](https://cart-rebound.com/docs/developers/rest-api).
-
-To build a production package, run `pnpm production-zip`. The repository docs cover Composer, Node.js, pnpm, testing, translation, and local development.
 
 The bundled third-party JavaScript libraries use the MIT License, which is compatible with the GPL. Their copyright and license notices are in `THIRD-PARTY-LICENSES.txt`.
 
@@ -468,6 +423,20 @@ Yes. Cart Rebound declares support for High-Performance Order Storage and uses t
 
 Cart Rebound gives you privacy-friendly controls, but it can't guarantee legal compliance on its own. Guest tracking and automatic emails are off by default, retention is up to you, every email has an unsubscribe link, data stays on your site, and the WordPress export and erase tools are supported. Each store still has to set these up and run them according to the laws that apply to it.
 
+= What data does Cart Rebound store? =
+
+Cart Rebound may store a plugin session ID, WordPress user ID, email address, first and last name, phone number, cart products, quantities, variations, prices, coupon codes, totals, currency, cart and order status, order references, recovered amounts, timestamps, and related activity logs. A cart's activity log is deleted along with the cart.
+
+Logged-in customers' carts are tracked while the plugin is active. Guest tracking and automatic recovery emails are off by default. Before you turn them on, check your legal basis and whether you need consent. Emails go through your site's WordPress mail system, so your hosting, SMTP, mail, security, backup, or integration providers may still handle data, depending on how your site is set up.
+
+= Does Cart Rebound set cookies? =
+
+Yes, one. To keep track of a cart, it sets a first-party cookie called `cart_rebound_ref`. It holds a random ID created by the plugin. The cookie is HTTP-only, uses SameSite=Lax, is marked Secure on HTTPS sites, and lasts about 30 days.
+
+= How does Cart Rebound handle personal data requests? =
+
+It adds exporters and erasers to the WordPress personal data tools. Requests are matched by email address and, for registered shoppers, by WordPress user ID. Recovery tokens and checkout links are left out of exports for security. Suggested text is also added to the WordPress privacy policy guide. You stay responsible for consent, lawful processing, email marketing rules, retention settings, answering privacy requests, keeping stored data safe, and publishing an accurate privacy notice.
+
 = Can customers unsubscribe from cart recovery emails? =
 
 Yes. Every recovery email has an unsubscribe link. Cart Rebound checks for unsubscribed addresses before sending any future recovery email.
@@ -479,6 +448,16 @@ A daily cleanup deletes old records based on your retention settings. By default
 = What happens when Cart Rebound is uninstalled? =
 
 When you delete the plugin the normal WordPress way, it removes its tables, settings, templates, counters, and scheduled tasks. Deactivating it keeps everything, so you can turn it back on later.
+
+= Where can I learn more about cart abandonment? =
+
+The Cart Rebound site has plain-English guides:
+
+* [WooCommerce cart abandonment explained](https://cart-rebound.com/guides/woocommerce-cart-abandonment)
+* [How to reduce your cart abandonment rate](https://cart-rebound.com/guides/reduce-cart-abandonment-rate)
+* [Abandoned cart emails not sending](https://cart-rebound.com/guides/woocommerce-abandoned-cart-not-sending-emails)
+* [GDPR and abandoned cart emails](https://cart-rebound.com/guides/gdpr-abandoned-cart-emails)
+* [How to measure your cart recovery rate](https://cart-rebound.com/guides/measure-cart-recovery-rate)
 
 = Does Cart Rebound prevent cart abandonment? =
 
