@@ -42,7 +42,7 @@ New here? The [Quick start guide](https://cart-rebound.com/docs/quick-start) wal
 
 = Who Cart Rebound is for =
 
-* **Small WooCommerce shops** that want free abandoned cart recovery with no monthly fees, paid tiers, or usage caps on carts and emails.
+* **Small WooCommerce shops** that want free abandoned cart recovery without a monthly SaaS subscription or caps on carts and emails.
 * **Stores with guest checkout** that need to capture the shopper's checkout email before the order is placed, so an abandoned checkout can still be followed up.
 * **Owners who want simple abandoned cart reminder emails** with their own wording, a table of the items left behind, and an optional discount coupon.
 * **Stores using the WooCommerce Checkout Block** as well as the classic checkout page.
@@ -351,7 +351,7 @@ Yes. The **Carts** screen lists every tracked cart with its status: active, aban
 
 = Is there a limit on how many carts or emails Cart Rebound handles? =
 
-No. There is no paid plan and no cap on tracked carts, abandoned cart emails, or recovered orders. Your hosting and mail provider set the practical limits on how much email your store can send.
+No. The free version does not cap tracked carts, abandoned cart emails, or recovered orders. Your hosting and mail provider set the practical limits on how much email your store can send.
 
 = Will Cart Rebound slow down my store? =
 
