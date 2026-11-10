@@ -31,6 +31,20 @@ const WIDE_ROUTES = ['/', '/carts', '/logs'];
 // Ask for a review only where recovery results are on screen, not over setup work.
 const REVIEW_ROUTES = ['/', '/carts'];
 
+const docs = window.CartRebound?.docs ?? {};
+
+const ExternalIcon = () => (
+	<svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+		<path
+			d="M9.5 3.5h3v3m0-3L7 9m-1-5H4.5a1 1 0 0 0-1 1v6.5a1 1 0 0 0 1 1H11a1 1 0 0 0 1-1V10"
+			stroke="currentColor"
+			strokeWidth="1.4"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		/>
+	</svg>
+);
+
 // WordPress sizes its sticky admin menu from a page height it measures only on load
 // and resize, so re-pin it whenever the app's own height changes.
 const useRepinAdminMenu = () => {
@@ -66,21 +80,38 @@ export const Layout = () => {
 	const { pathname } = useLocation();
 	const wide = WIDE_ROUTES.includes(pathname);
 	const appRef = useRepinAdminMenu();
+	const docsUrl = docs[pathname] ?? docs['/'];
 
 	return (
 		<div ref={appRef} className="cr-app">
 			<OnboardingWizard />
 
 			<header className="cr-header">
-				<h1 className="cr-header__title">
-					{__('Cart Rebound', 'cart-rebound')}
-				</h1>
-				<p className="cr-header__subtitle">
-					{__(
-						'Recover more WooCommerce sales with automated emails, secure recovery links, and clear revenue tracking.',
-						'cart-rebound'
-					)}
-				</p>
+				<div className="cr-header__text">
+					<h1 className="cr-header__title">
+						{__('Cart Rebound', 'cart-rebound')}
+					</h1>
+					<p className="cr-header__subtitle">
+						{__(
+							'Recover more WooCommerce sales with automated emails, secure recovery links, and clear revenue tracking.',
+							'cart-rebound'
+						)}
+					</p>
+				</div>
+				{docsUrl && (
+					<a
+						className="cr-linkbtn cr-header__help"
+						href={docsUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						{__('Help with this page', 'cart-rebound')}
+						<ExternalIcon />
+						<span className="cr-sr-only">
+							{__('(opens in a new tab)', 'cart-rebound')}
+						</span>
+					</a>
+				)}
 			</header>
 
 			<nav className="cr-tabs">

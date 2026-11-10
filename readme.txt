@@ -18,6 +18,8 @@ Shopping cart abandonment happens when a customer adds products but leaves befor
 
 The plugin supports logged-in customers, optional guest cart tracking, classic WooCommerce checkout, the **Checkout Block / Store API**, **variable products**, applied coupons, and **WooCommerce High-Performance Order Storage (HPOS)**. Guest tracking and automatic emails are disabled by default so each store can choose when to enable them.
 
+New here? The [Quick start guide](https://cart-rebound.com/docs/quick-start) walks through the first setup, and the full [Cart Rebound documentation](https://cart-rebound.com/docs/quick-start) covers every screen and setting.
+
 = WooCommerce abandoned cart recovery at a glance =
 
 - Track active shopping carts for registered customers, with a one-switch option to pause tracking anytime.
@@ -191,6 +193,48 @@ Cart Rebound is designed for current WooCommerce architecture:
 
 WooCommerce must be installed and active. Compatibility with a specific third-party checkout, cart, caching, multilingual, or email extension can depend on how that extension modifies standard WooCommerce behavior.
 
+= Documentation and support =
+
+Getting started:
+
+* [Installation](https://cart-rebound.com/docs/installation) and [Quick start](https://cart-rebound.com/docs/quick-start)
+* [Cart statuses](https://cart-rebound.com/docs/cart-statuses): what active, abandoned, recovered, completed, and lost mean
+
+Configuration:
+
+* [Settings reference](https://cart-rebound.com/docs/settings): every setting and its default
+* [Email templates](https://cart-rebound.com/docs/email-templates) and [merge tags](https://cart-rebound.com/docs/merge-tags)
+* [Recovery links](https://cart-rebound.com/docs/recovery-links)
+
+Daily use and reporting:
+
+* [Dashboard and reports](https://cart-rebound.com/docs/dashboard), [Manage carts](https://cart-rebound.com/docs/manage-carts), and the [Activity log](https://cart-rebound.com/docs/activity-log)
+* [Revenue attribution](https://cart-rebound.com/docs/attribution): how a recovered order is counted
+* [Privacy and data](https://cart-rebound.com/docs/privacy-and-data)
+* [Troubleshooting](https://cart-rebound.com/docs/troubleshooting)
+
+Developers:
+
+* [Actions and filters](https://cart-rebound.com/docs/developers/hooks)
+* [REST API](https://cart-rebound.com/docs/developers/rest-api)
+
+Guides:
+
+* [WooCommerce cart abandonment explained](https://cart-rebound.com/guides/woocommerce-cart-abandonment)
+* [How to reduce your cart abandonment rate](https://cart-rebound.com/guides/reduce-cart-abandonment-rate)
+* [Abandoned cart emails not sending](https://cart-rebound.com/guides/woocommerce-abandoned-cart-not-sending-emails)
+* [GDPR and abandoned cart emails](https://cart-rebound.com/guides/gdpr-abandoned-cart-emails)
+* [How to measure your cart recovery rate](https://cart-rebound.com/guides/measure-cart-recovery-rate)
+
+More links:
+
+* [Official website](https://cart-rebound.com/)
+* [Full FAQ](https://cart-rebound.com/faq)
+* [Changelog](https://cart-rebound.com/changelog) and [roadmap](https://cart-rebound.com/roadmap)
+* [Support forum](https://wordpress.org/support/plugin/cart-rebound/)
+* [Report a bug or request a feature](https://github.com/RishadAlam/cart-rebound/issues)
+* [Source code on GitHub](https://github.com/RishadAlam/cart-rebound)
+
 = Requirements =
 
 * WooCommerce must be installed and active.
@@ -217,7 +261,7 @@ Suggested disclosure text is added to the WordPress privacy-policy guide. Site o
 
 Human-readable PHP, TypeScript, React, and CSS source, tests, build configuration, and documentation are available at [github.com/RishadAlam/cart-rebound](https://github.com/RishadAlam/cart-rebound).
 
-The plugin exposes lifecycle actions for custom integrations, including `cart_rebound_abandoned`, `cart_rebound_recovered` and `cart_rebound_cart_status_changed`. Administrative REST routes use the `cart-rebound/v1` namespace and require the appropriate permission.
+The plugin exposes lifecycle actions for custom integrations, including `cart_rebound_abandoned`, `cart_rebound_recovered` and `cart_rebound_cart_status_changed`. Administrative REST routes use the `cart-rebound/v1` namespace and require the appropriate permission. See the [actions and filters reference](https://cart-rebound.com/docs/developers/hooks) and the [REST API reference](https://cart-rebound.com/docs/developers/rest-api).
 
 Production packages can be created with `pnpm production-zip`. See the repository documentation for Composer, Node.js, pnpm, testing, translation, and local-development instructions.
 
@@ -235,6 +279,8 @@ Bundled third-party JavaScript libraries are GPL-compatible and distributed unde
 8. Open **Templates** to review the default recovery email, sender details, merge tags, and optional coupon.
 9. Send a test email and confirm that the site's email delivery is configured correctly.
 10. Enable automatic recovery email when the store is ready to send customer reminders.
+
+Step-by-step instructions are in the [installation guide](https://cart-rebound.com/docs/installation) and the [Quick start](https://cart-rebound.com/docs/quick-start).
 
 = See the whole thing work in three minutes =
 
@@ -409,6 +455,10 @@ A normal WordPress uninstall removes the plugin's tables, settings, templates, c
 = Does Cart Rebound prevent cart abandonment? =
 
 Cart Rebound focuses on cart abandonment recovery: winning back eligible carts after shoppers leave. Its product and revenue reports may help a store investigate patterns, but the plugin does not promise to eliminate the underlying causes of checkout abandonment.
+
+= Where can I get help? =
+
+Start with the [Cart Rebound documentation](https://cart-rebound.com/docs/quick-start) and the [Troubleshooting guide](https://cart-rebound.com/docs/troubleshooting). If you still need help, post in the [WordPress.org support forum](https://wordpress.org/support/plugin/cart-rebound/). Bugs and feature requests can be filed on [GitHub](https://github.com/RishadAlam/cart-rebound/issues).
 
 = Can developers integrate Cart Rebound with other automation? =
 

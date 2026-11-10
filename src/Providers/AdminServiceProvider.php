@@ -12,6 +12,7 @@ namespace CartRebound\Providers;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Admin\Menu;
+use CartRebound\Admin\PluginLinks;
 use CartRebound\Core\ServiceProvider;
 
 /**
@@ -30,6 +31,7 @@ final class AdminServiceProvider extends ServiceProvider {
 	 */
 	public function register(): void {
 		$this->app->singleton( Menu::class );
+		$this->app->singleton( PluginLinks::class );
 	}
 
 	/**
@@ -40,6 +42,8 @@ final class AdminServiceProvider extends ServiceProvider {
 	 * @return void
 	 */
 	public function boot(): void {
+		$this->app->make( PluginLinks::class )->register();
+
 		add_action(
 			'admin_menu',
 			function (): void {

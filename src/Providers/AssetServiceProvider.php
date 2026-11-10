@@ -12,6 +12,7 @@ namespace CartRebound\Providers;
 defined( 'ABSPATH' ) || exit;
 
 use CartRebound\Admin\Menu;
+use CartRebound\Admin\PluginLinks;
 use CartRebound\Admin\ReviewPrompt;
 use CartRebound\Core\ServiceProvider;
 use CartRebound\Support\Branding;
@@ -192,6 +193,7 @@ final class AssetServiceProvider extends ServiceProvider {
 			'nonce'        => wp_create_nonce( 'wp_rest' ),
 			'initialRoute' => $route,
 			'pages'        => $pages,
+			'docs'         => $this->app->make( PluginLinks::class )->route_docs(),
 			'theme'        => Branding::colors(),
 			'reviewPrompt' => $this->app->make( ReviewPrompt::class )->for_admin(),
 			'currency'     => array(

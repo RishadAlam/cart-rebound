@@ -11,6 +11,8 @@
 
 ## Documentation
 
+🌐 **[Online documentation → cart-rebound.com/docs](https://cart-rebound.com/docs/quick-start)**: the published guides, starting with [Quick start](https://cart-rebound.com/docs/quick-start), [Settings reference](https://cart-rebound.com/docs/settings), [Merge tags](https://cart-rebound.com/docs/merge-tags), [Troubleshooting](https://cart-rebound.com/docs/troubleshooting), [Actions and filters](https://cart-rebound.com/docs/developers/hooks) and the [REST API](https://cart-rebound.com/docs/developers/rest-api). Also: [FAQ](https://cart-rebound.com/faq), [Changelog](https://cart-rebound.com/changelog), [Roadmap](https://cart-rebound.com/roadmap), [WordPress.org page](https://wordpress.org/plugins/cart-rebound/) and [support forum](https://wordpress.org/support/plugin/cart-rebound/).
+
 📖 **[Plain-English guide → `docs/MANUAL.md`](docs/MANUAL.md)** — start here if you run the shop. No jargon: what an abandoned cart is, a five-minute setup, a worked example of one customer being won back, then a tour of every screen with a screenshot of it.
 
 🔧 **[Usage & developer guide → `docs/USAGE.md`](docs/USAGE.md)** — step-by-step installation, every setting, how tracking & recovery work end to end, the admin dashboard, and the events + REST API reference.

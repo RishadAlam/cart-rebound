@@ -115,7 +115,40 @@
 }
 
 .cr-header {
+	display: flex;
+	align-items: baseline;
+	gap: 24px;
 	margin-bottom: 4px;
+}
+
+.cr-header__text {
+	flex: 1;
+	min-width: 0;
+}
+
+.cr-header__help {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+}
+
+@media (max-width: 782px) {
+	.cr-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+}
+
+.cr-header__help svg {
+	width: 14px;
+	height: 14px;
+}
+
+.cr-header__help:dir(rtl) svg {
+	transform: scaleX(-1);
 }
 
 .cr-header__title {
