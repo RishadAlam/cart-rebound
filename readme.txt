@@ -12,9 +12,11 @@ Self-hosted WooCommerce abandoned cart recovery plugin. Track cart abandonment, 
 
 == Description ==
 
-**Cart Rebound** is a lightweight, self-hosted **abandoned cart recovery plugin for WooCommerce**. It helps you track abandoned carts, send automated **cart recovery** emails with coupon codes, and restore lost checkouts in one click — without monthly SaaS fees or external accounts. If you need a WooCommerce abandoned cart plugin that keeps every cart and email inside your own store, Cart Rebound is built for that.
+**Cart Rebound** is a free, lightweight, self-hosted **abandoned cart recovery plugin for WooCommerce**. It helps you track abandoned carts, send automated **cart recovery** emails with coupon codes, and restore lost checkouts in one click — without monthly SaaS fees or external accounts. If you need a WooCommerce abandoned cart plugin that keeps every cart and email inside your own store, Cart Rebound is built for that.
 
 Shopping cart abandonment happens when a customer adds products but leaves before completing checkout. Cart Rebound handles the whole cart abandonment recovery cycle: it records eligible carts, detects when they become inactive, and gives the shopper a direct path back to purchase. Store owners get clear abandoned cart reports, customizable reminder emails, secure recovery URLs, product insights, and accurate cart-to-order attribution inside WordPress.
+
+Every abandoned checkout is a sale that almost happened. Some store owners call them incomplete orders; either way, the shopper chose products, started checkout, and left. Cart Rebound helps you recover lost sales from those carts with a timely abandoned cart reminder and a link that takes the shopper straight back to checkout with everything still in place.
 
 The plugin supports logged-in customers, optional guest cart tracking, classic WooCommerce checkout, the **Checkout Block / Store API**, **variable products**, applied coupons, and **WooCommerce High-Performance Order Storage (HPOS)**. Guest tracking and automatic emails are disabled by default so each store can choose when to enable them.
 
@@ -37,6 +39,15 @@ New here? The [Quick start guide](https://cart-rebound.com/docs/quick-start) wal
 - Keep all tracking data in your site's own WordPress database with configurable retention and auto-cleanup controls.
 - Use built-in WordPress privacy exporters, erasers, and one-click email unsubscribe links.
 - Connect custom workflows through WordPress lifecycle actions and protected REST endpoints.
+
+= Who Cart Rebound is for =
+
+* **Small WooCommerce shops** that want free abandoned cart recovery with no monthly fees, paid tiers, or usage caps on carts and emails.
+* **Stores with guest checkout** that need to capture the shopper's checkout email before the order is placed, so an abandoned checkout can still be followed up.
+* **Owners who want simple abandoned cart reminder emails** with their own wording, a table of the items left behind, and an optional discount coupon.
+* **Stores using the WooCommerce Checkout Block** as well as the classic checkout page.
+* **Shop owners who want honest numbers**: which products are left in carts most often, how many abandoned carts came back, and how much revenue was won back.
+* **Developers and agencies** who want to send abandoned cart events to a CRM, an email marketing tool, or a webhook through custom code or an automation plugin.
 
 = How Cart Rebound recovers abandoned carts =
 
@@ -71,6 +82,8 @@ When checkout creates an order, Cart Rebound adds an explicit reference to the o
 Cart Rebound provides focused email automation for stores that want a clear, manageable recovery workflow. Once enabled, one email is scheduled for each eligible abandoned cart. Store owners choose the send delay and the default template used for automatic reminders.
 
 Before sending, the plugin verifies that the cart is still eligible. This protects customers from receiving an unnecessary reminder after they have already completed the purchase. Successful sends are recorded so the same automatic message is not sent twice.
+
+This makes Cart Rebound a good fit when you want one well-timed abandoned cart follow-up email that brings shoppers back, instead of a long marketing sequence to manage.
 
 Recovery messages use the site's normal WordPress mail system. If the store uses an SMTP or transactional email plugin that integrates with `wp_mail()`, Cart Rebound uses that existing delivery configuration. Email deliverability remains dependent on the site's hosting, DNS, mail provider, and SMTP configuration.
 
@@ -328,6 +341,22 @@ A WooCommerce abandoned cart plugin records eligible shopping carts, identifies 
 
 Yes. Cart Rebound is a free WooCommerce abandoned cart plugin and open-source software licensed under GPLv2 or later. The plugin does not require a paid Cart Rebound account, subscription, or license key.
 
+= How do I recover abandoned carts in WooCommerce? =
+
+Install and activate Cart Rebound, then open its **Settings**. Choose how long a cart must sit idle before it counts as abandoned, turn on guest cart tracking if your store allows guest checkout, and switch on the recovery email with the delay you want. When a shopper leaves, Cart Rebound sends an abandoned cart reminder with a link that rebuilds their cart and opens checkout. The [Quick start guide](https://cart-rebound.com/docs/quick-start) walks through each step.
+
+= Can I see abandoned checkouts and incomplete orders? =
+
+Yes. The **Carts** screen lists every tracked cart with its status: active, abandoned, pending payment, recovered, completed, or lost. You can filter by status, open a cart to see its products and customer details, copy its recovery link, or send a reminder. Orders that were created but never paid show as pending payment until WooCommerce marks them paid.
+
+= Is there a limit on how many carts or emails Cart Rebound handles? =
+
+No. There is no paid plan and no cap on tracked carts, abandoned cart emails, or recovered orders. Your hosting and mail provider set the practical limits on how much email your store can send.
+
+= Will Cart Rebound slow down my store? =
+
+Cart Rebound is built to stay light. Abandonment scans and recovery emails run in the background through WooCommerce Action Scheduler, not while a shopper is loading a page. Cart data is stored in the plugin's own database tables, and old records are cleaned up on the schedule you choose.
+
 = When is a cart considered abandoned? =
 
 You choose the idle-time threshold in minutes. A cart must have items and a captured, valid email address. After it remains inactive beyond the threshold, the next scheduled scan marks it abandoned.
@@ -423,6 +452,10 @@ Yes. Enable admin recovery notification and choose an email address, or use the 
 = Does Cart Rebound track email opens and clicks? =
 
 No. The current version records recovery email send activity but does not include open-rate or click-rate tracking.
+
+= Can Cart Rebound send abandoned cart SMS or WhatsApp messages? =
+
+No. Cart Rebound sends recovery reminders by email only. Developers can use the `cart_rebound_abandoned` action, which includes the shopper's details and recovery link, to pass an abandoned cart to an SMS or messaging service of their choice.
 
 = Does Cart Rebound use an external service? =
 
