@@ -1,6 +1,6 @@
 === Cart Rebound – Abandoned Cart Recovery for WooCommerce ===
 Contributors: rishadbitcode
-Tags: abandoned cart, cart recovery, woocommerce, cart abandonment, abandoned cart recovery
+Tags: abandoned cart, cart recovery, woocommerce, cart abandonment recovery, abandoned cart recovery
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -12,9 +12,9 @@ Self-hosted WooCommerce abandoned cart recovery plugin. Track cart abandonment, 
 
 == Description ==
 
-**Cart Rebound** is a lightweight, self-hosted **abandoned cart recovery plugin for WooCommerce**. It helps you track abandoned carts, send automated **cart recovery** emails with coupon codes, and restore lost checkouts in one click — without monthly SaaS fees or external accounts.
+**Cart Rebound** is a lightweight, self-hosted **abandoned cart recovery plugin for WooCommerce**. It helps you track abandoned carts, send automated **cart recovery** emails with coupon codes, and restore lost checkouts in one click — without monthly SaaS fees or external accounts. If you need a WooCommerce abandoned cart plugin that keeps every cart and email inside your own store, Cart Rebound is built for that.
 
-Shopping cart abandonment happens when a customer adds products but leaves before completing checkout. Cart Rebound records eligible carts, detects when they become inactive, and gives the shopper a direct path back to purchase. Store owners get clear abandoned cart reports, customizable reminder emails, secure recovery URLs, product insights, and accurate cart-to-order attribution inside WordPress.
+Shopping cart abandonment happens when a customer adds products but leaves before completing checkout. Cart Rebound handles the whole cart abandonment recovery cycle: it records eligible carts, detects when they become inactive, and gives the shopper a direct path back to purchase. Store owners get clear abandoned cart reports, customizable reminder emails, secure recovery URLs, product insights, and accurate cart-to-order attribution inside WordPress.
 
 The plugin supports logged-in customers, optional guest cart tracking, classic WooCommerce checkout, the **Checkout Block / Store API**, **variable products**, applied coupons, and **WooCommerce High-Performance Order Storage (HPOS)**. Guest tracking and automatic emails are disabled by default so each store can choose when to enable them.
 
@@ -144,7 +144,7 @@ Recovered revenue is the paid WooCommerce order total linked to a recovered cart
 
 = Cart abandonment dashboard and analytics =
 
-The Cart Rebound dashboard turns tracked sessions into practical cart recovery reporting. Store managers can monitor:
+The Cart Rebound dashboard turns tracked sessions into practical WooCommerce cart recovery reporting. Store managers can monitor:
 
 * recoverable orders;
 * recovered orders;
@@ -276,11 +276,11 @@ Cart abandonment occurs when a shopper adds products to a WooCommerce cart but l
 
 = What does an abandoned cart recovery plugin do? =
 
-An abandoned cart plugin records eligible shopping carts, identifies when a checkout has been left incomplete, and provides a way to re-engage the shopper. Cart Rebound can send a reminder email with a secure link that restores the saved cart and returns the customer to checkout.
+A WooCommerce abandoned cart plugin records eligible shopping carts, identifies when a checkout has been left incomplete, and provides a way to re-engage the shopper. Cart Rebound can send a reminder email with a secure link that restores the saved cart and returns the customer to checkout.
 
 = Is Cart Rebound free? =
 
-Yes. Cart Rebound is free, open-source software licensed under GPLv2 or later. The plugin does not require a paid Cart Rebound account, subscription, or license key.
+Yes. Cart Rebound is a free WooCommerce abandoned cart plugin and open-source software licensed under GPLv2 or later. The plugin does not require a paid Cart Rebound account, subscription, or license key.
 
 = When is a cart considered abandoned? =
 
@@ -380,7 +380,7 @@ No. The current version records recovery email send activity but does not includ
 
 = Does Cart Rebound use an external service? =
 
-No. The plugin does not require an external cart recovery platform or Cart Rebound account. Data is stored in the WordPress database and email is sent through the site's configured WordPress mail system.
+No. WooCommerce cart recovery runs inside your own WordPress site, without an external recovery platform or Cart Rebound account. Data is stored in the WordPress database and email is sent through the site's configured WordPress mail system.
 
 = Does it work with SMTP plugins? =
 
@@ -408,7 +408,7 @@ A normal WordPress uninstall removes the plugin's tables, settings, templates, c
 
 = Does Cart Rebound prevent cart abandonment? =
 
-Cart Rebound focuses on recovering eligible carts after shoppers leave. Its product and revenue reports may help a store investigate patterns, but the plugin does not promise to eliminate the underlying causes of checkout abandonment.
+Cart Rebound focuses on cart abandonment recovery: winning back eligible carts after shoppers leave. Its product and revenue reports may help a store investigate patterns, but the plugin does not promise to eliminate the underlying causes of checkout abandonment.
 
 = Can developers integrate Cart Rebound with other automation? =
 
