@@ -213,6 +213,48 @@ const previousDays = (days: number): string =>
 		days
 	);
 
+interface Retention {
+	unrecovered: number;
+	converted: number;
+}
+
+const retentionOf = (settings: Settings | undefined): Retention | undefined =>
+	settings
+		? {
+				unrecovered: settings.cleanup_days,
+				converted: settings.converted_cleanup_days,
+			}
+		: undefined;
+
+const purgeNote = (
+	days: number,
+	retention: Retention | undefined
+): string | null =>
+	retention && days > retention.unrecovered
+		? sprintf(
+				/* translators: %d: number of days, set in Settings. */
+				_n(
+					'Abandoned carts that are not won back are deleted after %d day, so older ones are missing here.',
+					'Abandoned carts that are not won back are deleted after %d days, so older ones are missing here.',
+					retention.unrecovered,
+					'cart-rebound'
+				),
+				retention.unrecovered
+			)
+		: null;
+
+const PurgeNote = ({
+	days,
+	retention,
+}: {
+	days: number;
+	retention: Retention | undefined;
+}) => {
+	const note = purgeNote(days, retention);
+
+	return note === null ? null : <p className="cr-panel__sub">{note}</p>;
+};
+
 const customerOf = (cart: Cart): string => {
 	const name = `${cart.first_name} ${cart.last_name}`.trim();
 
@@ -283,13 +325,19 @@ const Comparison = ({
 	previous,
 	days,
 	currency,
+	retention,
 }: {
 	current: Tally;
 	previous: Tally;
 	days: number;
 	currency: string;
+	retention: Retention | undefined;
 }) => {
+	// Recovered carts older than the retention window are deleted, so the earlier period would read low.
+	const previousKept = !retention || days * 2 <= retention.converted;
+
 	if (
+		!previousKept ||
 		!hasActivity(previous) ||
 		current.recovered + previous.recovered === 0
 	) {
@@ -371,14 +419,17 @@ const Headline = ({
 	previous,
 	days,
 	trackingOff,
+	retention,
 }: {
 	stats: Stats;
 	current: Tally;
 	previous: Tally;
 	days: number;
 	trackingOff: boolean;
+	retention: Retention | undefined;
 }) => {
 	const currency = stats.currency;
+	const note = purgeNote(days, retention);
 
 	if (current.recovered > 0) {
 		return (
@@ -407,6 +458,7 @@ const Headline = ({
 						previous={previous}
 						days={days}
 						currency={currency}
+						retention={retention}
 					/>
 					<OpenNow stats={stats} />
 				</p>
@@ -430,6 +482,7 @@ const Headline = ({
 						previous={previous}
 						days={days}
 						currency={currency}
+						retention={retention}
 					/>
 					{interpolate(
 						/* translators: 1: number of carts, e.g. "3 carts", 2: their combined value. */
@@ -446,6 +499,7 @@ const Headline = ({
 							</strong>,
 						]
 					)}{' '}
+					{note !== null && <>{note} </>}
 					<OpenNow stats={stats} />
 				</p>
 			</>
@@ -549,12 +603,14 @@ const SummaryPanel = ({
 	days,
 	onDays,
 	trackingOff,
+	retention,
 }: {
 	stats: Stats | undefined;
 	series: ReturnType<typeof useTimeseries>;
 	days: number;
 	onDays: (next: number) => void;
 	trackingOff: boolean;
+	retention: Retention | undefined;
 }) => {
 	const shownDays = series.data
 		? Math.max(1, Math.floor(series.data.length / 2))
@@ -591,6 +647,7 @@ const SummaryPanel = ({
 				previous={tally(periods.previous)}
 				days={shownDays}
 				trackingOff={trackingOff}
+				retention={retention}
 			/>
 		);
 	}
@@ -639,9 +696,11 @@ const SummaryPanel = ({
 const TrendPanel = ({
 	series,
 	currency,
+	retention,
 }: {
 	series: ReturnType<typeof useTimeseries>;
 	currency: string;
+	retention: Retention | undefined;
 }) => {
 	const shownDays = series.data
 		? Math.max(1, Math.floor(series.data.length / 2))
@@ -652,9 +711,11 @@ const TrendPanel = ({
 		shownDays > 0 &&
 		(width - PLOT_GUTTER) / shownDays < MIN_DAY_SLOT;
 	const weekly = shownDays >= WEEKLY_FROM || narrow;
+	// Whole weeks only: the series runs two periods long, so the oldest week borrows its missing days.
+	const chartedDays = weekly ? Math.ceil(shownDays / 7) * 7 : shownDays;
 	const buckets = series.data
 		? bucketize(
-				splitPeriods(series.data, shownDays).current,
+				splitPeriods(series.data, chartedDays).current,
 				weekly ? 7 : 1
 			)
 		: [];
@@ -706,6 +767,7 @@ const TrendPanel = ({
 							'cart-rebound'
 						)}
 					</p>
+					<PurgeNote days={chartedDays} retention={retention} />
 				</div>
 				{charted && <RecoveryLegend />}
 			</header>
@@ -735,9 +797,11 @@ const productName = (row: ProductReportRow): string =>
 const ProductsPanel = ({
 	days,
 	products,
+	retention,
 }: {
 	days: number;
 	products: ReturnType<typeof useProductReport>;
+	retention: Retention | undefined;
 }) => {
 	const rows = products.data ?? [];
 	const top = Math.max(1, ...rows.map((row) => row.abandoned));
@@ -828,6 +892,7 @@ const ProductsPanel = ({
 							days
 						)}
 					</p>
+					<PurgeNote days={days} retention={retention} />
 				</div>
 			</header>
 			<div
@@ -886,7 +951,11 @@ const OpenCartsPanel = ({ openCount }: { openCount: number | undefined }) => {
 					<li key={cart.id}>
 						<AdminLink
 							to="/carts"
-							state={{ status: 'abandoned', search: cart.email }}
+							state={{
+								status: 'abandoned',
+								search: cart.email,
+								cart,
+							}}
 							className="cr-open__row"
 						>
 							<span className="cr-open__who">
@@ -1156,6 +1225,7 @@ export const Dashboard = () => {
 	const series = useTimeseries(days * 2);
 	const products = useProductReport(days, PRODUCT_ROWS);
 	const settings = useSettings();
+	const retention = retentionOf(settings.data);
 
 	if (stats.isError || (!stats.isLoading && !stats.data)) {
 		const sessionExpired =
@@ -1183,12 +1253,18 @@ export const Dashboard = () => {
 						days={days}
 						onDays={setDays}
 						trackingOff={settings.data?.tracking_enabled === false}
+						retention={retention}
 					/>
 					<TrendPanel
 						series={series}
 						currency={stats.data?.currency ?? ''}
+						retention={retention}
 					/>
-					<ProductsPanel days={days} products={products} />
+					<ProductsPanel
+						days={days}
+						products={products}
+						retention={retention}
+					/>
 				</div>
 				<div className="cr-dash__rail">
 					<OpenCartsPanel openCount={stats.data?.counts.abandoned} />

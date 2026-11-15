@@ -56,18 +56,24 @@ interface CartsPreset {
 	status: string;
 	search: string;
 	sort: { by: string; order: SortOrder };
+	cart: Cart | null;
 }
 
 const DEFAULT_SORT = { by: 'last_activity', order: 'desc' as SortOrder };
 
 const presetFrom = (state: unknown): CartsPreset => {
-	const preset: CartsPreset = { status: '', search: '', sort: DEFAULT_SORT };
+	const preset: CartsPreset = {
+		status: '',
+		search: '',
+		sort: DEFAULT_SORT,
+		cart: null,
+	};
 
 	if (typeof state !== 'object' || state === null) {
 		return preset;
 	}
 
-	const { status, search, orderby } = state as Record<string, unknown>;
+	const { status, search, orderby, cart } = state as Record<string, unknown>;
 
 	if (typeof status === 'string' && FILTER_STATUSES.includes(status)) {
 		preset.status = status;
@@ -82,6 +88,14 @@ const presetFrom = (state: unknown): CartsPreset => {
 		(Object.values(SORTABLE) as string[]).includes(orderby)
 	) {
 		preset.sort = { by: orderby, order: 'desc' };
+	}
+
+	if (
+		typeof cart === 'object' &&
+		cart !== null &&
+		typeof (cart as Partial<Cart>).id === 'number'
+	) {
+		preset.cart = cart as Cart;
 	}
 
 	return preset;
@@ -1217,7 +1231,7 @@ export const Carts = () => {
 	const [feedback, setFeedback] = useFeedback();
 	const [recoverCart, setRecoverCart] = useState<Cart | null>(null);
 	const [sendCart, setSendCart] = useState<Cart | null>(null);
-	const [detailCart, setDetailCart] = useState<Cart | null>(null);
+	const [detailCart, setDetailCart] = useState<Cart | null>(preset.cart);
 
 	const { data, isLoading, isFetching, isError } = useCarts({
 		status,
