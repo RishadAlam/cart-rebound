@@ -48,6 +48,7 @@ for runtime_path in "${RUNTIME_PATHS[@]}"; do
 	rsync -a --relative --prune-empty-dirs \
 		--exclude='.gitkeep' \
 		--exclude='.DS_Store' \
+		--exclude='assets/images/banners/' \
 		"./${runtime_path}" "${STAGE}/"
 done
 
