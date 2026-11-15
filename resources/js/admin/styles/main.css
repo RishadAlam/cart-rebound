@@ -3661,6 +3661,9 @@ a.cr-linkbtn {
 .cr-rchart__plot svg {
 	display: block;
 	overflow: visible;
+
+	/* The plot is drawn in physical coordinates; RTL would flip every text-anchor. */
+	direction: ltr;
 }
 
 .cr-rchart__grid {
@@ -4064,7 +4067,7 @@ a.cr-linkbtn {
 	font-size: var(--cr-text-s);
 	font-weight: 400;
 	line-height: 1.45;
-	text-align: left;
+	text-align: start;
 	opacity: 0;
 	transform: translate(-50%, 4px);
 	pointer-events: none;

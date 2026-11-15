@@ -46,15 +46,17 @@ const cartCount = (count: number): string =>
 		formatNumber(count, 0)
 	);
 
-const tipStyle = (part: Part): CSSProperties => {
-	const center = part.start + part.share / 2;
+// The bar is a flex row, so in RTL its parts run from the right edge.
+const tipStyle = (part: Part, rtl: boolean): CSSProperties => {
+	const start = rtl ? 100 - part.start - part.share : part.start;
+	const center = start + part.share / 2;
 
 	if (center < 15) {
-		return { left: `${part.start}%` };
+		return { left: `${start}%` };
 	}
 
 	if (center > 85) {
-		return { left: `${part.start + part.share}%`, translate: '-100% 0' };
+		return { left: `${start + part.share}%`, translate: '-100% 0' };
 	}
 
 	return { left: `${center}%`, translate: '-50% 0' };
@@ -149,7 +151,10 @@ export const StatusBand = ({ counts }: { counts: Record<string, number> }) => {
 			{focused && (
 				<div
 					className="cr-band__tip"
-					style={tipStyle(focused)}
+					style={tipStyle(
+						focused,
+						document.documentElement.dir === 'rtl'
+					)}
 					aria-hidden="true"
 				>
 					<p className="cr-band__tiphead">
