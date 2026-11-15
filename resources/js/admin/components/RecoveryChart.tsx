@@ -221,9 +221,13 @@ export const RecoveryChart = ({
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
 		const last = buckets.length - 1;
 		const from = active ?? last;
+		const back = Math.max(0, from - 1);
+		const forward = Math.min(last, from + 1);
 		const next: Record<string, number> = {
-			ArrowLeft: Math.max(0, from - 1),
-			ArrowRight: Math.min(last, from + 1),
+			ArrowLeft: back,
+			ArrowDown: back,
+			ArrowRight: forward,
+			ArrowUp: forward,
 			Home: 0,
 			End: last,
 		};
@@ -333,7 +337,12 @@ export const RecoveryChart = ({
 										y={y + 4}
 										textAnchor="end"
 									>
-										{formatMoneyTick(step * tick, currency)}
+										{formatMoneyTick(
+											step * tick,
+											currency,
+											step,
+											axisMax
+										)}
 									</text>
 								</g>
 							);

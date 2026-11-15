@@ -21,11 +21,11 @@ const withSymbol = (
 
 // Not Intl: it follows the browser locale, so an en-US admin would see `€1,234.50`
 // for a store configured with a comma decimal. Mirror the store's own settings.
-const formatWooCommerceMoney = (
+const formatStoreNumber = (
 	amount: number,
+	decimals: number,
 	format: CartReboundBootData['currency']
 ): string => {
-	const decimals = Math.max(0, Math.min(20, format.decimals));
 	const [integer = '0', fraction = ''] = Math.abs(amount)
 		.toFixed(decimals)
 		.split('.');
@@ -33,11 +33,21 @@ const formatWooCommerceMoney = (
 		/\B(?=(\d{3})+(?!\d))/g,
 		format.thousandSeparator
 	);
-	const number =
-		decimals > 0
-			? `${grouped}${format.decimalSeparator}${fraction}`
-			: grouped;
-	const price = withSymbol(number, format);
+
+	return decimals > 0
+		? `${grouped}${format.decimalSeparator}${fraction}`
+		: grouped;
+};
+
+const formatWooCommerceMoney = (
+	amount: number,
+	format: CartReboundBootData['currency']
+): string => {
+	const decimals = Math.max(0, Math.min(20, format.decimals));
+	const price = withSymbol(
+		formatStoreNumber(amount, decimals, format),
+		format
+	);
 
 	return amount < 0 ? `-${price}` : price;
 };
@@ -80,18 +90,50 @@ export const formatNumber = (value: number, maximumFractionDigits = 1) => {
 	}
 };
 
-export const formatMoneyTick = (amount: number, currency: string): string => {
-	let number = formatNumber(Math.round(amount), 0);
+const COMPACT_FROM = 10000;
 
-	if (amount >= 1000000) {
-		number = `${formatNumber(amount / 1000000)}M`;
-	} else if (amount >= 10000) {
-		number = `${formatNumber(amount / 1000)}K`;
+const stepDecimals = (step: number): number => {
+	for (let decimals = 0; decimals < 2; decimals++) {
+		const scaled = step * 10 ** decimals;
+
+		if (Math.abs(scaled - Math.round(scaled)) < 1e-9) {
+			return decimals;
+		}
 	}
 
-	const wooCurrency = window.CartRebound?.currency;
+	return 2;
+};
 
-	return wooCurrency?.code === currency
-		? withSymbol(number, wooCurrency)
-		: number;
+const formatCompact = (value: number): string => {
+	try {
+		return new Intl.NumberFormat(
+			document.documentElement.lang || undefined,
+			{ notation: 'compact', maximumFractionDigits: 2 }
+		).format(value);
+	} catch {
+		return formatNumber(value);
+	}
+};
+
+// One format for every tick on an axis, so a compact axis never mixes `5,000` with `10K`.
+export const formatMoneyTick = (
+	amount: number,
+	currency: string,
+	step: number,
+	axisMax: number
+): string => {
+	const wooCurrency = window.CartRebound?.currency;
+	const store = wooCurrency?.code === currency ? wooCurrency : undefined;
+	const decimals = stepDecimals(step);
+	let number: string;
+
+	if (axisMax >= COMPACT_FROM && amount !== 0) {
+		number = formatCompact(amount);
+	} else if (store) {
+		number = formatStoreNumber(amount, decimals, store);
+	} else {
+		number = formatNumber(amount, decimals);
+	}
+
+	return store ? withSymbol(number, store) : number;
 };
