@@ -5,7 +5,6 @@
  * Description:       Free, self-hosted WooCommerce cart abandonment recovery with automated emails, secure restore links, coupons, and revenue reports.
  * Version:           1.2.0
  * Requires at least: 6.2
- * Tested up to:      7.1
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
  * Author:            Rishad Alam
