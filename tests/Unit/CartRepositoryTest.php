@@ -82,6 +82,68 @@ final class CartRepositoryTest extends TestCase {
 		$this->assertContains( 42, $call['args'] );
 	}
 
+	public function test_timeseries_counts_only_carts_that_are_still_recovered(): void {
+		Functions\when( 'wp_timezone' )->justReturn( new \DateTimeZone( 'UTC' ) );
+
+		$this->repository()->get_timeseries( 7 );
+
+		$this->assertCount( 2, $this->wpdb->prepared );
+		$this->assertStringContainsString( "(%s = '' OR status = %s)", $this->wpdb->prepared[1]['query'] );
+		$this->assertSame( '', end( $this->wpdb->prepared[0]['args'] ) );
+		$this->assertSame( CartSession::STATUS_RECOVERED, end( $this->wpdb->prepared[1]['args'] ) );
+	}
+
+	public function test_timeseries_days_follow_the_store_time_zone(): void {
+		$zone = new \DateTimeZone( 'Asia/Dhaka' );
+		Functions\when( 'wp_timezone' )->justReturn( $zone );
+
+		$series = $this->repository()->get_timeseries( 7 );
+		$today  = new \DateTimeImmutable( 'today', $zone );
+		$args   = $this->wpdb->prepared[0]['args'];
+
+		$this->assertCount( 7, $series );
+		$this->assertSame( $today->format( 'Y-m-d' ), $series[6]['date'] );
+		$this->assertSame( 21600, $args[1] );
+		$this->assertSame(
+			$today->modify( '-6 days' )->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ),
+			$args[5]
+		);
+	}
+
+	public function test_product_report_does_not_count_a_reversed_recovery_as_won_back(): void {
+		Functions\when( 'wp_timezone' )->justReturn( new \DateTimeZone( 'UTC' ) );
+
+		$recent   = gmdate( 'Y-m-d H:i:s', time() - 3600 );
+		$contents = (string) json_encode( array( array( 'product_id' => 5, 'name' => 'Mug' ) ) );
+
+		$this->wpdb->rows = array(
+			array(
+				'cart_contents' => $contents,
+				'status'        => CartSession::STATUS_LOST,
+				'abandoned_at'  => $recent,
+				'recovered_at'  => $recent,
+			),
+			array(
+				'cart_contents' => $contents,
+				'status'        => CartSession::STATUS_RECOVERED,
+				'abandoned_at'  => $recent,
+				'recovered_at'  => $recent,
+			),
+		);
+
+		$report = $this->repository()->get_product_report( 7, 5 );
+
+		$this->assertSame( 2, $report[0]['abandoned'] );
+		$this->assertSame( 1, $report[0]['recovered'] );
+	}
+
+	private function repository(): CartRepository {
+		return new CartRepository(
+			new EventDispatcher( new RecoveryLink() ),
+			new CartDataCleaner( new Scheduler() )
+		);
+	}
+
 	public function test_a_zero_search_does_not_match_carts_without_an_order(): void {
 		Functions\when( 'get_woocommerce_currency' )->justReturn( 'USD' );
 

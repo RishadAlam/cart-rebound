@@ -198,7 +198,7 @@ final class CartRepository {
 	}
 
 	/**
-	 * Daily recovery time series for the dashboard chart.
+	 * Daily recovery time series for the dashboard chart, in store-local days.
 	 *
 	 * @since 0.1.0
 	 *
@@ -206,17 +206,17 @@ final class CartRepository {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function get_timeseries( int $days ): array {
-		$days  = max( 1, min( 180, $days ) );
-		$start = gmdate( 'Y-m-d', (int) strtotime( '-' . ( $days - 1 ) . ' days' ) );
-		$table = ( new CartSession() )->get_table();
+		$days   = max( 1, min( 180, $days ) );
+		$window = $this->local_window( $days );
+		$table  = ( new CartSession() )->get_table();
 
-		$abandoned = $this->daily_totals( $table, 'abandoned_at', 'cart_total', $start );
-		$recovered = $this->daily_totals( $table, 'recovered_at', 'recovered_amount', $start );
+		$abandoned = $this->daily_totals( $table, 'abandoned_at', 'cart_total', $window );
+		$recovered = $this->daily_totals( $table, 'recovered_at', 'recovered_amount', $window, CartSession::STATUS_RECOVERED );
 
 		$series = array();
 
 		for ( $offset = 0; $offset < $days; $offset++ ) {
-			$date = gmdate( 'Y-m-d', (int) strtotime( $start . ' +' . $offset . ' days' ) );
+			$date = $window['start']->modify( '+' . $offset . ' days' )->format( 'Y-m-d' );
 
 			$series[] = array(
 				'date'                => $date,
@@ -242,7 +242,7 @@ final class CartRepository {
 	public function get_product_report( int $days, int $limit ): array {
 		$days  = max( 1, min( 180, $days ) );
 		$limit = max( 1, min( 50, $limit ) );
-		$since = gmdate( 'Y-m-d', (int) strtotime( '-' . ( $days - 1 ) . ' days' ) ) . ' 00:00:00';
+		$since = $this->local_window( $days )['since'];
 		$table = ( new CartSession() )->get_table();
 
 		global $wpdb;
@@ -250,7 +250,7 @@ final class CartRepository {
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				'SELECT cart_contents, abandoned_at, recovered_at FROM %i WHERE abandoned_at >= %s OR recovered_at >= %s ORDER BY id DESC LIMIT %d',
+				'SELECT cart_contents, status, abandoned_at, recovered_at FROM %i WHERE abandoned_at >= %s OR recovered_at >= %s ORDER BY id DESC LIMIT %d',
 				$table,
 				$since,
 				$since,
@@ -270,7 +270,8 @@ final class CartRepository {
 			$recovered_at = (string) ( $row['recovered_at'] ?? '' );
 
 			$was_abandoned = '' !== $abandoned_at && $abandoned_at >= $since;
-			$was_recovered = '' !== $recovered_at && $recovered_at >= $since;
+			$was_recovered = '' !== $recovered_at && $recovered_at >= $since
+				&& CartSession::STATUS_RECOVERED === (string) ( $row['status'] ?? '' );
 
 			if ( ! $was_abandoned && ! $was_recovered ) {
 				continue;
@@ -319,29 +320,54 @@ final class CartRepository {
 	}
 
 	/**
+	 * The report window in the store's time zone.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param int $days Window length in days, including today.
+	 * @return array{start: \DateTimeImmutable, since: string, offset: int} Local midnight the
+	 *               window opens at, that moment as a UTC datetime, and the store's UTC offset in seconds.
+	 */
+	private function local_window( int $days ): array {
+		$zone  = wp_timezone();
+		$now   = new \DateTimeImmutable( 'now', $zone );
+		$start = $now->setTime( 0, 0 )->modify( '-' . ( $days - 1 ) . ' days' );
+
+		return array(
+			'start'  => $start,
+			'since'  => $start->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' ),
+			'offset' => $zone->getOffset( $now ),
+		);
+	}
+
+	/**
 	 * Group one timestamp column into per-day count/sum buckets.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param string $table  Sessions table name.
-	 * @param string $column Datetime column to bucket on.
-	 * @param string $amount Numeric column to sum.
-	 * @param string $start  Inclusive start date (Y-m-d, UTC).
+	 * @param string                                                       $table  Sessions table name.
+	 * @param string                                                       $column UTC datetime column to bucket on.
+	 * @param string                                                       $amount Numeric column to sum.
+	 * @param array{start: \DateTimeImmutable, since: string, offset: int} $window Report window from local_window().
+	 * @param string                                                       $status Only count rows in this status; '' for any.
 	 * @return array<string, array<string, float>>
 	 */
-	private function daily_totals( string $table, string $column, string $amount, string $start ): array {
+	private function daily_totals( string $table, string $column, string $amount, array $window, string $status = '' ): array {
 		global $wpdb;
 
+		// Today's offset for every row: CONVERT_TZ needs MySQL time zone tables most hosts lack.
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				'SELECT DATE(%i) AS bucket, COUNT(*) AS cnt, SUM(%i) AS total FROM %i WHERE %i >= %s GROUP BY DATE(%i)',
+				"SELECT DATE(DATE_ADD(%i, INTERVAL %d SECOND)) AS bucket, COUNT(*) AS cnt, SUM(%i) AS total FROM %i WHERE %i >= %s AND (%s = '' OR status = %s) GROUP BY bucket",
 				$column,
+				$window['offset'],
 				$amount,
 				$table,
 				$column,
-				$start . ' 00:00:00',
-				$column
+				$window['since'],
+				$status,
+				$status
 			),
 			ARRAY_A
 		);
