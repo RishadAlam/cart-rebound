@@ -4,7 +4,7 @@ Tags: abandoned cart, cart recovery, woocommerce, cart abandonment recovery, aba
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.3
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -496,6 +496,30 @@ The admin screens also use protected REST endpoints under the `cart-rebound/v1` 
 
 == Changelog ==
 
+= 1.2.0 =
+
+**Release date:** 2026-11-15
+
+**New**
+
+* A redesigned Dashboard. It opens with a plain sentence about how much you won back in the last 7, 30 or 90 days and how that compares with the period before. Below it you see every cart on record split by status, abandoned and won-back value by day or week, the open carts worth chasing, your recovery setup, and the products most often left behind.
+* Click a status on the Dashboard to open the Carts screen with that status already filtered. Click a cart under **Worth chasing** to open its details.
+* Each Cart Rebound screen has a **Help with this page** link to its page in the documentation. The Plugins screen now links to Settings, the documentation, support, feature requests, and reviews.
+
+**Improved**
+
+* Dashboard days now follow your site's time zone, so a cart left late in the evening counts on the right day.
+* The Dashboard keeps the last numbers on screen while a new period loads.
+* The chart can be read with the keyboard, including the up and down arrow keys, and its numbers can be shown as a table.
+* Chart amounts use your store's number format and your language's short form for large numbers, and small amounts no longer show repeated labels.
+* The weekly chart shows whole weeks only, so the first bar no longer looks like a dip.
+* When a period is longer than the time abandoned carts are kept (see Settings), the Dashboard says that older carts are missing, and it skips the comparison with an earlier period that has already been cleaned up.
+* The chart, the status bar, and their tooltips now display correctly on right-to-left language sites.
+
+**Fixed**
+
+* A recovered order that is later refunded or cancelled no longer counts as won back on the Dashboard chart, in the summary sentence, or in the product report.
+
 = 1.1.3 =
 
 **Release date:** 2026-11-02
@@ -651,3 +675,9 @@ The admin screens also use protected REST endpoints under the `cart-rebound/v1` 
 * Abandonment detection you can adjust, recovery email templates, manual reminders, and secure one-click cart restore.
 * Recovered orders credited through a direct order link, a recovered revenue report, an admin dashboard, and a filterable activity log.
 * HPOS support, privacy tools, protected REST endpoints, and WordPress actions for custom recovery workflows.
+
+== Upgrade Notice ==
+
+= 1.2.0 =
+
+A redesigned Dashboard that follows your site's time zone. Refunded recoveries no longer count as won back.
