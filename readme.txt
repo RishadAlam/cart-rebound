@@ -513,7 +513,7 @@ The admin screens also use protected REST endpoints under the `cart-rebound/v1` 
 * The chart can be read with the keyboard, including the up and down arrow keys, and its numbers can be shown as a table.
 * Chart amounts use your store's number format and your language's short form for large numbers, and small amounts no longer show repeated labels.
 * The weekly chart shows whole weeks only, so the first bar no longer looks like a dip.
-* When a period is longer than the time abandoned carts are kept (see Settings), the Dashboard says that older carts are missing, and it skips the comparison with an earlier period that has already been cleaned up.
+* When a period is longer than the time abandoned carts are kept (see Settings), the Dashboard says that older carts are missing. It also skips the comparison with the earlier period when won-back carts from that period have already been cleaned up.
 * The chart, the status bar, and their tooltips now display correctly on right-to-left language sites.
 
 **Fixed**
